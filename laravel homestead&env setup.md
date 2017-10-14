@@ -187,3 +187,48 @@ xdebug.idekey = "PHPSTORM"
 settings：interpretor， remote， vagrant
 path mapping
 run->edit configuration  
+
+# adding phpmyadmin support for homestead box
+## method 1 
+This will install PhpMyAdmin (not the latest version) from Ubuntu's repositories. Assuming that your projects live in /home/vagrant/Code :
+
+    sudo apt-get install phpmyadmin Do not select apache2 nor lighttpd when prompted. Just hit tab and enter.
+
+    sudo ln -s /usr/share/phpmyadmin/ /home/vagrant/Code/phpmyadmin
+
+    cd ~/Code && serve phpmyadmin.app /home/vagrant/Code/phpmyadmin
+
+Note: If you encounter issues creating the symbolic link on step 2, try the first option or see Lyndon Watkins' answer below.
+Final steps:
+
+    Open the /etc/hosts file on your main machine and add:
+
+    127.0.0.1  phpmyadmin.app
+
+    Go to http://phpmyadmin.app:8000
+
+## method 2
+Step 1:
+
+Go to the phpMyAdmin website, download the latest version and unzip it into your code directory
+Step 2:
+
+Open up homestead.yaml file and add these lines
+
+folders:
+    - map: /Users/{yourName}/Code/phpMyAdmin
+      to: /home/vagrant/Code/phpMyAdmin
+sites:
+    - map: phpmyadmin.app
+      to: /home/vagrant/Code/phpMyAdmin
+
+Step 3:
+
+Open your hosts file and add this line:
+
+127.0.0.1 phpmyadmin.app
+
+Step 4:
+
+You may need to run vagrant provision to load the new configuration if vagrant is already running.
+
