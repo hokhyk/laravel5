@@ -47,7 +47,7 @@ Route::get('posts/{id}/{slug}', function ($id, $slug) {
 //
 })->where(['id' => '[0-9]+', 'slug' => '[A-Za-z]+']);
 
-## route names
+## route names  (also there can be route group names)
 <a href="<?php echo url('/'); ?>">
 
 // app/Http/routes.php
@@ -120,8 +120,81 @@ Route::get('users', function () {
 Note that each prefixed group also has a / group that represents the root of the prefix
 —in this example that’s /api.
 
+### route group sub-domain routing  (对于开启子域名解析的网站需要进行设置子域名路由）
+#### First, to present different
+sections of the application (or entirely differently applications) to different subdo‐
+mains:
+Route::group(['domain' => 'api.myapp.com'], function () {
+Route::get('/', function () {
+//
+});
+});
+#### And second, to set part of the subdomain as a parameter—most often used in cases of
+multitenancy (think Slack or Harvest, where each company gets their own subdo‐
+main like tighten.slack.co).
+Route::group(['domain' => '{account}.myapp.com'], function () {
+Route::get('/', function ($account) {
+//
+});
+Route::get('users/{id}', function ($account, $id) {
+//
+});
+});
 
+### route group namespace prefix
+// App\Http\Controllers\ControllerA
+Route::get('/', 'ControllerA@index');
+Route::group(['namespace' => 'API'], function () {
+// App\Http\Controllers\API\ControllerB
+Route::get('/', 'ControllerB@index');
+});
 
+### Route group name prefix
+Route::group(['as' => 'users.', 'prefix' => 'users'], function () {
+   Route::group(['as' => 'comments.', 'prefix' => 'comments'], function () {
+// Route name will be users.comments.show
+Route::get('{id}', ['as' => 'show', function () {
+//
+}]);
+});
+});
+# VIEWS
+In Laravel, there are two formats of view you can use out of the box: Blade or PHP. The difference is in the filename: about.php will be rendered with the
+PHP engine, and about.blade.php will be rendered with the Blade engine.
+
+   There are also three different ways to do view(). For now, just con‐
+cern yourself with view(), but if you ever see View::make(), it’s the
+same thing, and you could also inject the Illuminate\View\View
+Factory if you prefer.
+
+Route::get('/', function () {
+return view('home');
+});
+This code above looks for a view in resources/views/home.blade.php or
+resources/views/home.php, and loads its contents and parses any inline PHP or
+control structures until you have just the view’s output. 
+## Passing variables to views
+### chain method
+    Route::get('tasks', function () {
+return view('tasks.index')
+->with('tasks', Task::all());
+This Closure loads the resources/views/tasks/index.blade.php or resources/
+views/tasks/index.php view and passes it a single variable named tasks, which
+contains the result of the Task::all() method, which is a database query.
+
+### array method. If you prefer non-fluent routing, you could pass an array of variables as the second parameter:
+Route::get('tasks', function () {
+return view('tasks.index', ['tasks' => Task::all()]);
+});
+
+## View Composers and sharing variables with every view
+Sometimes it can become a hassle to pass the same variables over and over. There
+may be a variable that you want accessible to every view in the site, or to a certain
+class of views or a certain included sub-view—for example, all views related to tasks,
+or the header partial.
+It’s possible to share certain variables with every template or just certain templates,
+like in the following code:
+view()->share('variableName', 'variableValue');
 
 
 
