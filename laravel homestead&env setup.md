@@ -232,3 +232,13 @@ Step 4:
 
 You may need to run vagrant provision to load the new configuration if vagrant is already running.
 
+
+# homestead mysql database connection
+## preferablly using HediSQL + Wine under linux environment.
+• Connection Type: Standard (non-SSH)
+• Host: 127.0.0.1
+• Username: homestead
+• Password: secret
+• Port: 33060
+For my case, the host is 192.168.0.198
+
