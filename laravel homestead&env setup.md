@@ -75,8 +75,8 @@ php -r "unlink('composer-setup.php');"
 
 
 #安装laravel框架：
- ##1、全局安装
-composer global require "laravel/installer"
+ ## 1、全局安装
+composer global require "laravel/installer=~1.1"
 export PATH="~/.config/composer/vendor/bin:$PATH" 确保 ~/.composer/vendor/bin 在系统路径中
 laravel new blog
 每次重新进入homestead，都要重新执行命令export PATH="~/.config/composer/vendor/bin:$PATH"
@@ -141,7 +141,121 @@ composer create-project --prefer-dist laravel/laravel blog
      try_files $uri $uri/ /index.php?$query_string;
  }
  
- 
+##4. 添加ide-helper
+on homestead box, 
+Install
+
+Require this package with composer using the following command:
+
+composer require --dev barryvdh/laravel-ide-helper
+After updating composer, add the service provider to the providers array in config/app.php
+
+Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+To install this package on only development systems, add the --dev flag to your composer command:
+
+composer require --dev barryvdh/laravel-ide-helper
+In Laravel, instead of adding the service provider in the config/app.php file, you can add the following code to your app/Providers/AppServiceProvider.php file, within the register() method:
+
+public function register()
+{
+    if ($this->app->environment() !== 'production') {
+        $this->app->register(\Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class);
+    }
+    // ...
+}
+This will allow your application to load the Laravel IDE Helper on non-production enviroments.
+
+Automatic phpDoc generation for Laravel Facades
+
+You can now re-generate the docs yourself (for future updates)
+
+php artisan ide-helper:generate
+Note: bootstrap/compiled.php has to be cleared first, so run php artisan clear-compiled before generating (and php artisan optimize after).
+
+You can configure your composer.json to do this after each commit:
+
+"scripts":{
+    "post-update-cmd": [
+        "Illuminate\\Foundation\\ComposerScripts::postUpdate",
+        "php artisan ide-helper:generate",
+        "php artisan ide-helper:meta",
+        "php artisan optimize"
+    ]
+},
+You can also publish the config file to change implementations (ie. interface to specific class) or set defaults for --helpers or --sublime.
+
+php artisan vendor:publish --provider="Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider" --tag=config
+The generator tries to identify the real class, but if it cannot be found, you can define it in the config file.
+
+Some classes need a working database connection. If you do not have a default working connection, some facades will not be included. You can use an in-memory SQLite driver by adding the -M option.
+
+You can choose to include helper files. This is not enabled by default, but you can override it with the --helpers (-H) option. The Illuminate/Support/helpers.php is already set up, but you can add/remove your own files in the config file.
+
+Automatic phpDocs for models
+
+You need to require doctrine/dbal: ~2.3 in your own composer.json to get database columns.
+composer require doctrine/dbal
+If you don't want to write your properties yourself, you can use the command php artisan ide-helper:models to generate phpDocs, based on table columns, relations and getters/setters. You can write the comments directly to your Model file, using the --write (-W) option. By default, you are asked to overwrite or write to a separate file (_ide_helper_models.php). You can force No with --nowrite (-N). Please make sure to backup your models, before writing the info. It should keep the existing comments and only append new properties/methods. The existing phpdoc is replaced, or added if not found. With the --reset (-R) option, the existing phpdocs are ignored, and only the newly found columns/relations are saved as phpdocs.
+
+php artisan ide-helper:models Post
+/**
+ * An Eloquent Model: 'Post'
+ *
+ * @property integer $id
+ * @property integer $author_id
+ * @property string $title
+ * @property string $text
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ * @property-read \User $author
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Comment[] $comments
+ */
+By default, models in app/models are scanned. The optional argument tells what models to use (also outside app/models).
+
+php artisan ide-helper:models Post User
+You can also scan a different directory, using the --dir option (relative from the base path):
+
+php artisan ide-helper:models --dir="path/to/models" --dir="app/src/Model"
+You can publish the config file (php artisan vendor:publish) and set the default directories.
+
+Models can be ignored using the --ignore (-I) option
+
+php artisan ide-helper:models --ignore="Post,User"
+Note: With namespaces, wrap your model name in double-quotes ("): php artisan ide-helper:models "API\User", or escape the slashes (Api\\User)
+
+For properly recognition of Model methods (i.e. paginate, findOrFail) you should extend \Eloquent or add
+
+/** @mixin \Eloquent */
+for your model class.
+
+Automatic phpDocs generation for Laravel Fluent methods
+
+If you need phpDocs support for Fluent methods in migration, for example
+
+$table->string("somestring")->nullable()->index();
+After publishing vendor, simply change the include_fluent line your config/ide-helper.php file into:
+
+'include_fluent' => true,
+And then run php artisan ide-helper:generate , you will now see all of the Fluent methods are recognized by your IDE.
+
+PhpStorm Meta for Container instances
+
+It's possible to generate a PhpStorm meta file to add support for factory design pattern. For Laravel, this means we can make PhpStorm understand what kind of object we are resolving from the IoC Container. For example, events will return an Illuminate\Events\Dispatcher object, so with the meta file you can call app('events') and it will autocomplete the Dispatcher methods.
+
+php artisan ide-helper:meta
+app('events')->fire();
+\App::make('events')->fire();
+
+/** @var \Illuminate\Foundation\Application $app */
+$app->make('events')->fire();
+
+// When the key is not found, it uses the argument as class name
+app('App\SomeClass');
+Pre-generated example: https://gist.github.com/barryvdh/bb6ffc5d11e0a75dba67
+
+Note: You might need to restart PhpStorm and make sure .phpstorm.meta.php is indexed. Note: When you receive a FatalException about a class that is not found, check your config (for example, remove S3 as cloud driver when you don't have S3 configured. Remove Redis ServiceProvider when you don't use it).
+
+
  
  
 #laravel homestead box：
