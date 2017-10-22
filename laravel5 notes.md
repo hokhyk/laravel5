@@ -1,4 +1,15 @@
 # routes
+## understanding HTTP Verbs
+Here’s the quick rundown: 
+GET requests a resource and 
+HEAD asks for a headers-only version of the GET,
+POST creates a resource, 
+PUT overwrites a resources and 
+PATCH modifies a resource, 
+DELETE deletes a resource, and 
+OPTIONS asks the server which verbs are allowed at this URL.
+TRACE and 
+CONNECT.
 ## route verbs
 Route::get('/', function () {
 return 'Hello, World!';
@@ -196,9 +207,141 @@ It’s possible to share certain variables with every template or just certain t
 like in the following code:
 view()->share('variableName', 'variableValue');
 
+# controllers
+It may be tempting to cram all of the application’s logic into the controllers, but it’s
+better to think of controllers as the traffic cop that routes HTTP requests around
+your application. Since there are other ways requests can come into your application
+—cron jobs, “Artisan” command line calls, queue jobs, etc.--it’s wise to not rely on
+controllers for much behavior. This means a controller’s primary job is to capture the
+intent of an HTTP Request and pass it onto the rest of the application.
+## generate a controller by Artisan
+php artisan make:controller MySampleController
+This will create a new file named MySampleController.php in app/Http/Controllers.
 
+## get user input for controllers
+### using Facade  Input::get(fieldName)
+// TasksController.php
+...
+public function store()
+{
+$task = new Task;
+$task->title = Input::get('title');
+$task->description = Input::get('description');
+$task->save();
+return redirect('tasks');
+}
+### using \Illuminate\Http\Request object  ( dependency injection in controller)
+Controller method injection via typehinting
+// TasksController.php
+...
+public function store(\Illuminate\Http\Request $request)
+{
+$task = new Task;
+$task->title = $request->input('title');
+$task->description = $request->input('description');
+$task->save();
+return redirect('tasks');
+}
 
+## resource controllers  for RESTFUL/CRUD rules 
+For each, you can see the HTTP Verb, the URL, the controller method name, and the
+“name”:
+Verb   URL                 Controller-method    Name            Description
+GET    /tasks                index            tasks.index       Show all tasks
+GET    /tasks/create         create           tasks.create      Show the create task form
+POST   /tasks                store            tasks.store       Accept form submission from the create task form
+GET    /tasks/{photo}        show             tasks.show        Show one task
+GET    /tasks/{photo}/edit   edit             tasks.edit        Edit one task
+PUT/PATCH /tasks/{photo}  update              tasks.update      Accept form submission from the edit task form
+DELETE /tasks/{photo}     destroy             tasks.destroy     Delete one task
 
+## resource controller binding with routes  (resource route)
+Resource controller binding
+// app/Http/routes.php
+Route::resource('tasks', 'TasksController');
+
+### to show all routes defined for current app:
+php artisan route:list
+
+## route model binding
+### implicit route model binding
+Route::get('conferences/{conference}', function (Conference $conference) {
+return view('conferences.show')->with('conference', $conference);
+});
+Because the route parameter ({conference}) is the same as the method parameter
+($conference), and the method parameter is type-hinted with a Conference model
+(Conference $conference), Laravel sees this as a route model binding. Every time
+this rout is visited, the applicaiton will assume that whatever is passed into the URL
+in place of {conference} is an ID that should be used to look up a Conference, and
+then that resulting model instance will be passed in to your Closure or controller
+method.
+
+#### Customizing the royte key for an Eloquent model (默认是查找ID column，通过重载getRouteKeyName()这个函数修改成想要查找的字段。
+Any time an Eloquent model is looked up via a URL segment (usu‐
+ally because of route model binding), the default column Eloquent
+will look it up by is its primary key (ID).
+To change the column your Eloquent model uses as its URL
+lookup, add a method to your model named getRouteKeyName:
+public function getRouteKeyName()
+{
+return 'slug';
+}
+Now, a URL like conferences/{conference} will expect to get the slug instead of the
+ID, and will perform its lookups accordingly
+
+### explicit/custom route model binding （例子说明了怎么將路由的资源参数绑定到自定义的Eloquent Model上。即怎么修改route service provider实现將route resource自动注入到controller。）
+To manually configure Route Model bindings, go to the boot() method of
+App\Providers\RouteServiceProvider and add a line like in the example.
+Adding a Route Model Binding
+public function boot(Router $router)
+{
+parent::boot($router);
+$router->model('event', Conference::class);
+}
+You’ve now defined that whenever a route has a parameter in its definition named
+{event}, the route resolve will return an instance of the Conference class with the ID
+of that URL parameter.
+Using an explicit Route Model Binding
+Route::get('events/{event}', function (Conference $event) {
+return view('events.show')->with('event', $event);
+});
+
+# Form method spoofing & CSRF
+## Form method spoofing （用html进行http请求伪造）
+To inform Laravel that the form you’re currently submitting should be treated as
+something other than POST, add a hidden variable named _method with the value of
+either PUT, PATCH, or DELETE, and Laravel will match and route that form submission
+_as if it were actually a request with that verb._
+Example 3-34. Form method spoong
+<form action="/tasks/5" method="POST">
+<input type="hidden" name="_method" value="DELETE">
+</form>
+The form in Example 3-34, since it’s passing Laravel the method of “DELETE,” will
+match routes defined with Route::delete but not those with Route::post.
+
+## enable CSRF (cross site request forgery) protection in laravel
+By default, every route in Laravel except “read-only” routes (those using GET, HEAD, or
+OPTIONS) are protected against Cross-Site Request Forgery by requiring a token (in
+the form of an input named _token) be passed along with each request. This token is
+generated at the start of every session, and every non-read-only route compares the
+submitted _token against the session token.
+### In HTML forms, add the _token input to each of your submissions.
+<form action="/tasks/5" method="POST">
+<input type="hidden" name="_method" value="DELETE">
+<input type="hidden" name="_token" value="{{ csrf_token() }}">
+</form>
+### In JavaScript applications, 
+it’s a bit more work, but not much. The most common solution, for sites using jQuery, is to store the token in a meta tag on every page.
+Storing the CSRF token in a meta tag
+<meta name="csrf-token" content="{{ csrf_token() }}">
+Storing the token in a meta tag makes it easy to globally bind that to the correct
+HTTP header, which you can do once globally for all jQuery requests.
+Globally binding a jQuery header for CSRF
+$.ajaxSetup({
+headers: {
+'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+}
+});
 
 
 
