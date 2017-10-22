@@ -342,14 +342,174 @@ headers: {
 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 }
 });
+Laravel will check the X-CSRF-TOKEN on every request and valid tokens passed there
+will mark the CSRF protection as satisfied. If not, you will be likely running into the dreaded TokenMismatchException.
 
+# Redirects
+There are three common responses that you’ll return from your controller methods
+or route Closures: views, redirects, and errors. 
+There are two common ways to generate a redirect; we’ll use the Façades here, but
+you may prefer the global helper(/Illuminate/Foundation/helpers.php).Both are create an instance of 
+Illuminate\Http\RedirectResponse. 
+## three ways to return a redirect
+Route::get('redirect-with-facade', function () {
+return Redirect::to('auth/login');
+});
+Route::get('redirect-with-helper', function () {
+return redirect()->to('auth/login');
+});
+Route::get('redirect-with-helper-shortcut', function () {
+return redirect('auth/login');
+});
 
+if (! function_exists('redirect')) {
+    /**
+     * Get an instance of the redirector.
+     *
+     * @param  string|null  $to
+     * @param  int     $status
+     * @param  array   $headers
+     * @param  bool    $secure
+     * @return \Illuminate\Routing\Redirector|\Illuminate\Http\RedirectResponse
+     */
+    function redirect($to = null, $status = 302, $headers = [], $secure = null)
+    {
+        if (is_null($to)) {
+            return app('redirect');
+        }
 
+        return app('redirect')->to($to, $status, $headers, $secure);
+    }
+}
 
+## Redirect options
+### Redirect to
+The method signature for the to() method for redirects looks like this:
 
+function to($to = null, $status = 302, $headers = [], $secure = null)
 
+$to is a valid internal URI; $status is the HTTP status (defaulting to 301 FOUND);
+$headers allows you to define which HTTP headers to send along with your redirect;
+and $secure allows you to override the default choice of http vs https (which is nor‐
+mally set based on your current request URL).
 
+### Redirect route
+The route() method is the same as the to() method, but rather than point to a par‐
+ticular URI, it points to a particular route name.
+Example 3-39. Redirect route
+Route::get('redirect', function () {
+return Redirect::route('conferences.index');
+});
+Note that, since some route names require parameters, its parameter order is a little
+bit different; it has an optional second parameter for the route parameters:
+function route($to = null, $parameters = [], $status = 302, $headers = [])
 
+Redirect route with parameters
+Route::get('redirect', function () {
+return Redirect::route('conferences.show', ['conference' => 99]);
+});
+
+### Redirect back
+Because of some of the built-in conveniences of Laravel’s session implementation,
+your application will always have a knowledge of what the user’s previously-visited
+page was. That opens up the opportunity for a Redirect::back() redirect, which
+simply redirects the user to whatever page they came from.
+
+### Redirect::guest()   Redirect::intendend() 
+ it captures the cur‐
+rent URL in a query parameter named “url.intended” for use later. You would use this
+to redirect a user away from their current URL with the intent for them to return
+after authentication.
+
+### other redirect methods (vendor/laravel/framework/src/Illuminate/Routing/Redirector.php)
+ home() redirects to a route named home
+• refresh() redirects to the same page the user is currently on
+• away() allows for redirecting to an external URL without the default URL valida‐
+tion
+• secure() is like to() with the secure parameter set to true
+• action() allows you to like to a controller and method like this: action(MyCon
+troller@myMethod)
+
+### Redirect with data  using  ->with()
+When you’re redirecting the user to a different page, you often want to pass certain
+data along with them. You could manually flash the data to the session, but Laravel
+has some convenience methods to help you with that.
+
+Route::get('redirect-with-key-value', function () {
+return Redirect::to('dashboard')
+->with('error', true);
+});
+Route::get('redirect-with-array', function () {
+return Redirect::to('dashboard')
+->with(['error' => true, 'message' => 'Whoops!']);
+});
+
+#### Redirect with form input  (->withInput())
+You can also redirect with the form input flashed; this is most common in the case of
+a validation error, where you want to send the user back to the form they just came
+from.
+
+Route::get('form', function () {
+return view('form');
+});
+Route::post('form', function () {
+return Redirect::to('form')
+->withInput()
+->with(['error' => true, 'message' => 'Whoops!']);
+});
+
+The easiest way to get the flashed Input that was passed with withInput is the old()
+helper, which can be used to get all old input (old()) or just the value for a particular
+key (old(username)). You’ll commonly see this in views, which allows this HTML to
+be used both on the “create” and the “edit” view for this form:
+
+<input name="username" value="<?=
+old('username', 'Default username instructions here');
+?>">
+#### Redirect with form validation errors (withErrors())
+Route::post('form', function () {
+$validator = Validator::make($request->all), $this->validationRules);
+if ($validator->fails()) {
+return Redirect::to('form')
+->withErrors($validator)
+->withInput();
+}
+});
+
+### redirect and then Abort
+After returning views and redirects, the most common way to exit a route is to abort.
+There’s a globally available abort() method which optionally takes an HTTP status
+code, a message, and a headers array as parameters.
+
+403 Forbidden Abort
+Route::post('something-you-cant-do', function () {
+abort(403, 'You cannot do that!');
+});
+
+### custom responses other than returning views, redirects, errors.
+There are a few other options available for us to return, so let’s go over the most com‐
+mon responses after views, redirects, and errors. Just like with redirects, you can
+either use the Response Façade or the response() helper to run these methods on.
+#### Response make
+If you want to create an HTTP Response manually, just pass your data into the first
+parameter of Response::make(): 
+
+return Response::make(Hello, World!). 
+
+Once again, the second parameter is the HTTP status code and the third is your headers.
+#### Response json/jsonp
+To create a JSON-encoded HTTP response manually, pass your JSON-able content
+(arrays, collections, or whatever else) to the json() method: 
+
+return Response::json(User::all());
+
+. It’s just like make(), except it json_encodes your
+content and sets the appropriate headers.
+#### Response download
+To send a downloadable file, pass either a string filename or a SplFileInfo instance
+to download(), with an optional second parameter of the filename: 
+
+return Response::download(file501751.pdf, myFile.pdf);
 
 
 
