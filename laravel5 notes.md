@@ -511,5 +511,31 @@ to download(), with an optional second parameter of the filename:
 
 return Response::download(file501751.pdf, myFile.pdf);
 
+## testing routes 
+### Writing a simple POST route test
+// AssignmentTest.php
+public function test_post_creates_new_assignment()
+{
+$this->post('/assignments', [
+'title' => 'My great assignment'
+]);
+$this->seeInDatabase('assignments', [
+'title' => 'My great assignment'
+]);
+}
+
+### Writing a simple GET route test
+// AssignmentTest.php
+public function test_list_page_shows_all_assignments()
+{
+$assignment = Assignment::create([
+'title' => 'My great assignment'
+]);
+$this->visit('assignments')
+->andSee(['My great assignment']);
+}
+
+# blade templating
+
 
 
