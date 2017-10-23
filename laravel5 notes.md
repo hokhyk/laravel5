@@ -769,7 +769,7 @@ $this->visit('events')
 }
 
 # View Components 
-## gulp and Elixir
+## gulp and Elixir (laravel frontend assets management)
 Laravel also provides a Gulp-based build system called Elixir and some conventions around non-PHP assets.
 Elixir is at the core of the non-PHP frontend components.
 
@@ -902,8 +902,164 @@ a sample rev-manifest.json looks like:
 "css/all.css": "css/all-7f592e49.css"
 }
 
+### using Elixir for PHPUnit or PHPSpec testing
+With Elixir it’s easy to run your PHPUnit or PHPSpec tests every time your test files
+change.
+You have two options, mix.phpUnit() and mix.phpSpec(), and each will run the
+frameworks directly from the vendor folder, so you won’t have to do anything to
+make them work.
+If you add one of these methods to your Gulp file, you’ll find they only run once,
+even if you’re using gulp watch. How do you get them to respond to changes in your
+tests folder?
+There’s a separate Gulp command for that: gulp tdd. This grabs just the test com‐
+mands out of your Gulp file, whether phpUnit() or phpSpec(), listens to the appro‐
+priate folder, and re-runs the test suite whenever any files change.
 
+### Creating an Elixir extension
+// Either in gulpfile.js, or in an external file and required in gulpfile.js
+var gulp = require("gulp"),
+shell = require("gulp-shell"),
+elixir = require("laravel-elixir");
+elixir.extend("log", function (message) {
+new Task('log', function() {
+return gulp.src('').pipe(shell('echo "' + message + '" >> file.log'));
+})
+.watch('./resources/some/files/**/*');
+});
 
+## Pagination
+### Paginating database results Paginating a Query builder response (Eloquent ORM)
+// PostsController
+public function index()
+{
+return view('posts.index', ['posts' => DB::table('posts')->paginate(20)]);
+}
+The example defines that this route should return 20 posts per page, and will define
+which page the current user is on based on their URL’s page query parameter, if it has
+one. Eloquent models all have the same paginate() method.
+
+### Manually creating paginators
+If you’re not working with Eloquent or the Query Builder, or if you’re working with a
+complex query (e.g. those using groupBy), you might find yourself needing to create a
+paginator manually. Thankfully, you can do that with the 
+
+Illuminate\Pagination\Paginator    or the 
+Illuminate\Pagination\LengthAwarePaginator classes.
+
+The difference between the two classes is that Paginator will only provide previous
+and next buttons, but no links to each page; LengthAwarePaginator needs to know
+the length of the full result, so that it can generate links for each individual page.
+
+## Message bags
+Illuminate\Support\MessageBag 
+is a class tasked with storing, categorizing, and
+returning messages that are intended for the end user. It groups all messages by key,
+which are likely to be something like errors and messags (@todo is that actually
+right?), and provides convenience methods for getting all its stored messages or only
+those for a particular key, and for outputting these messages in various formats.
+
+### Manually creating and using MessageBag
+$messages = [
+'errors' => [
+'Somethign went wrong with edit 1!'
+],
+'messages' => [
+'Edit 2 was successful.'
+]
+];
+$messagebag = new \Illuminate\Support\MessageBag($messages);
+// Check for errors; if there are any, decorate and echo
+if ($messagebag->has('errors')) {
+echo '<ul id="errors">';
+foreach ($messagebag->get('errors', '<li><b>:message</b></li>') as $error) {
+echo $error;
+}
+echo '</ul>';
+}
+
+### Error bag snippet
+// partials/errors.blade.php
+@if ($errors->any())
+<div class="alert alert-danger">
+<ul>
+@foreach ($errors as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+</div>
+@endif
+
+## The string helpers and pluralization
+Laravel has a series of helpers for manipulating strings. They’re available as methods
+on the Str class (e.g. Str::plural(), but most also have a function shortcut (e.g.
+str_plural()).
+The Laravel documentation covers all of the string helpers in detail (TODO INSERT
+LINK https://laravel.com/docs/5.1/helpers), but here are a few of the most-commonlyused helpers:
+• e: a shortcut for html_entities
+• starts_with, ends_with, str_contains: check a string (first parametr) to see if it
+starts with, ends with, or contains another string (second parameter)
+• str_is: checks whether a string (second parameter) matches a particular pattern
+(first parameter)—for example, foo* will match foobar and foobaz
+• str_slug: converts a string to a URL-type slug with hyphens
+• str_plural(word, num), str_singular: pluralizes a word or singularizes it; Englishonly
+
+### Localization
+In Laravel, you’ll need to set an App locale at some point during the page load so the
+localization helpers know which bucket of translations to pull from. You’ll do this
+with App::setLocal($localeName), and you can run it in a service provider or a
+route or wherever else.
+You can define your fallback locale in config/app.php, where you should find a fall
+back_local key.
+
+#### Basic localization Basic use of trans() helper function.
+Let’s assume we are using the en locale right now. Laravel will look for a file in resources/lang/en/messages.php, which it will expect to return an array. It’ll look for a welcome key on that array, and if it exists, it’ll return its value.
+
+// routes.php
+Route::get('/en/welcome', function () {
+App::setLocal('en');
+return view('welcome');
+});
+
+// resources/lang/en/messages.php
+return [
+'welcome' => 'Welcome to our site!'
+];
+
+// resources/views/welcome.blade.php
+{{ trans('messages.welcome') }}
+
+#### Parameters in translations
+prepending a word with a colon (:name) marks it as a placeholder
+that can be replaced. 
+
+// routes.php
+Route::get('/en/welcome', function () {
+App::setLocal('en');
+return view('welcome');
+});
+
+// resources/lang/en/messages.php
+return [
+'welcome' => 'Welcome back, :name!'
+];
+// resources/views/welcome.blade.php
+{{ trans('messages.welcome', ['name' => 'Jose']) }}
+
+#### Pluralization in localization using trans_choice() helper method.
+Dening a simple translation with an option for pluralization
+// resources/lang/en/messages.php
+return [
+'task-deletion' => 'You have deleted a task|You have succesfully deleted tasks'
+];
+// resources/views/dashboard.blade.php
+@if ($numTasksDeleted > 0)
+{{ trans_choice('messages.task-deletion', $numTasksDeleted) }}
+@endif
+
+#### An example of Symfony’s Translation component
+// resources/lang/es/messages.php
+return [
+'task-deletion' => "{0} You didn't manage to delete any tasks.|[1,4] You deleted a few tasks.|[5,I];
 
 
 
