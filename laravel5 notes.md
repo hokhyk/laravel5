@@ -798,7 +798,7 @@ message: "Styles task complete."
 }));
 });
 
-### Compiling a Sass file in Gulp
+### Compiling a Sass file in Elixir
 var elixir = require('laravel-elixir');
 elixir(function(mix) {
 mix.sass('app.scss');
@@ -808,7 +808,99 @@ mix.sass('app.scss');
 By default, Elixir doesn’t minify all the files it’s generating. But if you want to run the
 build scripts in “production” mode, with all minification enabled, add the --production flag.
 
-### 
+### Compiling multiple les with Elixir
+var elixir = require('laravel-elixir');
+elixir(function(mix) {
+mix.sass([
+'app.scss',
+'public.scss'
+]);
+});
+
+### Disabling source maps in Elixir
+var elixir = require('laravel-elixir');
+elixir.config.sourcemaps = false;
+elixir(function(mix) {
+mix.sass('app.scss');
+});
+
+### Combining Stylesheets with Elixir
+var elixir = require('laravel-elixir');
+elixir(function(mix) {
+// Combines all files from resources/assets/css and subfolders
+mix.styles();
+// Combines files from resources/assets/css
+mix.styles([
+'normalize.css',
+'app.css'
+]);
+// Combines all styles from other directory
+mix.stylesIn('resources/some/other/css/directory');
+// Combines given styles from resources/assets/css
+// and outputs to a custom directory
+mix.styles([
+'normalize.css',
+'app.css'
+], 'public/other/css/output.css');
+// Combines given styles from custom directory
+// and outputs to a custom directory
+mix.styles([
+'normalize.css',
+'app.css'
+], 'public/other/css/output.css', 'resources/some/other/css/directory');
+});
+
+### Combining JavaScript les with Elixir
+any commands not provided with an output filename will generate to public/js/
+all.js.
+
+Combining JavaScript les with Elixir
+var elixir = require('laravel-elixir');
+elixir(function(mix) {
+// Combines files from resources/assets/js
+mix.scripts([
+'jquery.js',
+'app.js'
+]);
+// Combines all scripts from other directory
+mix.scriptsIn('resources/some/other/js/directory');
+// Combines given scripts from resources/assets/js
+// and outputs to a custom directory
+mix.scripts([
+'jquery.js',
+'app.js'
+], 'public/other/js/output.js');
+// Combines given scripts from custom directory
+// and outputs to a custom directory
+mix.scripts([
+'jquery.js',
+'app.js'
+], 'public/other/js/output.js', 'resources/some/other/js/directory');
+});
+
+### Elixir generated versioning
+Mix.version
+var elixir = require('laravel-elixir');
+elixir(function(mix) {
+mix.version('public/css/all.css');
+});
+This will now generate a version of that file with a unique hash appended to it—
+something like all-84fa1258.css.
+
+Next, use the PHP elixir() helper in your views to refer to that file like in
+the following Example:
+
+Using the elixir() helper in views
+<link rel="stylesheet" href="{{ elixir("css/all.css") }}">
+
+### How does Elixir versioning work behind-the-scenes?
+Elixir uses gulp-rev, which takes care of both appending the hash to the filenames,
+and also generates a file named public/build/rev-manifest.json. This stores the
+information the elixir() helper needs to find the generated file. Take a look at what
+a sample rev-manifest.json looks like:
+{
+"css/all.css": "css/all-7f592e49.css"
+}
 
 
 
