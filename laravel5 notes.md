@@ -651,5 +651,165 @@ return view('dashboard')
 ->with('key', 'value');
 });
 
-## 
+## using view composers
+### Sharing a variable globally
+view()->share('posts', Post::recent());
+
+You’ll likely place this code in some form of custom ViewComposerServiceProvider
+(see ??? to learn more about Service Providers), but for now you could also just put it
+in App\Providers\AppServiceProvider in the boot method.
+Using view()→share() makes the variable accessible to every view in the entire appli‐
+cation, however, so it might be overkill.
+
+### Creating a Closure-based view composer
+view()->composer('partials.sidebar', function ($view) {
+$view->with('posts', Post::recent());
+});
+
+As you can see, we’ve defined the name of the view we want it shared with (parti
+als.sidebar) in the first parameter and then passed a Closure to the second parame‐
+ter; in the Closure, we’ve used $view→with() to share a variable, but now only with a
+specific view.
+
+Anywhere a view composer is binding to a particular view (like in the
+Example which binds to partials.sidebar), you can also
+pass an array of view names instead to bind to multiple views.
+Or, you can use an asterisk in the view path: partials.*, or
+tasks.*, or just *.
+
+### Class-based view composers
+let’s create the view composer class. There’s no formally defined place for view
+composers to live, but the docs recommend App\Http\ViewComposers. So let’s create
+App\Http\ViewComposers\RecentPostsComposer.
+#### first step, to create A view composer
+<?php namespace App\Http\ViewComposers;
+use App\Post;
+use Illuminate\Contracts\View\View;
+class RecentPostsComposer
+{
+private $posts;
+public function __construct(Post $posts)
+{
+$this->posts = $posts;
+}
+public function compose(View $view)
+{
+$view->with('posts', $this->posts->recent());
+}
+}
+
+#### Registering a view composer in AppServiceProvider
+view()->composer(
+'partials.sidebar',
+'App\Http\ViewComposers\RecentPostsComposer'
+);
+
+Note that this binding is the same as a Closure-based view composer, but instead of
+passing a Closure, we’re passing the class name of our view composer. 
+
+# service injection
+There are three primary types of data we’re most likely to inject into a view: collec‐
+tions of data to iterate over, single objects that you’re displaying on the page, and
+services that generate data or views.
+## sevice injection in route definition
+With a service, the pattern will most likely look like the Example below, where we inject an
+instance of the service into the route definition by type-hinting it in the route defini‐
+tion’s method signature, and then pass it into the view.
+
+Injecting services into a view via the route denition constructor
+
+Route::get('injecting', function (AnalyticsService $analytics) {
+return view('injecting')
+->with('analytics', $analytics);
+});
+
+Using an injected analytics service in a view
+<div class="finances-display">
+{{ $analytics->getBalance() }} / {{ $analytics->getBudget() }}
+</div>
+
+## Injecting a service directly into a view
+@inject('analytics', 'App\Services\Analytics')
+<div class="finances-display">
+{{ $analytics->getBalance() }} / {{ $analytics->getBudget() }}
+</div>
+The first parameter of @inject is the name of the variable you’re injecting, and the
+second parameter is the class or interface that you want to inject an instance of. 
+Just like view composers, Blade service injection makes it easy to make certain data or
+functionality available to every instance of a view, without having to inject it via the
+route definition every time.
+
+# custom Blade directive
+## Binding a custom Blade directive
+// AppServiceProvider
+public function boot()
+{
+Blade::directive('isGuest', function () {
+return "<?php if (Auth::guest()): ?>";
+});
+}
+
+## Creating a Blade directive with parameters
+// Binding
+Blade::directive('newlinesToBr', function ($expression) {
+return "<?php echo nl2br{$expression}; ?>";
+});
+// In use
+<p>@newlinesToBr($message->body)</p>
+
+# Testing that a view displays certain content
+// EventsTest.php
+public function test_list_page_shows_all_events()
+{
+$event1 = factory(Event::class)->create();
+$event2 = factory(Event::class)->create();
+$this->visit('events')
+->andSee($event1->title)
+->andSee($event2->title);
+}
+
+# View Components
+Laravel also provides a Gulp-based build system called Elixir and some conventions around non-PHP assets.
+Elixir is at the core of the non-PHP frontend components.
+
+## Compiling a Sass file in Gulp
+var gulp = require('gulp'),
+sass = require('gulp-ruby-sass'),
+autoprefixer = require('gulp-autoprefixer'),
+rename = require('gulp-rename'),
+notify = require('gulp-notify'),
+livereload = require('gulp-livereload'),
+lr = require('tiny-lr'),
+server = lr();
+gulp.task('sass', function() {
+return gulp.src('resources/assets/sass/app.scss')
+.pipe(sass({
+style: 'compressed',
+sourcemap: true
+}))
+.pipe(autoprefixer('last 2 version', 'ie 9', 'ios 6'))
+.pipe(gulp.dest('public/css'))
+.pipe(rename({suffix: '.min'}))
+.pipe(livereload(server))
+.pipe(notify({
+title: "Karani",
+message: "Styles task complete."
+}));
+});
+
+## Compiling a Sass file in Gulp
+var elixir = require('laravel-elixir');
+elixir(function(mix) {
+mix.sass('app.scss');
+});
+
+
+
+
+
+
+
+
+
+
 
