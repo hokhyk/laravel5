@@ -768,11 +768,12 @@ $this->visit('events')
 ->andSee($event2->title);
 }
 
-# View Components
+# View Components 
+## gulp and Elixir
 Laravel also provides a Gulp-based build system called Elixir and some conventions around non-PHP assets.
 Elixir is at the core of the non-PHP frontend components.
 
-## Compiling a Sass file in Gulp
+### Compiling a Sass file in Gulp
 var gulp = require('gulp'),
 sass = require('gulp-ruby-sass'),
 autoprefixer = require('gulp-autoprefixer'),
@@ -797,13 +798,17 @@ message: "Styles task complete."
 }));
 });
 
-## Compiling a Sass file in Gulp
+### Compiling a Sass file in Gulp
 var elixir = require('laravel-elixir');
 elixir(function(mix) {
 mix.sass('app.scss');
 });
 
+### $ gulp --production
+By default, Elixir doesn’t minify all the files it’s generating. But if you want to run the
+build scripts in “production” mode, with all minification enabled, add the --production flag.
 
+### 
 
 
 
