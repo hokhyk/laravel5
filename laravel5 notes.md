@@ -536,6 +536,120 @@ $this->visit('assignments')
 }
 
 # blade templating
+## {{ $variable }} is functionally equivalent to <?= htmlentities($variable) ?>
+If you want to echo without the escaping, use {!! $variable !!} instead, it equals to <?= $variable ?>
+## Using @{{ to distinguish between Blade {{ }} and other template language's {{ }}
+Any {{ that’s prefaced with an @ will be ignored by Blade. 
+Using @{{ to ask Blade to skip
+// Parsed as Blade
+{{ $bladeVariable }}
+// @ removed, and echoed to the view directly
+@{{ handlebarsVariable }}
 
+### @if, @else, @elseif, and @endif
+@if (count($talks) === 1)
+There is one talk at this time period.
+@elseif (count($talks) === 0)
+There are no talks at this time period.
+@else
+There are {{ count($talks) }} talks at this time period.
+@endif
 
+### @unless and @endunless
+@unless ($user->hasPaid())
+You can complete your payment by switching to the payment tab.
+@endunless
+
+### @for and @endfor
+@for ($i = 0; $i < $talk->slotsCount(); $i++)
+The number is {{ $i }}
+@endfor
+
+### @foreach and @endforeach
+@foreach ($talks as $talk)
+• {{ $talk->title }} ({{ $talk->length }} minutes)
+@endforeach
+
+### @while
+@while ($item = array_pop($items))
+{{ $item->orSomething() }}<br>
+@endwhile
+
+### @forelse
+@forelse ($talks as $talk)
+• {{ $talk->title }} ({{ $talk->length }} minutes)
+@empty
+No talks this day.
+@endforelse
+
+### or
+{{ $title or "Default" }} 
+will echo the value of $title if it’s set, or “Default” if
+not.
+
+## template inheritance
+### Blade layout  @section/@show and @yield
+<!-- resources/views/layouts/master.blade.php -->
+<html>
+<head>
+<title>My Site | @yield('title', 'Home Page')</title>
+</head>
+<body>
+<div class="container">
+@yield('content')
+</div>
+@section('footerScripts')
+<script src="app.js">
+@show
+</body>
+</html>
+
+### Extending a Blade Layout
+<!-- resources/views/dashboard.blade.php -->
+@extends('layouts.master')
+@section('title', 'Dashboard')
+@section('content')
+Welcome to your application dashboard!
+@endsection
+@section('footerScripts')
+@parent
+<script src="dashboard.js">
+@endsection
+
+### @include: Including view partials with @include
+<!-- resources/views/home.blade.php -->
+<div class="content" data-page-name="{{ $pageName }}">
+<p>Here's why you should sign up for our service: <strong>It's Great.</strong></p>
+@include('sign-up-button', ['text' => 'See just how great it is'])
+</div>
+<!-- resources/views/sign-up-button.blade.php -->
+<a class="button button--callout" data-page-name="{{ $pageName }}">
+<i class="exclamation-icon"></i> {{ $text }}
+</a>
+### @each  Using view partials in a loop with @each
+<!-- resources/views/sidebar.blade.php -->
+<div class="sidebar">
+@each('partials.module', $modules, 'module', 'partials.empty-module')
+</div>
+<!-- resources/views/partials/module.blade.php -->
+<div class="sidebar-module">
+<h1>{{ $module->title }}</h1>
+</div>
+<!-- resources/views/partials/empty-module.blade.php -->
+<div class="sidebar-module">
+No modules :(
+</div>
+Take a look at that @each syntax. The first parameter is the name of the view partial.
+The second is the array or collection to iterate over. The third is the variable name
+that each item will be passed to the view as. And the optional fourth parameter is the
+view to show if the array or collection is empty.
+
+# binding data to views using view composers
+## Reminder on how to pass data to views using route definition
+Route::get('passing-data-to-views', function () {
+return view('dashboard')
+->with('key', 'value');
+});
+
+## 
 
