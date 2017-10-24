@@ -1560,6 +1560,95 @@ Laravel’s view rendering engine automatically caches your views. It usually do
 job of handling its own cache invalidation, but if you ever notice it’s gotten stuck, run
 view:clear to clear the cache.
 
+## writing custom artisan commands
+### php artisan make:command YourCommandName
+generates a new Artisan command in app/Console/Commands /{YourCommandName}.php
+
+### The default skeleton of an Artisan command
+php artisan make:command WelcomeNewUsers --command=email:newusers
+<?php
+namespace App\Console\Commands;
+use Illuminate\Console\Command;
+class WelcomeNewUsers extends Command
+{
+/**
+* The name and signature of the console command.
+**
+@var string
+*/
+protected $signature = 'email:newusers';
+/**
+* The console command description.
+**
+@var string
+*/
+protected $description = 'Command description';
+/**
+* Create a new command instance.
+**
+@return void
+*/
+public function __construct()
+{
+parent::__construct();
+} /
+**
+* Execute the console command.
+**
+@return mixed
+*/
+public function handle()
+{
+//
+}
+}
+
+### registering custom commands
+There’s one step left to make this new command usable in your application: you need to
+register it.
+Open app/Console/Kernel.php. You’ll see an array of command class names under the
+$commands property. To register your new command, add its class to this array. You can write
+it out, or just use the ::class class name accessor on the class.
+#### registering a new command in the console kernel
+class Kernel extends ConsoleKernel
+{
+/**
+* The Artisan commands provided by your application.
+**
+@var array
+*/
+protected $commands = [
+\App\Console\Commands\WelcomeNewUsers::class,
+];
+
+#### WRITING CLOSURE-BASED COMMANDS
+If you’d prefer to keep your command definition process simpler, you can write commands as closures instead of
+classes by defining them in routes/console.php. Everything we discuss in this chapter will apply the same way, but
+you will just define and register the commands in a single step in that file:
+// routes/console.php
+Artisan::command(
+'password:reset {userId} {--sendEmail}',
+function ($userId, $sendEmail) {
+// do something...
+}
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
