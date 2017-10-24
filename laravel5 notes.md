@@ -1428,9 +1428,39 @@ $this->post('posts', ['title' => 'Post Title', 'body' => 'This is the body']);
 $this->seeInDatabase(['title' => 'Post Title']);
 }
 
+# Artisan and Tinker
+## basic Artisan commands
+### php artisan list
+To get a list of all available Artisan commands, you can run php artisan list from the
+project root.
 
+### php artisan help commandName.
 
+### php artisan clear
+removes Laravel’s compiled class file, which is like an internal Laravel
+cache; run this as a first resort when things are going wrong and you don’t know why.
 
+### php artisan down/up
+puts your application in “maintenance mode” in order for you to fix an error, run
+migrations, or whatever else; up restores an application from maintenance mode.
+
+### php artisan env
+displays which environment Laravel is running at the moment; it’s the equivalent of
+echoing app()->environment() in-app
+
+### php artisan migrate 
+runs all database migrations.
+
+### php artisan optimize
+optimizes your application for better performance by caching core PHP classes
+into bootstrap/cache/compile.php.
+
+### php artisan serve  --host xxx --port 4000
+spins up a PHP server at localhost:8000 (you can customize the host and/or port
+with --host and --port).
+
+### php artisan tinker 
+brings up the Tinker REPL, which we’ll cover later in this chapter.
 
 
 
