@@ -1462,6 +1462,104 @@ with --host and --port).
 ### php artisan tinker 
 brings up the Tinker REPL, which we’ll cover later in this chapter.
 
+#### Options
+Before we cover the rest of the Artisan commands, let’s look at a few notable options you can
+pass any time you run an Artisan command:
+-q suppresses all output.
+-v, -vv, and -vvv are the three levels of output verbosity (normal, verbose, and debug).
+--no-interaction does not ask any interactive questions, so it won’t interrupt automated
+processes running it.
+--env allows you to define which environment the Artisan command should operate in
+(e.g., local, production, etc.).
+--version shows you which version of Laravel your application is running on.
+You’ve probably guessed from looking at these options that Artisan commands are intended
+to be used much like basic shell commands: you might run them manually, but they can also
+function as a part of some automated process at some point.
+For example, there are many automated deploy processes that might benefit from certain
+Artisan commands. You might want to run php artisan optimize every time you deploy an
+application. Flags like -q and --no-interaction ensure that your deploy scripts, not attended
+by a human being, can keep running smoothly.
+
+### grouped commands
+#### app
+This just contains app:name, which allows you to replace every instance of the default
+top-level App\ namespace with a namespace of your choosing. For example: php
+artisan app:name MyApplication.
+#### auth
+All we have here is auth:clear-resets, which flushes all of the expired password reset
+tokens from the database.
+#### cache
+cache:clear clears the caches, and cache:table creates a database migration if you plan
+to use the database cache driver.
+#### config
+config:cache caches your configuration settings for faster lookup; to clear the cache,
+use config:clear.
+#### db
+db:seed seeds your database, if you have configured database seeders.
+#### event
+event:generate builds missing event and event listener files based on the definitions in
+EventServiceProvider. We’ll learn more about events in Chapter 16.
+#### key
+key:generate creates a random application encryption key in your .env file.
+     Only run php artisan key:generate once — the first time you set up the application in a new environment 
+because this key is used to encrypt your data; if you change it after data has been stored, that data will all become inaccessible.
+#### make
+make:auth scaffolds out the views and corresponding routes for a landing page, a user
+dashboard, and login and register pages.
+All the rest of the make: actions create a single item, and have parameters that vary
+accordingly. To learn more about any individual command’s parameters, use help to
+read its documentation.
+For example, you could run php artisan help make:migration and learn that you can
+pass --create=tableNameHere to create a migration that already has the create table
+syntax in the file, as shown here: php artisan make:migration create_posts_table --
+create=posts
+
+#### migrate
+We saw a migrate command earlier to run our migrations, but here we can run all the
+other migration-related commands. Create the migrations table (to keep track of the
+migrations that are executed) with migrate:install, reset your migrations and start
+from scratch with migrate:reset, reset your migrations and run them all again with
+migrate:refresh, roll back just one migration with migrate:rollback, or check the
+status of your migrations with migrate:status.
+notifications
+notifications:table generates a migration that creates the table for database
+notifications.
+#### queue
+We’ll cover Laravel’s queues in Chapter 16, but the basic idea is that you can push jobs
+up into remote queues to be executed one after another by a worker. This command
+group provides all the tools you need to interact with your queues, like queue:listen to
+start listening to a queue, queue:table to create a migration for database-backed queues,
+and queue:flush to flush all failed queue jobs. There are quite a few more, which we’ll
+learn about in Chapter 16.
+#### route
+If you run route:list, you’ll see the definitions of every route defined in the
+application, including each route’s verb(s), path, name, controller/closure action, and
+middleware. You can cache the route definitions for faster lookups with route:cache and
+clear your cache with route:clear.
+
+#### schedule
+We’ll cover Laravel’s cron-like scheduler in Chapter 16, but in order for it to work, you
+need to set the system cron to run schedule:run once a minute:
+* * * * * php /home/myapp.com/artisan schedule:run >> /dev/null 2>&1
+As you can see, this Artisan command is intended to be run regularly in order to power a
+core Laravel service.
+#### session
+session:table creates a migration for applications using database-backed sessions.
+#### storage
+storage:link creates a symbolic link from public/storage to storage/app/public. This is
+a common convention in Laravel apps, to make it easy to put user uploads (or other files
+that commonly end up in storage/app) somewhere where they’ll be accessible at a public
+URL.
+#### vendor
+Some Laravel-specific packages need to “publish” some of their assets, either so that
+they can be served from your public directory or so that you can modify them. Either
+way, these packages register these “publishable assets” with Laravel, and when you run
+vendor:publish, it publishes them to their specified locations.
+#### view
+Laravel’s view rendering engine automatically caches your views. It usually does a good
+job of handling its own cache invalidation, but if you ever notice it’s gotten stuck, run
+view:clear to clear the cache.
+
 
 
 
