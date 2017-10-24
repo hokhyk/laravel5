@@ -1061,6 +1061,383 @@ return [
 return [
 'task-deletion' => "{0} You didn't manage to delete any tasks.|[1,4] You deleted a few tasks.|[5,I];
 
+# Collecting and Handling User Data
+## the Request façade
+The Request façade actualy exposes the entire Illuminate HTTP request object.
+It
+gives easy access to all of the ways users can give input to your site: POST, posted
+JSON, GET (query parameters), and URL segments.
+
+### Request::all()
+Request::all() gives you an array containing all of the input the user has provided, from every source. 
+Request::all()
+// GET route form view at /get-route
+<form method="post" action="/post-route?utm=12345">
+{{ csrf_field() }}
+<input type="text" name="firstName">
+<input type="submit">
+</form>
+// POST route at /post-route
+var_dump(Request::all());
+// Outputs:
+/**
+* [
+* '_token' => 'CSRF token here',
+* 'firstName' => 'value',
+* 'utm' => 12345
+* ]
+*/
+
+### Request::except()
+// POST route at /post-route
+var_dump(Request::except('_token'));
+// Outputs:
+/**
+* [
+* 'firstName' => 'value',
+* 'utm' => 12345
+* ]
+*/
+
+### Request::only()
+// POST route at /post-route
+var_dump(Request::only(['firstName', 'utm']));
+// Outputs:
+/**
+* [
+* 'firstName' => 'value',
+* 'utm' => 12345
+* ]
+*/
+
+### Request::has()
+// POST route at /post-route
+if (Request::has('utm')) {
+// Do some analytics work
+}
+
+### Request::exists
+is the same as Request::has, exist it will return TRUE if the key exists.
+
+### Request::input
+allows you to get the value of just a single field. Note that the second parameter is the default value, so if the user hasn’t passed in a value, you can have a sensible (and non-breaking) fallback.
+Request::input()
+// POST route at /post-route
+$userName = Request::get('name', '(anonymous)');
+
+### Dot notation to access array values in user data
+// GET route form view at /get-route
+<form method="post" action="/post-route">
+{{ csrf_field() }}
+<input type="text" name="employees[0][firstName]">
+<input type="text" name="employees[0][lastName]">
+<input type="text" name="employees[1][firstName]">
+<input type="text" name="employees[1][lastName]">
+<input type="submit">
+</form>
+// POST route at /post-route
+$employeeZeroFirstName = Request::input('employees.0.firstName');
+$allLastNames = Request::input('employees.*.lastName');
+$employeeOne = Request::input('employees.1');
+// If forms filled out as "Jim" "Smith" "Bob" "Jones":
+// $employeeZeroFirstName = 'Jim';
+// $allLastNames = ['Smith', 'Jones'];
+// $employeeOne = ['firstName' => 'Bob', 'lastName' => 'Jones']
+### Getting data from JSON with Request::input 
+POST /post-route HTTP/1.1
+Content-Type: application/json
+{"firstName":"Joe","lastName":"Schmoe","spouse":{"firstName":"Jill","lastName":"Schmoe"}}
+// post-route
+$firstName = Request::input('firstName');
+$spouseFirstname = Request::input('spouse.firstName');
+
+### Request::json
+Since Request::input is smart enough to pull user data from GET, POST, or JSON,
+why would we even worry about using Request::json to get that data? There are
+two possible reasons: First, to be more explicit to other programmers on your project
+about where you’re expecting the data to come from. And second, if the POST doesnt
+have the correct application/json headers, Request::input won’t pick it up as
+JSON, but Request::json will.
+
+### Façade namespaces, the request() global helper, and depencency injecting
+Any time you’re using Façades inside of namespaced classes (e.g. controllers), you’ll
+have to add the full Façade path to the import block at the top of your file (e.g. use
+Illuminate\Support\Facades\Request).
+Because of this, several of the Façades also have a companion that’s a global helper
+function. Almost all provide two functions: First, if they’re run with no parameter,
+they expose the same syntax as the façade (e.g. request()→has() is the same as
+Request::has()), and second, they have a default behavior for when you pass them a
+parameter (e.g. request('firstName') is a shortcut to request()→input('first
+Name')).
+Finally, with Request, you can also inject an instance of the Request object (learn
+more in ???) into any controller method or Route Closure. Just typehint Illuminate
+\Http\Request and you can then use all these same methods on that object instead—
+e.g. $request→all() instead of Request::all(). Here’s what that typehint might look
+like:
+Route::post('form', function (Illuminate\Http\Request $request) {
+var_dump($request->all());
+});
+
+### route data (URLs, route parameters, request objects.)
+#### URLs  Request::segments()
+each group of characters
+between / in a URL is called a segment. So, http://www.myapp.com/users/15/ has
+two segments: users and 15.
+Request::segments() returns an array of all segments, and Request::segment($segmentId)
+allows you to get the value of a single segment. Note that segments are returned on a
+1-based index, so in the example above, Request::segment(1) would return users.
+
+#### Getting URL details from route parameters
+// routes.php
+Route::get('users/{id}', function ($id) {
+// If the user visits myapp.com/users/15/, $id will equal 15
+});
+
+### dealing with file uploads.
+<form method="post" enctype="multipart/form-data">
+{{ csrf_field() }}
+<input type="text" name="name">
+<input type="file" name="profile_picture">
+<input type="submit">
+</form>
+
+// In controller/route Closure
+var_dump(Request::all());
+// Output:
+// [
+// "_token" => "token here"
+// "name" => "asdf"
+// "profile_picture" => UploadedFile {}
+// ]
+if (Request::hasFile('profile_picture')) {
+var_dump(Request::file('profile_picture'));
+}
+// Output:
+// UploadedFile (details)
+
+#### Validating a file upload
+if (
+Request::hasFile('profile_picture') &&
+Request::file('profile_picture')->isValid()
+) {
+//
+}
+#### UploadedFile class 
+The UploadedFile class extends PHP’s native SplFileInfo with methods allowing
+you to easily inspect and manipulate the file. This list isn’t exhaustive, but can give
+you a taste of what you can do:
+• guessExtension()
+• getMimeType()
+• move($directory, $newName = null)
+• getClientOriginalName()
+• getClientOriginalExtension()
+• getClientMimeType()
+• guessClientExtension()
+• getClientSize()
+• getError()
+• isValid()
+
+
+#### Common le upload workow
+if (Request::hasFile('profile_picture')) {
+$file = Request::file('profile_picture');
+if (! $file->isValid()) {
+// handle invalid state; likely redirect with an error message
+}
+$newFileName = Str::random(32) . '.' . $file->guessExtension();
+$file->move('profile_picture_path_here', $newFileName);
+Auth::user()->profile_picture = $newFileName;
+Auth::user()->save();
+}
+
+#### <form method="post" enctype="multipart/form-data">
+If you get null when you run Request::file, you might’ve forgot‐
+ten to set the encoding type on your form. Make sure to add the
+property enctype="multipart/form-data" on your form.
+<form method="post" enctype="multipart/form-data">
+
+## Validation
+### Basic usage of controller validation
+// app/Http/routes.php
+<?php
+Route::get('recipes/create', 'RecipesController@create');
+Route::post('recipes', 'RecipesController@store');
+// app/Http/Controllers/RecipesController.php
+<?php
+namespace App\Http\Controllers;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+class RecipesController extends Controller
+{
+public function create()
+{
+return view ('recipes.create');
+}
+public function store(Request $request)
+{
+$this->validate($request, [
+'title' => 'required|unique:recipes|max:125',
+'body' => 'required'
+]);
+// Recipe is valid; proceed to save it
+}
+}
+
+### more on Laravel's validation rules
+In our examples here (and in the docs) we’re using the “pipe” syn‐
+tax: 'fieldname': 'rule|otherRule|anotherRule'. But you can
+also use the array syntax to do the same thing: 'fieldname':
+['rule', 'otherRule', 'anotherRule'].
+There’s also the option for validating nested properties. These mat‐
+ter if you use HTML’s array syntax, which allows you to, for exam‐
+ple, have multiple “users” on an HTML form, each of which have a
+name and email address. Here’s how you validate that:
+$this->validate($request, [
+'user.name' => 'required',
+'user.email' => 'required|email',
+]);
+Finally, we don’t have enough space to cover every possible valida‐
+tion rule here, but here are a few of the most common rules:
+• required
+• email
+• alpha
+• alpha dash
+• alpha numeric
+• between (date)
+• exists (database)
+• integer
+• min
+• max
+• required if
+• required unless
+• same
+• size
+• unique (database)
+
+### Manual validation
+Route::get('recipes/create', function () {
+return view ('recipes.create');
+});
+Route::post('recipes', function (Illuminate\Http\Request $request) {
+$validator = Validator::make($request->all(), [
+'title' => 'required|unique:recipes|max:125',
+'body' => 'required'
+]);
+if ($validator->fails()) {
+return redirect('recipes/create')
+->withErrors($validator)
+->withInput();
+}
+// Recipe is valid; proceed to save it
+});
+
+### Displaying validation error messages
+Echo validation errors
+@if (count($errors) > 0)
+<ul id="errors">
+@foreach ($errors->all() as $error)
+<li>{{ $error }}</li>
+@endforeach
+</ul>
+@endif
+
+## Form Request (a Laravel specific way of dealing with user inputs data)
+### creating a Form Request class
+You can create a new Form Request using Artisan:
+php artisan make:request CreateCommentRequest
+You now have a Form Request object available at app/Http/Requests/CreateCommentRequest.php.
+
+Sample Form Request
+<?php
+namespace App\Http\Requests;
+use App\Http\Requests\Request;
+class CreateCommentRequest extends Request
+{
+public function rules()
+{
+return [
+'body' => 'required|max:1000'
+];
+}
+public function authorize()
+{
+$blogPostId = $this->route('blogPost');
+return BlogPost::where('id', $blogPostId)
+->where('user_id', Auth::user()->id)->exists();
+}
+}
+
+### using a form request in route definition
+Using a Form Request
+Route::post('comments', function (\App\Http\Requests\CreateCommentRequest $request) {
+// Store comment
+});
+
+You might be wondering where we call the Form Request, but Laravel does it for us. It
+validates the user input and authorizes their request. If the input is invalid, it’ll act
+just like the in-controller validate method works, redirecting them to the previous
+page with their input preserved and with the appropriate error messages passed
+along. And if the user is not authenticated, Laravel will return a 403 (Forbidden)
+error and not execute the route code.
+
+## Eloquent model mass assignment
+It’s a common pattern to pass the entirety of a form’s input directly to a database
+model. In Laravel.
+
+Route::post('posts', function () {
+$newPost = Post::create(Request::all());
+});
+
+Eloquent has a concept called “mass assignment”, which allows you to either whitelist
+fields that are fillable in this way (using the model’s $fillable property) or blacklist
+fields that aren’t fillable (using the model’s $guarded property). 
+
+Guarding an Eloquent model from mischevious mass assignment
+<?php
+namespace App;
+use Illuminate\Database\Eloquent\Model;
+class Post extends Model
+{
+protected $guarded = ['author_id'];
+}
+
+### preventing script injection using {{ instead of {!!.
+Any time you display content on a web page that was created by a user, you need to
+guard from script injection.
+
+If you use Laravel’s Blade
+templating engine, the default “echo” syntax ({{ $stuffToEcho }}) already runs the
+output through htmlentities() (PHP’s best way of making user content safe to
+echo) automatically. You actually have to do extra work to get out of it, by using the
+{!! $stuffToEcho !!} syntax.
+
+### testing inputs
+Testing that invalid input should be rejected
+public function test_input_missing_a_title_is_rejected()
+{
+$this->post('posts', ['body' => 'This is the body of my post']);
+$this->assertRedirectedTo('posts/create');
+$this->assertSessionHasErrors();
+$this->assertHasOldInput();
+}
+
+Testing that valid input should be processed
+public function test_valid_input_should_create_a_post_in_the_database()
+{
+$this->post('posts', ['title' => 'Post Title', 'body' => 'This is the body']);
+$this->seeInDatabase(['title' => 'Post Title']);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
