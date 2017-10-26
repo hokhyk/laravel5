@@ -1623,8 +1623,7 @@ protected $commands = [
 
 #### WRITING CLOSURE-BASED COMMANDS
 If you’d prefer to keep your command definition process simpler, you can write commands as closures instead of
-classes by defining them in routes/console.php. Everything we discuss in this chapter will apply the same way, but
-you will just define and register the commands in a single step in that file:
+classes by defining them in routes/console.php. Everything we discuss in this chapter will apply the same way, but you will just define and register the commands in a single step in that file:
 // routes/console.php
 Artisan::command(
 'password:reset {userId} {--sendEmail}',
@@ -1633,10 +1632,83 @@ function ($userId, $sendEmail) {
 }
 )
 
+#### A sample command 
+php artisan make:command WelcomeNewUsers --command=email:newusers
+app/Console/Commands/WelcomeNewUsers.php
 
+##### A sample Artisan command handle() method
+...
+class WelcomeNewUsers extends Command
+{
+public function handle()
+{
+User::signedUpThisWeek()->each(function ($user) {
+Mail::send(
+'emails.welcome',
+['name' => $user->name],
+function ($m) use ($user) {
+$m->to($user->email)->subject('Welcome!');
+}
+);
+});
+}
+Now every time you run php artisan email:newusers, this command will grab every user
+that signed up this week and send them the welcome email.
+If you would prefer injecting your mail and user dependencies instead of using facades, you
+can typehint them in the command constructor, and Laravel’s container will inject them for
+you when the command is instantiated.
 
+##### The same command, refactored using dependency injection and extracting its behavior out to a service class.
+...
+class WelcomeNewUsers extends Command
+{
+public function __construct(UserMailer $userMailer)
+{
+parent::__construct();
+$this->userMailer = $userMailer
+} 
+public function handle()
+{
+$this->userMailer->welcomeNewUsers();
+}
 
+### Arguments, required, optional, and/or with defaults
+protected $signature = 'password:reset {userId} {--sendEmail}';
 
+To define a required argument, surround it with braces:
+password:reset {userId}
+To make the argument optional, add a question mark:
+password:reset {userId?}
+To make it optional and provide a default, use:
+password:reset {userId=1}
+Options, required values, value defaults, and shortcuts
+Options are similar to arguments, but they’re prefixed with -- and can be used with no value.
+To add a basic option, surround it with braces:
+password:reset {userId} {--sendEmail}
+If your option requires a value, add an = to its signature:
+password:reset {userId} {--password=}
+And if you want to pass a default value, add it after the =:
+password:reset {userId} {--queue=default}
+Array arguments and array options
+Both for arguments and for options, if you want to accept an array as input, use the *
+character:
+password:reset {userIds*}
+password:reset {--ids=*}
+
+#### Using array syntax with Artisan commands
+// Argument
+php artisan password:reset 1 2 3
+// Option
+php artisan password:reset --ids=1 --ids=2 --ids=3
+
+#### ARRAY ARGUMENTS MUST BE THE LAST ARGUMENT
+Since an array argument captures every parameter after its definition and adds them as array items, an array
+argument has to be the last argument or option within an Artisan command’s signature.
+
+#### Defining description text for Artisan arguments and options: adding a colon : in the braces.
+protected $signature = 'password:reset
+{userId : The ID of the user}
+{--sendEmail : Whether to send user an email}';
 
 
 
