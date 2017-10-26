@@ -1710,6 +1710,210 @@ protected $signature = 'password:reset
 {userId : The ID of the user}
 {--sendEmail : Whether to send user an email}';
 
+### getting artisan command's inputs using argument() and option()
+#### arguments()
+$this->argument() with no parameters returns an array of all arguments (the first array item
+will be the command name). With a parameter passed, it’ll return the value of the argument
+specified:
+// with definition "password:reset {userId}":
+php artisan password:reset 5
+// $this->argument() returns this array
+[
+"command": "password:reset",
+"userId': "5",
+] /
+/ $this->argument('userId') returns this string
+"5"
+
+#### option()
+$this->option() with no parameters returns an array of all options, including some that will
+by default be false or null. With a parameter, it’ll return the value of the option specified:
+// with definition "password:reset {--userId=}":
+php artisan password:reset --userId=5
+// $this->option() returns this array
+[
+"userId" => "5"
+"help" => false
+"quiet" => false
+"verbose" => false
+"version" => false
+"ansi" => false
+"no-ansi" => false
+"no-interaction" => false
+"env" => null
+] //
+$this->option('userId') returns this string
+"5
+
+#### using argument() and option() in handle() function
+public function handle()
+{
+// All arguments, including the command name
+$arguments = $this->argument();
+// Just the 'userId' argument
+$userid = $this->argument('userId');
+// All options, including some defaults like 'no-interaction' and 'env'
+$options = $this->option();
+// Just the 'sendEmail' option
+$sendEmail = $this->option('sendEmail');
+}
+
+### getting artisan command input from command prompts
+There are a few more ways to get user input from within your handle() code, and they all
+involve prompting the user to enter information during the execution of your command:
+ask()
+Prompts the user to enter freeform text:
+$email = $this->ask('What is your email address?');
+secret()
+Prompts the user to enter freeform text, but hides the typing with asterisks:
+$password = $this->ask('What is the DB password?');
+confirm()
+Prompts the user for a yes/no answer, and returns a boolean:
+if ($this->confirm('Do you want to truncate the tables?')) {
+//
+}
+All answers except y or Y will be treated as a “no.”
+anticipate()
+Prompts the user to enter freeform text, and provides autocomplete suggestions. Still
+allows the user to type whatever she wants:
+$album = $this->anticipate('What is the best album ever?', [
+"The Joshua Tree", "Pet Sounds", "What's Going On"
+]);
+choice()
+Prompts the user to choose one of the provided options. The last parameter is the default
+if the user doesn’t choose:
+$winner = $this->choice(
+'Who is the best football team?',
+['Gators', 'Wolverines'],
+0
+);
+
+Note that the final parameter, the default, should be the array key. Since we passed a
+nonassociative array, the key for “Gators” is 0. You could also key your array, if you’d
+prefer:
+$winner = $this->choice(
+'Who is the best football team?',
+['gators' => 'Gators', 'wolverines' => 'Wolverines'],
+'gators'
+);
+
+### artisan command output 
+During the execution of your command, you might want to write messages to the user. The
+most basic way to do this is to use $this->info() to output basic green text:
+$this->info('Your command has run successfully.');
+You also have available the comment() (orange), question() (highlighted teal), error()
+(highlighted red), and line() (uncolored) methods to echo to the command line.
+
+#### Outputting tables with Artisan commands
+$headers = ['Name', 'Email'];
+$data = [
+['Dhriti', 'dhriti@amrit.com'],
+['Moses', 'moses@gutierez.com']
+];
+
+// Or, you could get similar data from the database:
+// $data = App\User::all(['name', 'email'])->toArray();
+
+$this->table($headers, $data);
+
+Sample output of an Artisan table
++---------+--------------------+
+| Name | Email |
++---------+--------------------+
+| Dhriti | dhriti@amrit.com |
+| Moses | moses@gutierez.com |
++---------+--------------------+
+
+#### outputting progress bar with Artisan commands
+Sample Artisan progress bar
+$totalUnits = 10;
+$this->output->progressStart($totalUnits);
+for ($i = 0; $i < $totalUnits; $i++) {
+sleep(1);
+$this->output->progressAdvance();
+} $
+this->output->progressFinish();
+
+First, we informed the system how many “units” we needed to work
+through. Maybe a unit is a user, and you have 350 users. The bar will then divide the entire
+width it has available on your screen by 350, and increment it by 1/350th every time you run
+progressAdvance(). Once you’re done, run progressFinish() so it knows it’s done
+displaying the progress bar.
+
+## Calling Artisan Commands in Normal Code
+The easiest way is to use the Artisan facade. You can either call a command using
+Artisan::call() (which will return the command’s exit code), or queue a command using
+Artisan::queue().
+
+#### Calling Artisan commands from other code
+Route::get('test-artisan', function () {
+$exitCode = Artisan::call('password:reset', [
+'userId' => 15, '--sendEmail' => true
+]);
+});
+
+As you can see, arguments are passed by keying to the argument name, and options with no
+value can be passed true or false.
+You can also call Artisan commands from other commands, using $this->call, (which is the
+same as Artisan::call(), or $this->callSilent, which is the same but suppresses all
+output). 
+#### Calling Artisan commands from other Artisan commands
+public function handle()
+{
+$this->callSilent('password:reset', [
+'userId' => 15
+]);
+}
+#### Finally, you can inject an instance of the Illuminate\Contracts\Console\Kernel contract,
+and use its call() method.
+
+## Tinker the REPL (read-eval-print-loop) tool for laravel.
+是一个 REPL (read-eval-print-loop)，REPL 指的是一个简单的、可交互式的编程环境，通过执行用户输入的命令，并将执行结果直接打印到命令行界面上来完成整个操作。
+$ php artisan tinker 
+crtl + c  退出
+
+### Using Tinker
+php artisan tinker
+>>> $user = new App\User;
+=> App\User: {}
+>>> $user->email = 'matt@mattstauffer.co';
+=> "matt@mattstauffer.co"
+>>> $user->password = bcrypt('superSecret');
+=> "$2y$10$TWPGBC7e8d1bvJ1q5kv.VDUGfYDnE9gANl4mleuB3htIY2dxcQfQ5"
+>>> $user->save();
+=> true
+
+we created a new user, set some data, and saved it to the database.
+
+### 通过提下命令轻松创建一个用户对象:
+>>> App\Models\User::create(['name'=>'zp',
+'email'=>'1356660191@qq.com','password'=>bcrypt('123456')])
+
+### Psy Shell 
+Tinker is powered by Psy Shell, so check that out to see what else you can do with Tinker.
+
+## The Artisan facade or the Illuminate\Contracts\Console\Kernel contract instance injection
+provides access to the Illuminate\Contracts\Console\Kernel contract,
+so if you want to avoid using the facade in your code, you can instead inject an instance of that
+and use its call() method, 
+
+### Injecting the kernel instead of using the Artisan facade
+use Illuminate\Contracts\Console\Kernel;
+...
+class NightlyCleanup extends Job
+{
+...
+public function handle(Kernel $kernel)
+{
+// ... do other stuff
+$kernel->call('logs:empty');
+}
+
+
+
+
+
+
 
 
 
