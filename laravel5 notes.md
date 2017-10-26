@@ -1909,7 +1909,7 @@ public function handle(Kernel $kernel)
 $kernel->call('logs:empty');
 }
 
-
+# Database and Eloquent
 
 
 
