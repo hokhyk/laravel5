@@ -1911,6 +1911,345 @@ $kernel->call('logs:empty');
 
 # Database and Eloquent
 
+## using other database connections other than the default one.
+With any service in Laravel that allows multiple “connections” — sessions can be backed by
+the database or file storage, the cache can use Redis or Memcached, databases can use MySQL
+or PostgreSQL — you can define multiple connections and also choose that a particular
+connection will be the “default,” meaning it will be used any time you don’t explicitly ask for
+a particular connection. Here’s how you ask for a specific connection, if you want to:
+
+$users = DB::connection('secondary')->select('select * from users');
+
+## Migration --define your database structure with codedriven migrations. 
+
+### Laravel’s default “create users table” migration
+<?php
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+class CreateUsersTable extends Migration
+{
+/**
+* Run the migrations.
+**
+@return void
+*/
+public function up()
+{
+Schema::create('users', function (Blueprint $table) {
+$table->increments('id');
+$table->string('name');
+$table->string('email')->unique();
+$table->string('password', 60);
+$table->rememberToken();
+$table->timestamps();
+});
+} /
+**
+* Reverse the migrations.
+**
+@return void
+*/
+public function down()
+{
+Schema::drop('users');
+}
+}
+
+up() tells the migration to create a new table named users with a few fields, and down() tells it to drop the users table.
+
+### creating a migration using: php artisan make:migration the/name/of/the/migration
+There are two flags you can optionally pass to this command. --create=table_name prefills
+the migration with code designed to create a table named table_name, and --
+table=_table_name_ just prefills the migration for modifications to an existing table. 
+
+php artisan make:migration create_users_table
+php artisan make:migration add_votes_to_users_table --table=users
+php artisan make:migration create_users_table --create=users
+
+#### creating a table
+Schema::create('tablename', function (Blueprint $table) {
+// Create columns here
+});
+
+#### creating columns
+Schema::create('users', function (Blueprint $table) {
+$table->string('name');
+});
+
+##### the simple field Blueprint methods:
+integer(colName), tinyInteger(colName), smallInteger(colName),
+mediumInteger(colName), bigInteger(colName)
+Adds an INTEGER type column, or one of its many variations
+
+string(colName, OPTIONAL length)
+Adds a VARCHAR type column
+
+binary(colName)
+Adds a BLOB type column
+
+boolean(colName)
+Adds a BOOLEAN type column (a TINYINT(1) in MySQL)
+
+char(colName, length)
+Adds a CHAR column
+
+datetime(colName)
+Adds a DATETIME column
+
+decimal(colName, precision, scale)
+Adds a DECIMAL column, with precision and scale — e.g., decimal('amount', 5, 2)
+specifies a precision of 5 and a scale of 2
+
+double(colName, total digits, digits after decimal)
+Adds a DOUBLE column — e.g., double('tolerance', 12, 8) specifies 12 digits long,
+with 8 of those digits to the right of the decimal place, as in 7204.05691739
+
+enum(colName, [choiceOne, choiceTwo])
+Adds an ENUM column, with provided choices
+
+float(colName)
+Adds a FLOAT column (same as double in MySQL)
+
+json(colName) and jsonb(colName)
+Adds a JSON or JSONB column (or a TEXT column in Laravel 5.1)
+
+text(colName), mediumText(colName), longText(colName)
+Adds a TEXT column (or its various sizes)
+
+time(colName)
+Adds a TIME column
+
+timestamp(colName)
+Adds a TIMESTAMP column
+
+uuid(colName)
+Adds a UUID column (CHAR(36) in MySQL)
+
+##### And these are the special (joined) Blueprint methods:
+increments(colName) and bigIncrements(colName)
+Add an unsigned incrementing INTEGER or BIG INTEGER primary key ID
+
+timestamps() and nullableTimestamps()
+Adds created_at and updated_at timestamp columns
+
+rememberToken()
+Adds a remember_token column (VARCHAR(100)) for user “remember me” tokens
+
+softDeletes()
+Adds a deleted_at timestamp for use with soft deletes
+
+morphs(colName)
+For a provided +colName+, adds an integer colName_id and a string colName_type (e.g.,
+morphs('tag') adds integer tag_id and string tag_type); for use in polymorphic
+relationship
+
+##### Building fileds' extra properties
+Schema::table('users', function (Blueprint $table) {
+$table->string('email')->nullable()->after('last_name');
+});
+
+###### The following methods are used to set additional properties of a field:
+nullable()
+Allows NULL values to be inserted into this column
+
+default('default content')
+Specifies the default content for this column if no value is provided
+
+unsigned()
+Marks integer columns as unsigned
+
+first() (MySQL only)
+Places the column first in the column order
+
+after(colName) (MySQL only)
+Places the column after another column in the column order
+
+unique()
+Adds a UNIQUE index
+
+primary()
+Adds a primary key index
+
+index()
+Adds a basic index
+Note that unique(), primary(), and index() can also be used outside of the fluent column
+building context.
+
+#### Dropping tables
+Schema::drop('contacts');
+
+#### Modifying columns
+To modify a column, just write the code you would write to create the column as if it were
+new, and then append a call to the change() method after it.
+##### REQUIRED DEPENDENCY BEFORE MODIFYING COLUMNS
+Before you modify any columns (or drop any columns in SQLite), you’ll need to add the 
+doctrine/dbal package as a requirement in your composer.json,
+and run composer update to bring it in.
+
+Schema::table('users', function ($table) {
+$table->string('name', 100)->change();
+});
+
+Schema::table('contacts', function ($table) {
+$table->string('deleted_at')->nullable()->change();
+});
+
+Schema::table('contacts', function ($table)
+{
+$table->renameColumn('promoted', 'is_promoted');
+});
+
+Schema::table('contacts', function ($table)
+{
+$table->dropColumn('votes');
+});
+
+##### MODIFYING MULTIPLE COLUMNS AT ONCE in one migration
+If you try to drop or modify multiple columns within a single migration closure and you are using SQLite, you’ll run into errors.
+
+you don’t have to create a new migration for each. Instead, just create multiple calls to
+Schema::table() within the up() method of your migration:
+public function up()
+{
+Schema::table('contacts', function (Blueprint $table)
+{
+$table->dropColumn('is_promoted');
+});
+Schema::table('contacts', function (Blueprint $table)
+{
+$table->dropColumn('alternate_email');
+});
+}
+
+### indexes and foreign keys
+#### Adding column indexes in migrations
+// after columns are created...
+$table->primary('primary_id'); // Primary key; unnecessary if used increments()
+$table->primary(['first_name', 'last_name']); // Composite keys
+$table->unique('email'); // Unique index
+$table->unique('email', 'optional_custom_index_name'); // Unique index
+$table->index('amount'); // Basic index
+$table->index('amount', 'optional_custom_index_name'); // Basic index
+
+#### Removing column indexes in migrations
+$table->dropPrimary('contacts_id_primary');
+$table->dropUnique('contacts_email_unique');
+$table->dropIndex('optional_custom_index_name');
+// If you pass an array of column names to dropIndex, it will
+// guess the index names for you based on the generation rules
+$table->dropIndex(['email', 'amount']);
+
+#### Adding and removing foreign keys
+To add a foreign key that defines that a particular column references a column on another
+table, Laravel’s syntax is simple and clear:
+$table->foreign('user_id')->references('id')->on('users');
+Here we’re adding a foreign index on the user_id column, showing that it references the id
+column on the users table. 
+
+##### If we want to specify foreign key constraints, we can do that too, with onDelete() and
+onUpdate(). For example:
+$table->foreign('user_id')
+->references('id')
+->on('users')
+->onDelete('cascade');
+
+##### To drop an index, we can either delete it by referencing its index name (which is
+automatically generated by combining the names of the columns and tables being referenced):
+$table->dropForeign('contacts_user_id_foreign');
+
+or by passing it an array of the fields that it’s referencing on the local table:
+$table->dropForeign(['user_id']);
+
+### php artisan migrate
+This command runs all “outstanding” migrations. Laravel keeps track of which migrations
+you have run and which you haven’t.
+
+#### php artisan migrate --seed
+
+#### php artisan migrate:XXXX
+You can also run any of the following commands:
+
+migrate:install 
+creates the database table that keeps track of which migrations you
+have and haven’t run; this is run automatically when you run your migrations.
+
+migrate:reset
+rolls back every database migration you’ve run on this install.
+
+migrate:refresh
+rolls back every database migration you’ve run on this install, and then
+runs every migration available. It’s the same as running migrate:reset and then migrate,
+one after the other.
+
+migrate:rollback
+rolls back just the migrations that ran the last time you ran migrate,
+or, with the added option --step=1, rolls back the number of migrations you specify.
+
+migrate:status
+shows a table listing every migration, with a Y or N next to each showing
+whether or not it has run yet in this environment.
+
+## seeding 
+### to run a seeder
+1. There are two primary ways to run the seeders: along with a migration, or separately.
+To run a seeder along with a migration, just add --seed to any migration call:
+php artisan migrate --seed
+php artisan migrate:refresh --seed
+
+2. And to run it independently:
+php artisan db:seed
+php artisan db:seed --class=VotesTableSeeder
+This will run whatever you have defined in the run() methods of every seeder class (or just
+the class you passed to --class).
+
+### creating a seeder  
+1. php artisan make:seeder ContactsTableSeeder
+You’ll now see a ContactsTableSeeder class show up in the database/seeds directory. 
+
+2. Before we edit it, let’s add it to the DatabaseSeeder class so it will run when we run our seeders:
+// database/seeds/DatabaseSeeder.php
+...
+public function run()
+{
+$this->call(ContactsTableSeeder::class);
+}
+
+3. Now let’s edit the seeder itself. The simplest thing we can do there is manually insert a record
+using the DB facade:
+<?php
+use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Model;
+class ContactsTableSeeder extends Seeder
+{
+public function run()
+{
+DB::table('contacts')->insert([
+'name' => 'Lupita Smith'
+'email' => 'lupita@gmail.com',
+]);
+}
+}
+
+### Model factories
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
