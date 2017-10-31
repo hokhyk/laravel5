@@ -2231,10 +2231,180 @@ DB::table('contacts')->insert([
 }
 
 ### Model factories
+#### creating a model factory
+Model factories are defined in database/factories/ModelFactory.php. Each factory has a name
+and a definition of how to create a new instance of the defined class. The $factory->define()
+method takes the factory name as the first parameter and a closure that’s run for each
+generation as the second parameter.
+1. defining the factory in database/factories/ModelFactory.php.
+
+$factory->define(Contact::class, function (Faker\Generator $faker) {
+return [
+'name' => 'Lupita Smith',
+'email' => 'lupita@gmail.com',
+];
+});
+
+$factory->define(Contact::class, function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+'email' => $faker->email,
+];
+});
+
+$factory->define(User::class, function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+];
+});
+$factory->define('users', function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+];
+});
+
+2. call the factory()
+Now we can use the factory() global helper to create an instance of Contact in our seeding
+and testing:
+// Create one
+$contact = factory(Contact::class)->create();
+// Create many
+factory(Contact::class, 20)->create();
+
+#### using a model factory
+There are two primary contexts in which we’ll use model factories: testing and seeding.
+Using model factories
+factory(Post::class)->create([
+'title' => 'My greatest post ever'
+]);
+
+factory(User::class, 20)->create()->each(function ($u) use ($post) {
+$post->comments()->save(factory(Comment::class)->make([
+'user_id' => $u->id
+]));
+});
+
+make() or create().
+Both methods generate an instance of this class, using the definition in modelFactory.php. The
+difference is that make() creates the instance but doesn’t (yet) save it to the database, whereas
+create() saves it to the database instantly.
+
+#### Defining multiple factory types for the same model
+$factory->define(Contact::class, function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+'email' => $faker->email,
+];
+});
+$factory->defineAs(Contact::class, 'vip', function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+'email' => $faker->email,
+'vip' => true,
+];
+});
+
+#### Extending a factory type
+$factory->define(Contact::class, function (Faker\Generator $faker) {
+return [
+'name' => $faker->name,
+'email' => $faker->email,
+];
+});
+
+$factory->defineAs(
+Contact::class,
+'vip',
+function (Faker\Generator $faker) use ($factory) {
+$contact = $factory->raw(Contact::class);
+return array_merge($contact, ['vip' => true]);
+});
+
+Now, let’s make a specific type:
+$vip = factory(Contact::class, 'vip')->create();
+$vips = factory(Contact::class, 'vip', 3)->create();
 
 
+## query builder
+At the core of every piece of Laravel’s database functionality is the query builder, a fluent interface for interacting with your database.
 
+A fluent interface is one that primarily uses method chaining to provide a simpler API to the end user. Rather than
+expecting all of the relevant data to be passed into either a constructor or a method call, fluent call chains can be built
+gradually, with consecutive calls. Consider this comparison:
+// Non-fluent:
+$users = DB::select(['table' => 'users', 'where' => ['type' => 'donor']]);
+// Fluent:
+$users = DB::table('users')->where('type', 'donor')->get();
 
+### Basic Usage of the DB Facade
+he DB facade is used both for query builder chaining and for simpler raw queries.
+Sample raw SQL and query builder usage
+// basic statement
+DB::statement('drop table users')
+// raw select, and parameter binding
+DB::select('select * from contacts where validated = ?', [true]);
+// select using the fluent builder
+$users = DB::table('users')->get();
+// joins and other complex calls
+DB::table('users')
+->join('contacts', function ($join) {
+$join->on('users.id', '=', 'contacts.user_id')
+->where('contacts.type', 'donor');
+})
+->get();
+
+### Raw SQL
+1. the DB facade and the statement() method: DB::statement('SQL statement here').
+
+2.  there are also specific methods for various common actions: select(), insert(),
+update(), and delete(). These are still raw calls, but there are differences. First, using
+update() and delete() will return the number of rows affected, whereas statement() won’t;
+second, with these methods it’s clearer to future developers exactly what sort of statement
+you’re making.
+
+#### Raw selects
+The simplest of the specific DB methods is select(). You can run it without any additional
+parameters:
+$users = DB::select('select * from users');
+
+This will return a collection of stdClass objects.Collection is like a PHP array with superpowers, allowing you to run map(), filter(), reduce(), each(), and much more on your data. 
+The DB facade returns an instance of Illuminate\Support\Collection and Eloquent returns an instance of Illuminate\Database\Eloquent\Collection, which extends Illuminate\Support\Collection with a few Eloquent-specific methods.
+
+#### Parameter bindings and named bindings
+Laravel’s database architecture allows for the use of PDO parameter binding, which protects
+your queries from potential SQL attacks. Passing a parameter to a statement is as simple as
+replacing the value in your statement with a ?, then adding the value to the second parameter
+of your call:
+$usersOfType = DB::select(
+'select * from users where type = ?',
+[$type]
+);
+You can also name those parameters for clarity:
+$usersOfType = DB::select(
+'select * from users where type = :type',
+['type' => $userType]
+);
+
+#### Raw inserts
+From here, the raw commands all look pretty much the same. Raw inserts look like this:
+DB::insert(
+'insert into contacts (name, email) values (?, ?)',
+['sally', 'sally@me.com']
+);
+
+#### Raw updates
+Updates look like this:
+$countUpdated = DB::update(
+'update contacts set status = ? where id = ?',
+['donor', $id]
+);
+
+#### Raw deletes
+And deletes look like this:
+$countDeleted = DB::delete(
+'delete from contacts where archived = ?',
+[true]
+);
 
 
 
