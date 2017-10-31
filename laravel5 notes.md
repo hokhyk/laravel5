@@ -2613,13 +2613,112 @@ $averageCost = DB::table('orders')
 ->where('status', 'completed')
 ->avg('amount');
 
+#### Writing raw queries inside query builder methods with DB::raw
+We’ve already seen a few custom methods for raw statements — for example, select() has a
+selectRaw() counterpart that allows you to pass in a string for the query builder to place after
+the WHERE statement.
+You can also, however, pass in the result of a DB::raw() call to almost any method in the
+query builder to achieve the same result:
+$contacts = DB::table('contacts')
+->select(DB::raw('*, (score * 100) AS integer_score'))
+->get();
 
+#### joins
+$users = DB::table('users')
+->join('contacts', 'users.id', '=', 'contacts.user_id')
+->select('users.*', 'contacts.name', 'contacts.status')
+->get();
 
+The join() method creates an inner join. You can also chain together multiple joins one after
+another, or use leftJoin() to get a left join.
 
+Finally, you can create more complex joins by passing a closure into the join() method:
 
+DB::table('users')
+->join('contacts', function ($join) {
+$join
+->on('users.id', '=', 'contacts.user_id')
+->orOn('users.id', '=', 'contacts.proxy_user_id');
+})
+->get();
 
+#### unions
+You can union two queries together by creating them first and then using the union() or
+unionAll() method to union them:
 
+$first = DB::table('contacts')
+->whereNull('first_name');
+$contacts = DB::table('contacts')
+->whereNull('last_name')
+->union($first)
+->get()
 
+#### Inserts
+The insert() method is pretty simple. Pass it an array to insert a single row or an array of
+arrays to insert multiple rows, and use insertGetId() instead of insert() to get the
+autoincrementing primary key ID back as a return:
+$id = DB::table('contacts')->insertGetId([
+'name' => 'Abe Thomas',
+'email' => 'athomas1987@gmail.com',
+]);
+DB::table('contacts')->insert([
+['name' => 'Tamika Johnson', 'email' => 'tamikaj@gmail.com'],
+['name' => 'Jim Patterson', 'email' => 'james.patterson@hotmail.com'],
+]);
+
+#### Updates
+Updates are also simple. Create your update query and, instead of get() or first(), just use
+update() and pass it an array of parameters:
+DB::table('contacts')
+->where('points', '>', 100)
+->update(['status' => 'vip']);
+You can also quickly increment and decrement columns using the increment() and
+decrement() methods. The first parameter of each is the column name, and the second is
+(optionally) the number to increment/decrement by:
+DB::table('contacts')->increment('tokens', 5);
+DB::table('contacts')->decrement('tokens');
+
+#### Deletes
+Deletes are even simpler. Build your query and then end it with delete():
+DB::table('users')
+->where('last_login', '<', Carbon::now()->subYear())
+->delete();
+You can also truncate the table, which both deletes every row and also resets the
+autoincrementing ID:
+DB::table('contacts')->truncate();
+
+#### JSON operations
+If you have JSON columns, you can update or select rows based on aspects of the JSON
+structure by using the arrow syntax to traverse children:
+// Select all records where the "isAdmin" property of the "options"
+// JSON column is set to true
+DB::table('users')->where('options->isAdmin', true)->get();
+// Update all records, setting the "verified" property
+// of the "options" JSON column to true
+DB::table('users')->update(['options->isVerified', true]);
+
+This is a new feature from Laravel 5.3.
+
+#### Transactions   DB::transaction(function ())
+database transactions are a tool that allows you to wrap up a series of database queries to be performed in a batch, which you can choose to roll back, undoing the entire series of queries. Transactions are often used to ensure that all or none, but not some, of a series of related queries are performed — if one fails, the ORM will roll back the entire series of queries.
+
+A simple database transaction
+DB::transaction(function () use ($userId, $numVotes)
+{
+// Possibly failing DB query
+DB::table('users')
+->where('id', $userId)
+->update(['votes' => $numVotes]);
+// Caching query that we don't want to run if the above query fails
+DB::table('votes')
+->where('user_id', $userId)
+->delete();
+});
+
+##### manually begin and end transactions: DB::beginTransaction(), DB::commit(), abort with DB::rollBack()
+— this applies both for query builder queries and for Eloquent queries. Start with DB::beginTransaction(), end with DB::commit(), and abort with DB::rollBack().
+
+## Eloquent
 
 
 
