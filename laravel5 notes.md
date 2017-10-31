@@ -2406,17 +2406,212 @@ $countDeleted = DB::delete(
 [true]
 );
 
+### Chaining with the Query Builder
+The methods can be split up into what I’ll call constraining methods, modifying methods, and ending/returning
+methods.
+#### Constraining methods
+These methods take the query as it is and constrain it to return a smaller subset of possible
+data:
 
+1. select()
+Allows you to choose which columns you’re selecting:
+$emails = DB::table('contacts')
+->select('email', 'email2 as second_email')
+->get();
+// Or
+$emails = DB::table('contacts')
+->select('email')
+->addSelect('email2 as second_email')
+->get();
 
+2. where()
+Allows you to limit the scope of what’s being returned using WHERE. By default, the
+signature of the where() method is that it takes three parameters — the column, the
+comparison operator, and the value:
+$newContacts = DB::table('contact')
+->where('created_at', '>', Carbon::now()->subDay())
+->get();
+However, if your comparison is =, which is the most common comparison, you can drop
+the second operator: $vipContacts = DB::table('contacts')->where('vip',true)-
+>get();.
+If you want to combine where() statements, you can either chain them after each other, or
+pass an array of arrays:
+$newVips = DB::table('contacts')
+->where('vip', true)
+->where('created_at', '>', Carbon::now()
+->subDay());
+// Or
+$newVips = DB::table('contacts')->where([
+['vip', true],
+['created_at', '>', Carbon::now()->subDay()],
+]);
 
+3. orWhere()
+Creates simple OR WHERE statements:
+$priorityContacts = DB::table('contacts')
+->where('vip', true)
+->orWhere('created_at', '>', Carbon::now()->subDay())
+->get();
+To create a more complex OR WHERE statement with multiple conditions, pass orWhere()
+a closure:
+$contacts = DB::table('contacts')
+->where('vip', true)
+->orWhere(function ($query) {
+$query->where('created_at', '>', Carbon::now()->subDay())
+->where('trial', false);
+})
+->get();
 
+##### POTENTIAL CONFUSION WITH MULTIPLE WHERE AND ORWHERE CALLS
+If you are using orWhere() calls in conjunction with multiple where() calls, you need to be very careful to ensure
+the query is doing what you think it is. This isn’t because of any fault with Laravel, but because a query like the
+following might not do what you expect:
 
+$canEdit = DB::table('users')
+->where('admin', true)
+->orWhere('plan', 'premium')
+->where('is_plan_owner', true)
+->get();
 
+SELECT * FROM users
+WHERE admin = 1
+OR plan = 'premium'
+AND is_plan_owner = 1;
 
+If you want to write SQL that says “if this OR (this and this),” which is clearly the intention in the previous example, you’ll want to pass a closure into the orWhere() call:
 
+$canEdit = DB::table('users')
+->where('admin', true)
+->orWhere(function ($query) {
+$query->where('plan', 'premium')
+->where('is_plan_owner', true);
+})
+->get();
 
+SELECT * FROM users
+WHERE admin = 1
+OR (plan = 'premium' AND is_plan_owner = 1);
 
+4. whereBetween(colName, [low, high])
+Allows you to scope a query to return only rows where a column is between two values
+(inclusive of the two values):
+$mediumDrinks = DB::table('drinks')
+->whereBetween('size', [6, 12])
+->get();
 
+5. The same works for whereNotBetween(), but it will select the inverse.
+whereIn(colName, [1, 2, 3])
+Allows you to scope a query to return only rows where a column is in an explicitly
+provided list of options: $closeBy = DB::table('contacts')->whereIn(state, [FL,
+GA, AL])->get().
+$closeBy = DB::table('contacts')->whereIn('state', ['FL', 'GA', 'AL'])->get()
+
+6. The same works for whereNotIn(), but it will select the inverse.
+whereNull(colName) and whereNotNull(colName)
+Allow you to select only rows where a given column is NULL or is NOT NULL, respectively.
+
+7. whereRaw()
+Allows you to pass in a raw, unescaped string to be added after the WHERE statement:
+$goofs = DB::table('contacts')->whereRaw('id = 12345')->get()
+
+##### BEWARE OF SQL INJECT ION using whereRaw()
+Any SQL queries passed to whereRaw() will not be escaped. Use this method carefully and infrequently; this is the
+prime opportunity for SQL injection attacks in your app.
+
+8. whereExists()
+Allows you to select only rows that, when passed into a provided subquery, return at least
+one row. Imagine you only want to get those users who have left at least one comment:
+$commenters = DB::table('users')
+->whereExists(function ($query) {
+$query->select('id')
+->from('comments')
+->whereRaw('comments.user_id = users.id');
+})
+->get();
+
+9. distinct()
+Selects only distinct rows. Usually this is paired with select(), because if you use a
+primary key, there will be no duplicated rows: $lastNames = DB::table('contacts')-
+>select('last_name')->distinct()->get().
+
+#### Modifying methods
+These methods change the way the query’s results will be output, rather than just limiting its
+results:
+1. orderBy(colName, direction)
+Orders the results. The second parameter may be either asc (the default) or desc:
+$contacts = DB::table('contacts')
+->orderBy('last_name', 'asc')
+->get();
+
+2. groupBy() and having() or havingRaw()
+Groups your results by a column. Optionally, having() and havingRaw() allow you to
+filter your results based on properties of the groups. For example, you could look for
+only cities with at least 30 people in them:
+$populousCities = DB::table('contacts')
+->groupBy('city')
+->havingRaw('count(contact_id) > 30')
+->get();
+
+3. skip() and take()
+Most often used for pagination, these allow you to define how many rows to return and
+how many to skip before starting the return — like a page number and a page size in a
+pagination system:
+$page4 = DB::table('contacts')->skip(30)->take(10)->get();
+
+4. latest(colName) and oldest(colName)
+Sort by the passed column (or created_at if no column name is passed) in descending
+(latest()) or ascending (oldest()) order.
+
+5. inRandomOrder()
+Sorts the result randomly
+
+#### Ending/returning methods
+These methods stop the query chain and trigger the execution of the SQL query:
+
+1. get()
+Gets all results for the built query:
+$contacts = DB::table('contacts')->get();
+$vipContacts = DB::table('contacts')->where('vip', true)->get();
+
+2. first() and firstOrFail()
+Get only the first result — like get(), but with a LIMIT 1 added:
+$newestContact = DB::table('contacts')
+->orderBy('created_at', 'desc')
+->first();
+
+first()
+Fails silently if there are no results, whereas firstOrFail() will throw an exception.
+If you pass an array of column names to either method, they’ll return the data for just
+those columns instead of all columns.
+
+3. find(id) and findOrFail(id)
+Like first(), but you pass in an ID value that corresponds to the primary key to look up.
+find() fails silently if a row with that ID doesn’t exist, while findOrFail() will throw
+an exception:
+$contactFive = DB::table('contacts')->find(5);
+
+4. value()
+Plucks just the value from a single field from the first row. Like first(), but if you only
+want a single column:
+$newestContactEmail = DB::table('contacts')
+->orderBy('created_at', 'desc')
+->value('email');
+
+5. count()
+Returns an integer count of all of the matching results:
+$countVips = DB::table('contacts')
+->where('vip', true)
+->count();
+
+6. min() and max()
+Return the minimum or maximum value of a particular column:
+$highestCost = DB::table('orders')->max('amount');
+
+7. sum() and avg()
+Return the sum or average of all of the values in a particular column:
+$averageCost = DB::table('orders')
+->where('status', 'completed')
+->avg('amount');
 
 
 
