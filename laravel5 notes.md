@@ -2719,6 +2719,54 @@ DB::table('votes')
 — this applies both for query builder queries and for Eloquent queries. Start with DB::beginTransaction(), end with DB::commit(), and abort with DB::rollBack().
 
 ## Eloquent
+### Creating and Defining Eloquent Models : php artisan make:model Contact 
+php artisan make:model Contact 
+(If you want to automatically create a migration when you create your model, pass the -m or --migration flag:
+php artisan make:model Contact --migration)
+
+This command creates a model in app/Contact.php:
+<?php
+namespace App;
+use Illuminate\Database\Eloquent\Model;
+class Contact extends Model
+{
+//
+}
+
+#### Table name
+The default behavior for table names is that Laravel “snake cases” and pluralizes your class
+name, so SecondaryContact would access a table named secondary_contacts. If you’d like to
+customize the name, set the $table property explicitly on the model:
+protected $table = 'contacts_secondary';
+
+#### Primary key
+Laravel assumes, by default, that each table will have an autoincrementing integer primary
+key, and it will be named id.
+If you want to change the name of your primary key, change the $primaryKey property:
+protected $primaryKey = 'contact_id';
+And if you want to set it to be nonincrementing, use:
+public $incrementing = false;
+
+#### Timestamps
+Eloquent expects every table to have created_at and updated_at timestamp columns. If your
+table won’t have them, disable the $timestamps functionality:
+public $timestamps = false;
+You can customize the format Eloquent uses to store your timestamps to the database by
+setting the $dateFormat class property to a custom string. The string will be parsed using
+PHP’s date() syntax, so the following example will store the date as seconds since the Unix
+epoch:
+protected $dateFormat = 'U';
+
+### Retrieving Data with Eloquent
+Most of the time you pull data from your database with Eloquent, you’ll use static calls on
+your Eloquent model.
+Let’s start by getting everything:
+$allContacts = Contact::all();
+
+Let’s filter it a bit:
+$vipContacts = Contact::where('vip', true)->get();
+
+#### everything you can do with the query builder on the DB facade you can do on your Eloquent objects.
 
 
 
