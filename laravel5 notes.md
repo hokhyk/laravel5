@@ -4997,8 +4997,7 @@ $contact->forceDelete();
 // or
 Contact::onlyTrashed()->forceDelete();
 
-
-
+### Scopes
 
 
 
