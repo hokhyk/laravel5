@@ -5444,13 +5444,331 @@ $contact->save();
 $contact->user()->dissociate();
 $contact->save();
 
+##### Using relationships as query builders
+Until now, we’ve taken the method name (e.g., contacts()) and called it as if were a property
+(e.g., $user->contacts). What happens if we call it as a method? Instead of processing the
+relationship, it will return a prescoped query builder.
 
+$donors = $user->contacts()->where('status', 'donor')->get();
 
+##### Selecting only records that have a related item: has()
+You can also choose to select only records that meet particular criteria with regard to their
+related items using has():
+$postsWithComments = Post::has('comments')->get();
 
+You can also adjust the criteria further:
+$postsWithManyComments = Post::has('comments', '>=', 5)->get();
 
+You can nest the criteria:
+$usersWithPhoneBooks = User::has('contacts.phoneNumbers')->get();
 
+And finally, you can write custom queries on the related items:
+// Gets all contacts with a phone number containing the string "867-5309"
+$jennyIGotYourNumber = Contact::whereHas('phoneNumbers', function ($query) {
+$query->where('number', 'like', '%867-5309%');
 
+#### has many through : $this->hasManyThrough
+Defining a has-many-through relationship
+class User extends Model
+{
+public function phoneNumbers()
+{
+return $this->hasManyThrough(PhoneNumber::class, Contact::class);
+}
+You’d access this relationship using $user->phone_numbers, and as always you can customize
+the relationship key on the intermediate model (with the third parameter of
+hasmanyThrough()) and the relationship key on the distant model (with the fourth parameter).
 
+### many to many 
+#### Defining a many-to-many relationship :$this->belongsToMany
+class User extends Model
+{
+public function contacts()
+{
+return $this->belongsToMany(Contact::class);
+}
+}
+
+Defining a many-to-many relationship’s inverse
+class Contact extends Model
+{
+public function users()
+{
+return $this->belongsToMany(User::class);
+}
+}
+
+#### pivot table and its conventional name rule.
+many-to-many relationships rely on a pivot table that connects the two. The
+conventional naming of this table is done by placing the two singular table names together,
+ordered alphabetically, and separating them by an underscore.
+So, since we’re linking users and contacts, our pivot table should be named contacts_users
+(if you’d like to customize the table name, pass it as the second parameter to the
+belongsToMany() methods). It needs two columns: contact_id and user_id.
+Just like with hasMany(), we get access to a collection of the related items, but this time it’s
+from both sides
+
+Accessing the related items from both sides of a many-to-many relationship
+$user = User::first();
+$user->contacts->each(function ($contact) {
+// do something
+});
+$contact = Contact::first();
+$contact->users->each(function ($user) {
+// do something
+});
+$donors = $user->contacts()->where('status', 'donor')->get();
+
+#### UNIQUE ASPECTS OF ATTACHING AND DETACHING MANY-TO-MANY RELATED ITEMS
+Since your pivot table can have its own properties, you need to be able to set those properties when you’re attaching a
+many-to-many related item. You can do that by passing an array as the second parameter to save():
+$user = User::first();
+$contact = Contact::first();
+$user->contacts()->save($contact, ['status' => 'donor']);
+Additionally, you can use attach() and detach() and, instead of passing in an instance of a related item, you can just
+pass an ID. They work just the same as save(), but can also accept an array of IDs without you needing to rename the
+method to something like attachMany():
+$user = User::first();
+$user->contacts()->attach(1);
+$user->contacts()->attach(2, ['status' => 'donor']);
+$user->contacts()->attach([1, 2, 3]);
+$user->contacts()->attach([
+1 => ['status' => 'donor'],
+2,
+3
+]);
+$user->contacts()->detach(1);
+$user->contacts()->detach([1, 2]);
+$user->contacts()->detach(); // Detaches all contacts
+You can also use updateExistingPivot() to make changes just to the pivot record:
+$user->contacts()->updateExistingPivot($contactId, [
+'status' => 'inactive'
+]);
+And if you’d like to replace the current relationships, effectively detaching all previous relationships and attaching new
+ones, you can pass an array to sync():
+$user->contacts()->sync([1, 2, 3]);
+$user->contacts()->sync([
+1 => ['status' => 'donor'],
+2,
+3
+]);
+
+#### Getting data from the pivot table
+One thing that’s unique about many to many is that it’s our first relationship that has a pivot
+table. The less data you have on a pivot table, the better, but there are some cases where it’s
+valuable to store information on your pivot table — for example, you might want to store a
+created_at field to see when this relationship was created.
+
+##### defining columns  in pivot table using withPivot(), withTimestamps()
+In order to store these fields, you have to add them to the relationship definition, You can define specific fields using withPivot() or add created_at and updated_at timestamps using withTimestamps().
+
+Adding fields to a pivot record
+public function contacts()
+{
+return $this->belongsToMany(Contact::class)
+->withTimestamps()
+->withPivot('status', 'preferred_greeting');
+}
+
+##### Getting data from a related item’s pivot entry
+$user = User::first();
+$user->contacts->each(function ($contact) {
+echo sprintf(
+'Contact associated with this user at: %s',
+$contact->pivot->created_at
+);
+});
+
+### Polymorphic relationship  $this->morphsTo()  $this->morphMany
+Remember, our polymorphic relationship is where we have multiple Eloquent classes
+corresponding to the same relationship. We’re going to use Stars (like favorites) right now. A
+user can star both Contacts and Events, and that’s where the name polymorphic comes from:
+a single interface to objects of multiple types.
+
+we’ll need three tables, and three models: Star, Contact, and Event (and, of course, User,
+but we’ll get there in a second). The contacts and events tables will just be as they normally
+are, and the stars table will contain an id field, a starrable_id, and a starrable_type. For
+each Star, you’ll be defining which “type” (e.g., Contact or Event) and which ID of that type
+(e.g., 1) it is.
+
+Creating the models for a polymorphic starring system
+class Star extends Model
+{
+public function starrable()
+{
+return $this->morphsTo();
+}
+}
+
+class Contact extends Model
+{
+public function stars()
+{
+return $this->morphMany(Star::class, 'starrable');
+}
+} 
+
+class Event extends Model
+{
+public function stars()
+{
+return $this->morphMany(Star::class, 'starrable');
+}
+}
+
+So, how do we create a Star?
+$contact = Contact::first();
+$contact->stars()->create();
+It’s that easy. The Contact is now starred.
+In order to find all of the Stars on a given Contact, we call the stars() method:
+
+Retrieving the instances of a polymorphic relationship
+$contact = Contact::first();
+$contact->stars->each(function ($star) {
+// Do stuff
+});
+If we have an instance of Star, we can get its target by calling the method we used to define its
+morphTo(), which in this context is starrable(). 
+
+Retrieving the target of polymorphic instance
+$stars = Star::all();
+$stars->each(function ($star) {
+var_dump($star->starrable); // An instance of Contact or Event
+});
+Finally, you might be wondering, “What if I care who starred this contact?” That’s a great
+question; of course you do. It’s as simple as adding user_id to your stars table, and then
+setting up that a User has many Stars and a Star belongs to_ one User — a one-to-many
+relationship.The stars table becomes almost a pivot table between your User
+and your Contacts and Events.
+
+Extending a polymorphic system to differentiate by user
+class Star extends Model
+{
+public function starrable()
+{
+return $this->morphsTo;
+} 
+
+public function user()
+{
+return $this->belongsTo(User::class);
+}
+}
+
+class User extends Model
+{
+public function stars()
+{
+return $this->hasMany(Star::class);
+}
+}
+
+That’s it! You can now run $star->user or $user->stars to find a list of a User’s Stars or to
+find the starring User from a Star. Also, when you create a new Star, you’ll now want to pass
+the User:
+
+$user = User::first();
+$event = Event::first();
+$event->stars()->create(['user_id' => $user->id]);
+
+### Many to many polymorphic  $this->morphToMany  $this->morphedByMany
+The most complex and least common of the relationship types, many-to-many polymorphic
+relationships are like polymorphic relationships, except instead of being one to many they’re
+many to many.
+
+The most common example for this relationship type is the tag, so I’ll keep it safe and use that
+as our example. Let’s imagine you want to be able to tag Contacts and Events. The uniqueness
+of many-to-many polymorphism is that it’s many to many: each tag may be applied to
+multiple items, and each tagged item might have multiple tags. And to add to that, it’s
+polymorphic: tags can be related to items of several different types. For the database, we’ll
+start with the normal structure of the polymorphic relationship but also add a pivot table.
+This means we’ll need a contacts table, an events table, and a tags table, all shaped like
+normal with an ID and whatever properties you want, and a new taggables table, which will
+have a tag_id, a taggable_id, and a taggable_type. Each entry into the taggables table will
+relate a tag with one of the taggable content types.
+
+Defining a polymorphic many-to-many relationship
+class Contact extends Model
+{
+public function tags()
+{
+return $this->morphToMany(Tag::class, 'taggable');
+}
+} 
+
+class Event extends Model
+{
+public function tags()
+{
+return $this->morphToMany(Tag::class, 'taggable');
+}
+}
+
+class Tag extends Model
+{
+public function contacts()
+{
+return $this->morphedByMany(Contact::class, 'taggable');
+}
+
+public function events()
+{
+return $this->morphedByMany(Event::class, 'taggable');
+}
+}
+
+Here’s how to create your first tag:
+$tag = Tag::firstOrCreate(['name' => 'likes-cheese']);
+$contact = Contact::first();
+$contact->tags()->attach($tag->id);
+
+Accessing the related items from both sides of a many-to-many polymorphic
+relationship
+$contact = Contact::first();
+$contact->tags->each(function ($tag) {
+// Do stuff
+});
+$tag = Tag::first();
+$tag->contacts->each(function ($contact) {
+// Do stuff
+});
+
+### Child Records Updating Parent Record Timestamps :
+#### using protected $touches
+any Eloquent models by default will have created_at and updated_at timestamps.
+Eloquent will set the updated_at timestamp automatically any time you make any changes to a record.
+
+When a related item either belongsTo() or belongsToMany() another item, it might be
+valuable to mark the other item as updated any time the related item is updated. For example,
+if a PhoneNumber is updated, the Contact it’s connected to should be marked as having been
+updated as well.
+
+Updating a parent record any time the child record is updated
+class PhoneNumber extends Model
+{
+protected $touches = ['contact'];
+public function contact()
+{
+return $this->belongsTo(Contact::class);
+}
+
+#### Eager loading (to avoid the datbase load so-called N+1 problem)
+The problem with lazy loading is that it can introduce significant database load (often the N+1 problem).
+If you are loading a model instance and you know you’ll be working with its relationships,
+you can instead choose to “eager-load” one or many of its sets of related items:
+$contacts = Contact::with('phoneNumbers')->get();
+Using the with() method with a retrieval gets all of the items related to the pulled item(s), and
+as you can see in this example, you pass it the name of the method the relationship is defined by.
+
+When we use eager loading, instead of pulling the related items one at a time when they’re requested (selecting one phone number each time a foreach loop runs), we have a single query to pull the initial items (selecting all contacts) and a second query to pull all their related items (selecting all phone numbers owned by the contacts we just pulled).
+
+You can eager-load multiple relationships by passing multiple parameters to the with() call:
+
+$contacts = Contact::with('phoneNumbers', 'addresses')->get();
+
+And you can nest eager loading to eager-load the relationships of relationships:
+
+$authors = Author::with('posts.comments')->get();
 
 
 
