@@ -5102,18 +5102,347 @@ You define an accessor by writing a method on your model with the following stru
 get{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
 accessor method would be named getFirstNameAttribute.
 
+1. Decorating a preexisting column with Eloquent accessors
+// Model definition:
+class Contact extends Model
+{
+public function getNameAttribute($value)
+{
+return $value ?: '(No name provided)';
+}
+} //
+Accessor usage:
+$name = $contact->name;
 
+2. Defining an attribute with no backing column using Eloquent accessors
+// Model definition:
+class Contact extends Model
+{
+public function getFullNameAttribute()
+{
+return $this->first_name . ' ' . $this->last_name;
+}
+} //
+Accessor usage:
+$fullName = $contact->full_name;
 
+#### mutators ( setters)
+Mutators work the same way as accessors, except they’re for determining how to process
+setting the data instead of getting it.
 
+You define a mutator by writing a method on your model with the following structure:
+set{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+mutator method would be named setFirstNameAttribute.
 
+1. Decorating setting the value of an attribute with Eloquent mutators
 
+// Defining the mutator
+class Order extends Model
+{
+public function setAmountAttribute($value)
+{
+$this->attributes['amount'] = $value > 0 ? $value : 0;
+}
+} //
+Using the mutator
+$order->amount = '15';
 
+This reveals that the way mutators are expected to “set” data on the model is by setting it in
+$this->attributes with the column name as the key.
 
+2. Allowing for setting the value of a nonexistent attribute with Eloquent mutators
 
+// Defining the mutator
+class Order extends Model
+{
+public function setWorkgroupNameAttribute($workgroupName)
+{
+$this->attributes['email'] = "{$workgroupName}@ourcompany.com";
+}
+} 
+// Using the mutator
+$order->workgroup_name = 'jstott';
 
+As you can probably guess, it’s relatively uncommon to create a mutator for a non-existent
+column, because it can be confusing to set one property and have it change a different column
+— but it is possible.
 
+#### attribute casting   using protected $casts 
+Possible attribute casting column types
 
+Type                  Description
+int|integer         Casts with PHP (int)
+real|float|double   Casts with PHP (float)
+string              Casts with PHP (string)
+bool|boolean        Casts with PHP (bool)
+object              Parses to/from JSON, as a stdClass object
+array               Parses to/from JSON, as an array
+collection          Parses to/from JSON, as a collection
+date|datetime       Parses from database DATETIME to Carbon, and back
+timestamp           Parses from database TIMESTAMP to Carbon, and back (can be used instead of Date mutators)
 
+Using attribute casting on an Eloquent model
+class Contact
+{
+protected $casts = [
+'vip' => 'boolean',
+'children_names' => 'array',
+'birthday' => 'date',
+];
+}
+
+#### Date mutators (Defining columns to be mutated as timestamps)
+You can choose for particular columns to be mutated as timestamp columns by adding them to the dates array.
+
+Defining columns to be mutated as timestamps
+class Contact
+{
+protected $dates = [
+'met_at'
+];
+}
+
+By default, this array contains created_at and updated_at, so adding entries to dates just adds them to the list.
+However, there’s no difference between adding columns to this list and adding them to $this->casts as timestamp, so this is becoming a bit of an unnecessary feature now that attribute casting can cast timestamps.
+
+### Eloquent Collections
+#### basic connections in Laravel (Illuminate\Support\Collection)
+Laravel’s Collection objects (Illuminate\Support\Collection) are a little bit like arrays on
+steroids. The methods they expose on array-like objects are so helpful that, once you’ve been
+using them for a while, you’ll likely want to pull Illuminate into even non-Laravel projects
+just for collections — which you can, with the Tightenco/Collect package.
+
+#####  the simplest way to create a collection. 
+Laravel also has a collect() helper.
+$collection = collect([1, 2, 3]);
+
+Now let’s say we want to filter out any even numbers:
+$odds = $collection->reject(function ($item) {
+return $item % 2 === 0;
+});
+Or what if we want to get a version of the array where each item is multiplied by 10? We can
+do that as follows:
+$multiplied = $collection->map(function ($item) {
+return $item * 10;
+});
+We can even get only the evens, multiply them all by 10, and reduce them to a single number
+by sum:
+$sum = $collection
+->filter(function ($item) {
+return $item % 2 == 0;
+})->map(function ($item) {
+return $item * 10;
+})->sum();
+
+They provide the same functionality as native PHP methods like array_map() and array_reduce(), but you don’t have to memorize PHP’s unpredictable parameter order, and the method chaining syntax is endlessly more readable.
+
+##### What Eloquent collections add (Illuminate\Database\Eloquent\Collection class)
+Each Eloquent collection is a normal collection, but extended for the particular needs of a
+collection of Eloquent results to represent database rows.
+For example, every Eloquent collection has a method called modelKeys() that returns an array
+of the primary keys of every instance in the collection. find($id) looks for an instance that
+has the primary key of $id.
+One additional feature available here is the ability to define that any given model should
+return its results wrapped in a specific class of collection. So, if you want to add specific
+methods to any collection of objects of the Order class — possibly related to summarizing the
+financial details of your orders — you could create a custom OrderCollection that extends
+the Illuminate\Database\Eloquent\Collection class, and then register it in your model.
+
+1. Custom Collection classes for Eloquent models
+...
+class OrderCollection extends Collection
+{
+public function sumBillableAmount()
+{
+return $this->reduce(function ($carry, $order) {
+return $carry + ($order->billable ? $order->amount : 0);
+}, 0);
+}
+} .
+..
+class Order extends Model
+{
+public function newCollection(array $models = [])
+{
+return new OrderCollection($models);
+}
+Now, any time you get back a collection of Orders (e.g., from Order::all()) it’ll actually be
+an instance of the OrderCollection class:
+$orders = Order::all();
+$billableAmount = $orders->sumBillableAmount();
+
+### Eloquent Serialization
+Serializing complex database records can be, well, complex, and this is one of the places
+many ORMs fall short. Thankfully, you get two powerful methods for free with Eloquent:
+toArray() and toJson(). Collections also have toArray() and toJson(), so all of these are
+valid:
+$contactArray = Contact::first()->toArray();
+$contactJson = Contact::first()->toJson();
+$contactsArray = Contact::all()->toArray();
+$contactsJson = Contact::all()->toJson();
+
+You can also cast an Eloquent instance or collection to a string ($string = (string)
+$contact;), but both models and collections will just run toJson() and return the result.
+
+1. Returning JSON from routes directly
+
+// routes/web.php
+Route::get('api/contacts', function () {
+return Contact::all();
+});
+Route::get('api/contacts/{id}', function ($id) {
+return Contact::findOrFail($id);
+});
+
+2. Hiding attributes from JSON
+
+It’s very common to use JSON returns in APIs, and it’s very common to want to hide certain
+attributes in these contexts, so Eloquent makes it easy to hide any attributes every time you
+cast to JSON.
+
+##### You can either blacklist attributes, hiding the ones you list: public $hidden, $visible, 
+
+class Contact extends Model
+{
+public $hidden = ['password', 'remember_token'];
+
+##### or whitelist attributes, showing only the ones you list:
+
+class Contact extends Model
+{
+public $visible = ['name', 'email', 'status'];
+
+##### This also works for relationships:
+
+class User extends Model
+{
+public $hidden = ['contacts'];
+public function contacts()
+{
+return $this->hasMany(Contact::class);
+}
+
+##### There might be times when you want to make an attribute visible just for a single call. That’s
+possible, with the Eloquent method makeVisible():
+
+$array = $user->makeVisible('remember_token')->toArray();
+
+##### ADDING A GENERATED COLUMN TO ARRAY AND JSON OUTPUT: $appends
+If you have created an accessor for a column that doesn’t exist — for example, our full_name column — add it to the $appends array on the model to add it to the array and JSON output:
+
+class Contact extends Model
+{
+protected $appends = ['full_name'];
+
+public function getFullNameAttribute()
+{
+return "{$this->first_name} {$this->last_name}";
+
+### Eloquent Relationships
+#### one to one  : $this->hasOne
+Defining a one-to-one relationship
+class Contact extends Model
+{
+public function phoneNumber()
+{
+return $this->hasOne(PhoneNumber::class);
+}
+
+How should this be defined in your database? Since we’ve defined that the Contact has one PhoneNumber, Eloquent expects that the table supporting the PhoneNumber class (likely phone_numbers) has a contact_id column on it. If you named it something different (for instance, owner_id), you’ll need to change your definition:
+
+return $this->hasOne(PhoneNumber::class, 'owner_id');
+
+Here’s how we access the phone number on a contact:
+
+$contact = Contact::first();
+$contactPhone = $contact->phoneNumber;
+
+Notice that we define the method in the Example with phoneNumber(), but we access it with ->phoneNumber.
+That’s the magic. You could also access it with ->phone_number. This will return a full Eloquent instance of the related PhoneNumber record.
+
+##### Defining a one-to-one relationship’s inverse : $this->belongsTo
+class PhoneNumber extends Model
+{
+public function contact()
+{
+return $this->belongsTo(Contact::class);
+}
+Then we access it the same way:
+$contact = $phoneNumber->contact;
+
+##### INSERTING RELATED ITEMS
+Each relationship type has its own quirks for how to relate models, but here’s the core of how it works: pass an
+instance to save(), or an array of instances to saveMany(). You can also pass properties to create() and it’ll
+make a new instance for you:
+
+$contact = Contact::first();
+$phoneNumber = new PhoneNumber;
+$phoneNumber->number = 8008675309;
+$contact->phoneNumbers()->save($phoneNumber);
+
+// or
+$contact->phoneNumbers()->saveMany([
+PhoneNumber::find(1),
+PhoneNumber::find(2),
+]);
+
+// or
+$contact->phoneNumbers()->create([
+'number' => '+13138675309'
+]);
+
+#### one to many 
+##### Defining a one-to-many relationship : $this->hasMany
+
+class User extends Model
+{
+public function contacts()
+{
+return $this->hasMany(Contact::class);
+}
+
+Once again, this expects that the Contact model’s backing table (likely contacts) has a
+user_id column on it. If it doesn’t, override it by passing the correct column name as the
+second parameter of hasMany().
+We can get a user’s contacts as follows:
+$user = User::first();
+$usersContacts = $user->contacts;
+Just like with one to one, we use the name of the relationship method and call it as if it were a
+property instead of a method. However, this method returns a collection instead of a model
+instance. And this is a normal Eloquent collection, so you can have all sorts of fun with it:
+
+$donors = $user->contacts->filter(function ($contact) {
+return $contact->status == 'donor';
+});
+
+$lifetimeValue = $contact->orders->reduce(function ($carry, $order) {
+return $carry + $order->amount;
+}, 0);
+
+#####  Defining a one-to-many relationship’s inverse :$this->belongsTo
+class Contact extends Model
+{
+public function user()
+{
+return $this->belongsTo(User::class);
+}
+And just like one to one, we can access the User from the Contact:
+$userName = $contact->user->name;
+
+##### ATTACHING AND DETACHING RELATED ITEMS FROM THE ATTACHED ITEM (this illustrates how reverse save is used on belongsTo )
+Most of the time we attach related items by running save() on the parent and passing in the related item, 
+as in 
+$user->contacts()->save($contact). 
+
+But if you want to perform the behaviors on the attached (“child”) item,
+you can use associate() and dissociate() on the method that returns the belongsTo():
+
+$contact = Contact::first();
+$contact->user()->associate(User::first());
+$contact->save();
+// and later
+$contact->user()->dissociate();
+$contact->save();
 
 
 
