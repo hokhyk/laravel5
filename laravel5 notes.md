@@ -4997,7 +4997,110 @@ $contact->forceDelete();
 // or
 Contact::onlyTrashed()->forceDelete();
 
-### Scopes
+## Scopes
+Local and global scopes in Eloquent allow you to define prebuilt “scopes” (filters) that you
+can use either every time a model is queried (“global”) or every time you query it with a
+particular method chain (“local”).
+
+### local scopes
+1. $activeVips = Contact::activeVips()->get();
+
+class Contact
+{
+public function scopeActiveVips($query)
+{
+return $query->where('vip', true)->where('trial', false);
+}
+To define a local scope, we add a method to the Eloquent class that begins with “scope” and
+then contains the title-cased version of the scope name. This method is passed a query builder
+and needs to return a query builder, 
+
+2. You can also define scopes that accept parameters:
+
+class Contact
+{
+public function scopeStatus($query, $status)
+{
+return $query->where('status', $status);
+}
+
+And you use them in the same way, just passing the parameter to the scope:
+$friends = Contact::status('friend')->get();
+
+### global scopes
+There are two ways to define a global scope: using a closure or using an entire class. In each,
+you’ll register the defined scope in the model’s boot() method. 
+1. Adding a global scope using a closure
+...
+class Contact extends Model
+{
+protected static function boot()
+{
+parent::boot();
+static::addGlobalScope('active', function (Builder $builder) {
+$builder->where('active', true);
+});
+}
+
+We just added a global scope, named active, and every query on this model will be
+scoped to only rows with active set to true.
+
+2. Creating a global scope class 
+Create a class that implements Illuminate\Database\Eloquent\Scope, 
+which means it will have an apply() method that takes an instance of a query builder and an instance of the model.
+
+<?php
+namespace App\Scopes;
+use Illuminate\Database\Eloquent\Scope;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
+class ActiveScope implements Scope
+{
+public function apply(Builder $builder, Model $model)
+{
+return $builder->where('active', true);
+}
+}
+
+To apply this scope to a model, once again override the parent’s boot() method and call addGlobalScope() on the class using static.
+
+Applying a class-based global scope
+<?php
+use App\Scopes\ActiveScope;
+use Illuminate\Database\Eloquent\Model;
+class Contact extends Model
+{
+protected static function boot()
+{
+parent::boot();
+static::addGlobalScope(new ActiveScope);
+}
+}
+
+#### Removing global scopes
+There are three ways to remove a global scope, and all three use the withoutGlobalScope()
+or withoutGlobalScopes() methods. 
+
+1. If you’re removing a closure-based scope, the first parameter of that scope’s addGlobalScope() registration will be the key you used to enable it:
+$allContacts = Contact::withoutGlobalScope('active')->get();
+
+2. If you’re removing a single class-based global scope, you can pass the class name to withoutGlobalScope() or withoutGlobalScopes():
+Contact::withoutGlobalScope(ActiveScope::class)->get();
+Contact::withoutGlobalScopes([ActiveScope::class, VipScope::class])->get();
+
+3. Or, you can just disable all global scopes for a query:
+Contact::withoutGlobalScopes()->get();
+
+### Customizing Field Interactions with Accessors, Mutators, and Attribute Casting (Eloquent setter, getter )
+#### Accessors ( getters)
+Accessors allow you to define custom attributes on your Eloquent models for when you are
+reading data from the model instance. This may be because you want to change how a
+particular column is output, or because you want to create a custom attribute that doesn’t exist
+in the database table at all.
+You define an accessor by writing a method on your model with the following structure:
+get{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+accessor method would be named getFirstNameAttribute.
 
 
 
