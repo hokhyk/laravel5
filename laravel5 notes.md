@@ -5771,7 +5771,23 @@ And you can nest eager loading to eager-load the relationships of relationships:
 $authors = Author::with('posts.comments')->get();
 
 
+##### Constraining eager loads
+If you want to eager-load a relationship, but not all of the items, you can pass a closure to
 
+with() to define exactly which related items to eager-load:
+$contacts = Contact::with(['addresses' => function ($query) {
+$query->where('mailable', true);
+}])->get();
+
+##### Lazy eager loading
+I know it sounds crazy, because we just defined eager loading as sort of the opposite of lazy
+loading, but sometimes you don’t know you want to perform an eager-load query until after
+the initial instances have been pulled. You can still perform an eager load after the fact, with
+lazy eager loading:
+$contacts = Contact::all();
+if ($showPhoneNumbers) {
+$contacts->load('phoneNumbers');
+}
 
 
 
