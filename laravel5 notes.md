@@ -5789,6 +5789,56 @@ if ($showPhoneNumbers) {
 $contacts->load('phoneNumbers');
 }
 
+##### Eager loading only the count
+If you want to eager-load relationships but only so you can have access to the count of items
+in each relationship, you can try withCount():
+$authors = Author::withCount('posts')->get();
+// adds a "posts_count" integer to each Author with a count of that
+// Author's number of related posts
 
 
+### Eloquent Events
+Eloquent models fire events out into the void of your application every time certain actions
+happen, regardless of whether you’re listening. If you’re familiar with pub/sub, it’s this same
+model.
+
+Here’s a quick rundown of binding a listener to when a new Contact is created. We’re going
+to bind it in the boot() method of AppServiceProvider, and let’s imagine we’re notifying a
+third-party service every time we create a new Contact.
+Example 8-51. Binding a listener to an Eloquent event
+class AppServiceProvider extends ServiceProvider
+{
+public function boot()
+{
+$thirdPartyService = new SomeThirdPartyService;
+Contact::creating(function ($contact) use ($thirdPartyService) {
+try {
+$thirdPartyService->addContact($contact);
+} catch (Exception $e) {
+Log::error('Failed adding contact to ThirdPartyService; cancelled.');
+return false;
+}
+});
+}
+We can see a few things in Example 8-51. First, we use Modelname::eventName() as the
+method, and pass it a closure. The closure gets access to the model instance that is being
+operated on. Second, we’re going to need to define this listener in a service provider
+somewhere. And third, if we return false, the operation will cancel and the save() or
+update() will be cancelled.
+Here are the events that every Eloquent model fires:
+creating
+created
+updating
+updated
+saving
+saved
+deleting
+deleted
+restoring
+restored
+Most of these should be pretty clear, except possibly restoring and restored, which fire
+when you’re restoring a soft-deleted row. Also, saving is fired for both creating and
+updating and saved is fired for both created and updated.
+
+# User Authentication and Authorization
 
