@@ -5894,4 +5894,59 @@ You may have noticed that sometimes I write the word “contract” and sometime
 In the end, though, they’re the same thing: an agreement that a class will provide certain methods with a certain signature. On a related note, the Illuminate\Contracts namespace contains a group of interfaces that Laravel components implement and typehint. This makes it easy to develop similar components that implement the same interfaces and swap them into your application in place of the stock Illuminate components. When the Laravel core and components typehint a mailer, for example, they don’t typehint the Mailer class. Instead, they typehint the Mailer contract (interface), making it easy to provide your own mailer. To learn more about how to do this, take a look at Chapter 11.
 
 ## Using the auth() Global Helper and the Auth Facade
+The auth() global helper is the easiest way to interact with the status of the authenticated user
+throughout your app. You can also inject an instance of Illuminate\Auth\AuthManager and
+get the same functionality, or use the Auth facade.
+
+The most common usages are to check whether a user is logged in (auth()->check() returns
+true if the current user is logged in; auth()->guest() returns true if the user is not logged
+in) and to get the currently logged-in user (use auth()->user(), or auth()->id() for just the
+ID; both return null if no user is logged in).
+
+Sample usage of the auth() global helper in a controller
+public function dashboard()
+{
+if (auth()->guest()) {
+return redirect('sign-up');
+} r
+eturn view('dashboard')
+->with('user', auth()->user());
+}
+
+## The Auth Controllers in the Auth-namespaced controllers: RegisterController, LoginController,ResetPasswordController, and ForgotPasswordController.
+
+### RegisterController
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
