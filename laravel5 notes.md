@@ -5841,4 +5841,57 @@ when you’re restoring a soft-deleted row. Also, saving is fired for both creat
 updating and saved is fired for both created and updated.
 
 # User Authentication and Authorization
+## The User Model and Migration
+We are able to fill out the name, email, and password properties when
+creating a new user, and the password and remember_token properties are excluded when
+outputting the user as JSON.
+
+<?php
+// App\User
+namespace App;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class User extends Authenticatable
+{
+use Notifiable;
+/*** The attributes that are mass assignable.
+**
+@var array
+*/
+protected $fillable = [
+'name', 'email', 'password',
+];
+
+/*** The attributes excluded from the model's JSON form.
+**
+@var array
+*/
+protected $hidden = [
+'password', 'remember_token',
+];
+}
+
+<?php
+// Illuminate\Foundation\Auth\User
+namespace Illuminate\Foundation\Auth;
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+class User extends Model implements
+AuthenticatableContract,
+AuthorizableContract,
+CanResetPasswordContract
+{
+use Authenticatable, Authorizable, CanResetPassword;
+}
+
+### CONTRACTS AND INTERFACES
+You may have noticed that sometimes I write the word “contract” and sometimes “interface,” and that almost all of the interfaces in Laravel are under the Contracts namespace. A PHP interface is essentially an agreement between two classes that one of the classes will “behave” a certain way. It’s a bit like a contract between them, and thinking about it as a contract gives a bit more inherent meaning to the name than calling it an interface does.
+In the end, though, they’re the same thing: an agreement that a class will provide certain methods with a certain signature. On a related note, the Illuminate\Contracts namespace contains a group of interfaces that Laravel components implement and typehint. This makes it easy to develop similar components that implement the same interfaces and swap them into your application in place of the stock Illuminate components. When the Laravel core and components typehint a mailer, for example, they don’t typehint the Mailer class. Instead, they typehint the Mailer contract (interface), making it easy to provide your own mailer. To learn more about how to do this, take a look at Chapter 11.
+
+## Using the auth() Global Helper and the Auth Facade
 
