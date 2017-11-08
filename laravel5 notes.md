@@ -5916,6 +5916,13 @@ eturn view('dashboard')
 ## The Auth Controllers in the Auth-namespaced controllers: RegisterController, LoginController,ResetPasswordController, and ForgotPasswordController.
 
 ### RegisterController
+The controller itself just contains a few hooks that the traits will call at given points. That
+makes it easy to customize a few common behaviors without having to dig deeply into the
+code that makes it all work.
+The $redirectTo property defines where users will be redirected after registration. The
+validator() method defines how to validate registrations. And the create() method defines
+how to create a new user based on an incoming registration. 
+
 
 
 
