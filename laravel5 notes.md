@@ -5923,7 +5923,30 @@ The $redirectTo property defines where users will be redirected after registrati
 validator() method defines how to validate registrations. And the create() method defines
 how to create a new user based on an incoming registration. 
 
-
+Laravel’s default RegisterController
+...
+class RegisterController extends Controller
+{
+use RegistersUsers;
+protected $redirectTo = '/home';
+...
+protected function validator(array $data)
+{
+return Validator::make($data, [
+'name' => 'required|max:255',
+'email' => 'required|email|max:255|unique:users',
+'password' => 'required|min:6|confirmed',
+]);
+} p
+rotected function create(array $data)
+{
+return User::create([
+'name' => $data['name'],
+'email' => $data['email'],
+'password' => bcrypt($data['password']),
+]);
+}
+}
 
 
 
