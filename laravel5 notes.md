@@ -5948,6 +5948,68 @@ return User::create([
 }
 }
 
+#### RegistersUsers trait
+The RegistersUsers trait, which the RegisterController imports, handles a few primary
+functions for the registration process. First, it shows users the registration form view, with the
+showRegistrationForm() method. If you want new users to register with a view other than
+auth.register you can override the showRegistrationForm() method in your
+RegisterController.
+Next, it handles the POST of the registration form with the register() method. This method
+passes the user’s registration input to the validator from the validator() method of your
+RegisterController, and then on to the create() method.
+
+And finally, the redirectPath() method (pulled in via the RedirectsUsers trait) defines
+where users should be redirected after a successful registration. You can define this URI with
+the redirectTo property on your controller, or you can override the redirectPath() method
+and return whatever you want.
+
+If you want this trait to use a different auth guard than the default (you’ll learn more about
+guards in “Guards”), you can override the auth() method and have it return whichever guard
+you’d like.
+
+### LoginController
+
+#### AuthenticatesUsers traint
+The AuthenticatesUsers trait is responsible for showing users the login form, validating
+their logins, throttling failed logins, handling logouts, and redirecting users after a successful
+login.
+
+The showLoginForm() method defaults to showing the user the auth.login view, but you can
+override it if you’d like it to use a different view.
+The login() method accepts the POST from the login form. It validates the request using the
+validateLogin() method, which you can override if you’d like to customize the validation. It
+then hooks into the functionality of the ThrottlesLogins trait, which we’ll cover shortly, to
+reject users with too many failed logins. And finally, it redirects the user, either to her
+intended path (if the user was redirected to the login page when attempting to visit a page
+within the app) or to the path defined by the redirectPath() method, which returns your
+$redirectTo property.
+The trait calls the empty authenticated() method after a successful login, so if you’d like to
+perform any sort of behavior in response to a successful login, just override this method in
+your LoginController.
+There’s a username() method that defines which of your users columns is the “username”;
+this defaults to email but you can change that by overwriting the username() method in your
+controller to return the name of your username column.
+And, like in the RegistersUsers trait, you can override the guard() method to define which
+auth guard (more on that in “Guards”) this controller should use.
+
+#### ThrottlesLogins trait
+The ThrottlesLogins trait is an interface to Laravel’s Illuminate\Cache\RateLimiter class,
+which is a utility to rate-limit any event using the cache. This trait applies rate limiting to user
+logins, limiting users from using the login form if they’ve had too many failed logins within
+a certain amount of time. This functionality does not exist in Laravel 5.1.
+If you import the ThrottlesLogins trait, all of its methods are protected, which means they
+can’t actually be accessed as routes. Instead, the AuthenticatesUsers trait looks to see whether
+you’ve imported the ThrottlesLogins trait, and if so, it’ll attach its functionality to your
+logins without any work on your part. Since the default LoginController imports both, you’ll
+get this functionality for free if you use the auth scaffold.
+ThrottlesLogins limits any given combination of username and IP address to 5 attempts per
+60 seconds. Using the cache, it increments the “failed login” count of a given username/IP
+address combination, and if any user reaches 5 failed login attempts within 60 seconds, it
+redirects that user back to the login page with an appropriate error until the 60 seconds is
+over.
+
+
+
 
 
 
