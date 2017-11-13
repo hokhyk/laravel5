@@ -6008,6 +6008,26 @@ address combination, and if any user reaches 5 failed login attempts within 60 s
 redirects that user back to the login page with an appropriate error until the 60 seconds is
 over.
 
+#### ResetPasswordController
+The ResetPasswordController simply pulls in the ResetsPasswords trait. This trait provides
+validation and access to basic password reset views, and then uses an instance of Laravel’s
+PasswordBroker class (or anything else implementing the PasswordBroker interface, if you
+choose to write your own) to handle sending password reset emails and actually resetting the
+passwords.
+Just like the other traits we’ve covered, it handles showing the reset password view
+(showResetForm() shows the auth.passwords.reset view), and the POST request that is sent
+from that view (reset() validates and sends the appropriate response). The resetPassword()
+method actually resets the password, and you can customize the broker with broker() and the
+auth guard with guard().
+If you’re interested in customizing any of this behavior, just override the specific method you
+want to customize in your controller.
+
+
+
+
+
+
+
 
 
 
