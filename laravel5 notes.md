@@ -6022,6 +6022,12 @@ auth guard with guard().
 If you’re interested in customizing any of this behavior, just override the specific method you
 want to customize in your controller.
 
+#### ForgotPasswordController
+The ForgotPasswordController simply pulls in the SendsPasswordResetEmails trait. It shows
+the auth.passwords.email form with the showLinkRequestForm() method, and handles the
+POST of that form with the sendResetLinkEmail() method. You can customize the broker with
+the broker() method.
+
 
 
 
