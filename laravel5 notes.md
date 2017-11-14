@@ -6028,12 +6028,43 @@ the auth.passwords.email form with the showLinkRequestForm() method, and handles
 POST of that form with the sendResetLinkEmail() method. You can customize the broker with
 the broker() method.
 
+### Auth::routes()
+Now that we have the auth controllers providing some methods for a series of pre-defined
+routes, we’ll want our users to actually be able to hit those routes. We could add all these
+routes manually to routes/web.php, but there’s already a convenience tool for that, called
+Auth::routes():
+// routes/web.php
+Auth::routes();
 
 
+    public static function routes()
+    {
+        static::$app->make('router')->auth();
+    }
+    
+// Illuminate/Routing/Router.php
 
+The routes provided by Auth::routes()
 
+   public function auth()
+    {
+        // Authentication Routes...
+        $this->get('login', 'Auth\LoginController@showLoginForm')->name('login');
+        $this->post('login', 'Auth\LoginController@login');
+        $this->post('logout', 'Auth\LoginController@logout')->name('logout');
 
+        // Registration Routes...
+        $this->get('register', 'Auth\RegisterController@showRegistrationForm')->name('register');
+        $this->post('register', 'Auth\RegisterController@register');
 
+        // Password Reset Routes...
+        $this->get('password/reset', 'Auth\ForgotPasswordController@showLinkRequestForm')->name('password.request');
+        $this->post('password/email', 'Auth\ForgotPasswordController@sendResetLinkEmail')->name('password.email');
+        $this->get('password/reset/{token}', 'Auth\ResetPasswordController@showResetForm')->name('password.reset');
+        $this->post('password/reset', 'Auth\ResetPasswordController@reset');
+    }
+
+### The Auth Scaffold
 
 
 
