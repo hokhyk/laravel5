@@ -6065,11 +6065,36 @@ The routes provided by Auth::routes()
     }
 
 ### The Auth Scaffold
+At this point you have a migration, a model, controllers, and routes for your authentication
+system. But what about your views?
+Laravel handles that by providing an auth scaffold (new in Laravel 5.2), which is intended to
+be run on a new application and provide you with even more skeleton code to get your auth
+system running quickly.
+The auth scaffold takes care of adding Auth::routes() to your routes file, adds a view for
+each route, and creates a HomeController to serve as the landing page for logged-in users; it
+also routes to the index() method of HomeController at the /home URI.
+#### php artisan make:auth 
+the following files will be made available to you:
 
+app/Http/Controllers/HomeController.php
+resources/views/auth/login.blade.php
+resources/views/auth/register.blade.php
+resources/views/auth/passwords/email.blade.php
+resources/views/auth/passwords/reset.blade.php
+resources/views/layouts/app.blade.php
+resources/views/home.blade.php
 
+#### Let’s review quickly the steps from new site to full authentication system:
+laravel new MyApp
+cd MyApp
+php artisan make:auth
+php artisan migrate
 
+That’s it. Run those commands, and you will have a landing page and a bootstrap-based user
+registration, login, logout, and password reset system, with a basic landing page for all
+authenticated users.
 
-
+### “Remember Me”
 
 
 
