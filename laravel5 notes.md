@@ -6120,7 +6120,19 @@ indicating whether or not the current user authenticated via a remember token. T
 you to prevent certain higher-sensitivity features from being accessible by remember token,
 and you can require users to reenter their passwords.
 
+### Manually Authenticating Users
+The most common case for user authentication is that you’ll allow the users to provide their
+credentials, and then use auth()->attempt() to see whether the provided credentials match
+any real users. If so, you log them in.
+But sometimes there are contexts where it’s valuable for you to be able to choose to log a user
+in on your own. For example, you may want to allow admin users to switch users.
 
+1. There are two methods that make this possible. First, you can just pass a user ID:
+auth()->loginUsingId(5);
+
+2. Second, you can pass a User object (or any other object that implements the
+Illuminate\Contracts\Auth\Authenticatable contract):
+auth()->login($user);
 
 
 
