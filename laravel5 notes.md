@@ -6095,9 +6095,30 @@ registration, login, logout, and password reset system, with a basic landing pag
 authenticated users.
 
 ### “Remember Me”
+1. Attempting a user authentication
+if (auth()->attempt([
+'email' => request()->input('email'),
+'password' => request()->input('password')
+])) {
+// Handle the successful login
+}
 
+2. Attempting a user authentication with a “remember me” checkbox check
+if (auth()->attempt([
+'email' => request()->input('email'),
+'password' => request()->input('password')
+]), request()->has('remember')) {
+// Handle the successful login
+}
+You can see that we checked whether the input has a remember property, which will return a
+boolean. This allows our users to decide if they want to be remembered with a checkbox in
+the login form.
 
-
+And later, if you need to manually check whether the current user was authenticated by a
+remember token, there’s a method for that: auth()->viaRemember() returns a boolean
+indicating whether or not the current user authenticated via a remember token. This will allow
+you to prevent certain higher-sensitivity features from being accessible by remember token,
+and you can require users to reenter their passwords.
 
 
 
