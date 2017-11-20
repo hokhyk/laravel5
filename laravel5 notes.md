@@ -6160,10 +6160,84 @@ Route::get('account', 'AccountController@dashboard');
 });
 Route::get('login', 'Auth\LoginController@getLogin')->middleware('guest');
 
+## Guards
+Every aspect of Laravel’s authentication system is routed through something called a guard.
+Each guard is a combination of two pieces: a driver that defines how it persists and retrieves
+the authentication state (for example, session), and a provider that allows you to get a user by
+certain criteria (for example, users).
+Out of the box Laravel has two guards: web and api. web is the more traditional authentication
+style, using the session driver and the basic user provider. api also uses the same user
+provider, but it uses the token driver instead of the session to authenticate each request.
+
+### changing the default Guard in config/auth.php
+You can change this
+guard by changing the auth.defaults.guard setting in config/auth.php:
+'defaults' => [
+'guard' => 'web', // Change the default here
+'passwords' => 'users',
+],
+
+### Using Other Guards Without Changing the Default
+If you want to use another guard, but not change the default, you can start your Auth calls with
+guard():
+$apiUser = auth()->guard('api')->user();
+This will, just for this call, get the current user using the api guard.
+
+### Adding a New Guard
+You can add a new guard at any time in config/auth.php, in the auth.guards setting:
+'guards' => [
+'trainees' => [
+'driver' => 'session',
+'provider' => 'trainees',
+],
+],
+As you can see here, we’ve created a new guard (in addition to web and api) named trainees.
+Let’s imagine, for the rest of this section, that we’re building an app where our users are
+physical trainers and they each have their own users — trainees — who can log in to their
+subdomains. So, we need a separate guard for them.
+The only two options for driver are token and session. Out of the box, the only option for
+provider is users, but you can create your own provider easily.
+
+#### Creating a Custom User Provider
+Just below where the guards are defined in config/auth.php, there’s an auth.providers
+section that defines the available providers. Let’s create a new provider named trainees:
+'providers' => [
+'users' => [
+'driver' => 'eloquent',
+'model' => App\User::class,
+],
+'trainees' => [
+'driver' => 'eloquent',
+'model' => App\Trainee::class,
+],
+],
+The two options for driver are eloquent and database; if you use eloquent, you’ll need a
+model property that contains an Eloquent class name (the model to use for your User class),
+and if you use database, you’ll need a table property to define which table it should
+authenticate against.
+In our example, you can see that this application has a User and a Trainee, and they need to be
+authenticated separately. This way, the code can differentiate between auth()->guard(users)
+and auth()->guard(trainees).
+One last note: the auth route middleware can take a parameter that is the guard name. So, you
+can guard certain routes with a specific guard:
+Route::group(['middleware' => 'auth:trainees'], function () {
+// Trainee-only routes here
+});
+
+### Custom User Providers for Nonrelational Databases
+The user provider creation flow just described still relies on the same UserProvider class,
+which means it’s expecting to pull the identifying information out of a relational database. But
+if you’re using Mongo or Riak or something similar, you’ll actually need to create your own
+class.
+To do this, create a new class that implements the Illuminate\Contracts\Auth\UserProvider
+interface, and then bind it in AuthServiceProvider@boot:
+auth()->provider('riak', function ($app, array $config) {
+// Return an instance of Illuminate\Contracts\Auth\UserProvider...
+return new RiakUserProvider($app['riak.connection']);
+})
 
 
-
-
+## Auth Events
 
 
 
