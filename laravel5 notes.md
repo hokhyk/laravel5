@@ -6134,7 +6134,31 @@ auth()->loginUsingId(5);
 Illuminate\Contracts\Auth\Authenticatable contract):
 auth()->login($user);
 
+## Auth Middleware
+Laravel comes with the route Auth middleware out of the box.
+Route middleware defined in App\Http\Kernel:
+protected $routeMiddleware = [
+'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+'can' => \Illuminate\Auth\Middleware\Authorize::class,
+'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+];
+Three of the default route middleware are authentication-related: auth restricts route access to
+authenticated users, auth.basic restricts access to authenticated users using HTTP Basic
+Authentication, and guest restricts access to unauthenticated users. can is used for authorizing
+user access to given routes.
 
+It’s most common to use auth for your authenticated-user-only sections and guest for any
+routes you don’t want authenticated users to see (like the login form). auth.basic is a much
+less commonly used middleware for authenticating via request headers.
+
+### Sample routes protected by auth middleware
+Route::group(['middleware' => 'auth'], function () {
+Route::get('account', 'AccountController@dashboard');
+});
+Route::get('login', 'Auth\LoginController@getLogin')->middleware('guest');
 
 
 
