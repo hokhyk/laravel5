@@ -6249,9 +6249,20 @@ protected $listen = [
 'Illuminate\Auth\Events\Lockout' => [],
 ];
 
+## Authorization (ACL) and Roles
+Laravel’s authorization system enables you to determine whether a user is authorized to do a particular thing, which you’ll check using a few primary verbs: can, cannot, allows, and denies. The access control list (ACL) system is new in Laravel 5.2.
+Most of this authorization control will be performed using the Gate facade, but there are also
+convenience helpers in your controllers, on the User model, as middleware, and available as
+Blade directives. 
 
+if (Gate::denies('edit', $contact)) {
+abort(403);
+} i
+f (! Gate::check('create', Contact::class)) {
+abort(403);
+}
 
-
+### Defining Authorization Rules
 
 
 
