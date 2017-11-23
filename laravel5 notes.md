@@ -6263,7 +6263,38 @@ abort(403);
 }
 
 ### Defining Authorization Rules
+The default place to define authorization rules is the boot() method of the AuthServiceProvider. It should already have an instance of Illuminate\Contracts\Auth\Access\Gate (aliased as GateContract) typehinted and injected as $gate.
 
+An authorization rule is called an ability, and is comprised of two things: a string key (e.g.,
+update-contact) and a closure that returns a boolean.
+Example 9-10. Sample ability for updating a contact
+class AuthServiceProvider extends ServiceProvider
+{
+public function boot(GateContract $gate)
+{
+$this->registerPolicies($gate);
+$gate->define('update-contact', function ($user, $contact) {
+return $user->id === $contact->user_id;
+});
+}
+}
+
+First, you want to define a key. In naming this key, you should consider what string makes
+sense in your code’s flow to refer to the ability you’re providing the user. You can see the
+code sample uses the convention {verb}-{modelName}: create-contact, update-contact,
+etc.
+Second, you define the closure. The first parameter will be the currently authenticated user,
+and all parameters after that will be the object(s) you’re checking for access to — in this
+instance, the contact.
+
+So, given those two objects, we can check whether the user is authorized to update this contact.
+You can write this logic however you want, but in the app we’re looking at at the moment,
+authorization depends on being the creator of the contact row. The closure will return true
+(authorized) if the current user created the contact, and false (unauthorized) if not.
+
+Just like with route definitions, you could also use a class and method instead of a closure to
+resolve this definition:
+$gate->define('update-contact', 'ContactACLChecker@updateContact');
 
 
 
