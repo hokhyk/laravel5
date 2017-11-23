@@ -6296,6 +6296,35 @@ Just like with route definitions, you could also use a class and method instead 
 resolve this definition:
 $gate->define('update-contact', 'ContactACLChecker@updateContact');
 
+### The Gate Facade ( and Injecting Gate)
+1. Example 9-11. Basic Gate facade usage
+if (Gate::allows('update-contact', $contact)) {
+// Update contact
+} //
+or...
+if (Gate::denies('update-contact', $contact)) {
+abort(403);
+}
+
+
+2. Abilities with multiple parameters
+// Definition
+$gate->define('add-contact-to-group', function ($user, $contact, $group) {
+return $user->id === $contact->user_id && $user->id === $group->user_id;
+});
+// Usage
+if (Gate::denies('add-contact-to-group', [$contact, $group])) {
+abort(403);
+}
+
+3. And if you need to check authorization for a user other than the currently authenticated user,
+try forUser(), like in Example 9-13.
+Example 9-13. Specifying the user for Gate
+if (Gate::forUser($user)->denies('create-contact')) {
+abort(403);
+}
+
+### the Authorize Middleware 
 
 
 
