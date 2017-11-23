@@ -6324,7 +6324,27 @@ if (Gate::forUser($user)->denies('create-contact')) {
 abort(403);
 }
 
-### the Authorize Middleware 
+### the Authorize Middleware   //route authorization
+If you want to authorize entire routes, you can use the Authorize middleware (which has a
+shortcut of can), like in Example 9-14.
+Example 9-14. Using the Authorize middleware
+Route::get('people/create', function () {
+// Create person...
+})->middleware('can:create-person');
+Route::get('people/{person}/edit', function () {
+// Create person...
+})->middleware('can:create,person');
+Here, the {person} parameter (whether it’s defined as a string or as a bound route model) will
+be passed to the ability method as an additional parameter.
+
+
+
+
+
+
+
+
+
 
 
 
