@@ -6614,6 +6614,8 @@ $this->assertTrue(auth()->check());
 u could also use the integration test features to direct the test to “click” your authentication
 fields and “submit” the fields to test the entire flow.
 
+# Requests and Responses
+## laravel's Request Lifecycle
 
 
 
