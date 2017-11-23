@@ -6257,8 +6257,8 @@ Blade directives.
 
 if (Gate::denies('edit', $contact)) {
 abort(403);
-} i
-f (! Gate::check('create', Contact::class)) {
+} 
+if (! Gate::check('create', Contact::class)) {
 abort(403);
 }
 
@@ -6337,7 +6337,80 @@ Route::get('people/{person}/edit', function () {
 Here, the {person} parameter (whether it’s defined as a string or as a bound route model) will
 be passed to the ability method as an additional parameter.
 
+### controller authorization
+The parent App\Http\Controllers\Controller class in Laravel imports the
+AuthorizesRequests trait, which provides three methods for authorization: authorize(),
+authorizeForUser(), and authorizeResource().
 
+1. authorize() takes an ability key and an object (or array of objects) as parameters, and if the
+authorization fails, it’ll quit the application with a 403 (Unauthorized) status code. That means
+this feature can turn three lines of authorization code into just one, as you can see in
+Example 9-15.
+
+Example 9-15. Simplifying controller authorization with authorize()
+// From this:
+public function show($contactId)
+{
+$contact = Contact::findOrFail($contactId);
+if (Gate::cannot('update-contact', $contact)) {
+abort(403);
+}
+} //
+To this:
+public function show($contactId)
+{
+$contact = Contact::findOrFail($contactId);
+$this->authorize('update-contact', $contact);
+} 
+
+2. authorizeForUser() is the same, but allows you to pass in a User object instead of defaulting
+to the currently authenticated user:
+$this->authorizeForUser($user, 'update-contact', $contact);
+
+3. authorizeResource(), called once in the controller constructor, maps a predefined set of
+authorization rules to each of the RESTful controller methods in that controller — something
+like Example 9-16.
+
+Example 9-16. The authorization-to-method mappings of authorizeResource()
+...
+class ContactsController extends Controller
+{
+public function __construct()
+{
+// This call does everything you see in the methods below.
+// If you put this here, you can remove all authorize
+// calls in the individual resource methods here.
+$this->authorizeResource(Contact::class);
+} p
+ublic function index()
+{
+$this->authorize('view', Contact::class);
+} p
+ublic function create()
+{
+$this->authorize('create', Contact::class);
+} p
+ublic function store(Request $request)
+{
+$this->authorize('create', Contact::class);
+} p
+ublic function show(Contact $contact)
+{
+$this->authorize('view', $contact);
+} p
+ublic function edit(Contact $contact)
+{
+$this->authorize('update', $contact);
+} p
+ublic function update(Request $request, Contact $contact)
+{
+$this->authorize('update', $contact);
+} p
+ublic function destroy(Contact $contact)
+{
+$this->authorize('delete', $contact);
+}
+}
 
 
 
