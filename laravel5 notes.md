@@ -6412,7 +6412,39 @@ $this->authorize('delete', $contact);
 }
 }
 
+### checking on the user instance
+If you’re not in a controller, you’re more likely to be checking the capabilities of a specific
+user than the currently authenticated user. That’s already possible with the Gate facade using
+the forUser() method, but sometimes the syntax can feel a little off.
 
+Thankfully, the Authorizable trait on the User class provides three methods to make a more
+readable authorization feature: $user->can(), $user->cant(), and $user->cannot(). As you
+can probably guess, cant() and cannot() do the same thing, and can() is their exact inverse.
+That means you can do something like Example 9-17.
+Example 9-17. Checking authorization on a user instance
+$user = User::find(1);
+if ($user->can('create-contact')) {
+// do something
+} B
+ehind the scenes, these methods are just passing your params to Gate; in the preceding
+example, Gate::forUser($user)->can('create-contact').
+
+### Blade Checks
+Blade also has a little convenience helper: a @can directive. Example 9-18 illustrates its usage.
+Example 9-18. Using Blade’s @can directive
+<nav>
+<a href="/">Home</a>
+@can('edit-contact', $contact)
+<a href="{{ route('contacts.edit', [$contact->id]) }}">Edit This Contact</a>
+@endcan
+</nav>
+You can also use @else in between @can and @endcan, and you can use @cannot and
+@endcannot as in Example 9-19.
+Example 9-19. Using Blade’s @cannot directive
+<h1>{{ $contact->name }}</h1>
+@cannot('edit-contact', $contact)
+LOCKED
+@endcannot
 
 
 
