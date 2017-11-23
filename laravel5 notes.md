@@ -6541,6 +6541,79 @@ return true;
 #### PASSPORT AND OAUTH
 There’s a Laravel package called Passport that makes it easy to set up your own OAuth server as a part of your Laravel app. Take a look at “API Authentication with Laravel Passport” to learn more about how it works.
 
+### Testing using ->be() method
+ the simplest option is to use the ->be() method to simulate being logged in as a user.
+1. Authenticating as a user in application tests
+public function test_it_creates_a_new_contact()
+{
+$user = factory(User::class)->create();
+$this->be($user);
+$this->post('contacts', [
+'email' => 'my@email.com'
+]);
+$this->seeInDatabase('contacts', [
+'email' => 'my@email.com',
+'user_id' => $user->id,
+]);
+}
+
+2. Testing authorization rules
+public function test_non_admins_cant_create_users()
+{
+$user = factory(User::class)->create([
+'admin' => false
+]);
+$this->be($user);
+$this->post('users', ['email' => 'my@email.com']);
+$this->dontSeeInDatabase('users', [
+'email' => 'my@email.com'
+]);
+}
+
+3. test for a 403 response like in Example 9-26.
+Example 9-26. Testing authorization rules by checking status code
+public function test_non_admins_cant_create_users()
+{
+$user = factory(User::class)->create([
+'admin' => false
+]);
+$this->be($user);
+$this->post('users', ['email' => 'my@email.com']);
+$this->assertResponseStatus(403);
+}
+
+4. test our authentication (sign up and sign in) routes work, as illustrated in
+Example 9-27.
+Example 9-27. Testing authentication routes
+public function test_users_can_register()
+{
+$this->post('register', [
+'name' => 'Sal Leibowitz',
+'email' => 'sal@leibs.net',
+'password' => 'abcdefg123',
+'password_confirmation' => 'abcdefg123',
+]);
+$this->followRedirects()->assertResponseOk();
+$this->seeInDatabase('users', [
+'name' => 'Sal Leibowitz',
+'email' => 'sal@leibs.net',
+]);
+} p
+ublic function test_users_can_log_in()
+{
+$user = factory(User::class)->create([
+'password' => bcrypt('abcdefg123')
+]);
+$this->post('login', [
+'email' => $user->email,
+'password' => 'abcdefg123',
+]);
+$this->followRedirects()->assertResponseOk();
+$this->assertTrue(auth()->check());
+} Yo
+u could also use the integration test features to direct the test to “click” your authentication
+fields and “submit” the fields to test the entire flow.
+
 
 
 
