@@ -6635,6 +6635,32 @@ First, it loads Composer’s autoload file and Laravel’s compiled application 
 at bootstrap/cache/compiled.php. This file is what’s generated when you run php artisan
 optimize, and it preloads all of the most commonly used classes for faster loading.
 
+##### php artisan optimize
+
+3. creating the container
+Next, it kicks off Laravel’s bootstrap, creating the application container and registering a few core services.
+Finally, it creates an instance of the kernel, creates a request representing the current user’s
+web request, and passes the request to the kernel to handle. The kernel responds with an
+Illuminate Response object, which index.php then returns to the end user, and terminates the
+page request.
+
+### Laravel 's kernel
+The kernel is the core router of every Laravel application, responsible for taking in a user
+request, processing it through middleware and handling exceptions and passing it to the page
+router, and then returning the final response. There are actually two kernels, but only one is
+used for each page request. One of the routers handles web requests (the HTTP kernel) and the
+other handles console, cron, and Artisan requests (the console kernel). Each has a handle()
+method that’s responsible for taking in an Illuminate Request object and returning an
+Illuminate Response object.
+
+The kernel runs all of the bootstraps that need to run before every request, including
+determining which environment the current request is running in (staging, local, production,
+etc.) and running all of the service providers. The HTTP kernel additionally defines the list of
+middleware that will wrap each request, including the core middleware responsible for
+sessions and CSRF protection.
+
+### 
+
 
 
 
