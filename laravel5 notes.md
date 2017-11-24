@@ -6659,7 +6659,50 @@ etc.) and running all of the service providers. The HTTP kernel additionally def
 middleware that will wrap each request, including the core middleware responsible for
 sessions and CSRF protection.
 
-### 
+### service providers
+A service provider is a class that encapsulates logic that various parts of your application need to run in order to bootstrap their core functionality.
+
+For example, there’s an AuthServiceProvider that bootstraps all of the registrations
+necessary for Laravel’s authentication system and a RouteServiceProvider that bootstraps the
+routing system.
+
+Service providers are a tool for grouping that bootstrap code into
+related classes. If you have any code that needs to run in preparation for your application
+code to work, it’s a strong candidate for a service provider.
+
+Service providers have two important methods: boot() and register(). There’s also a
+$defer property that you might choose to use. Here’s how they work.
+1.  register()
+First, all of the service providers’ register() methods are called. This is where we want to
+bind classes and aliases to the container. You don’t want to do anything in register() that
+relies on the entire application being bootstrapped.
+2. boot()
+Second, all of the service providers’ boot() methods are called. You can now do any other
+bootstrapping here, like binding event listeners or defining routes — anything that may rely
+on the entire Laravel application having been bootstrapped.
+
+3. defered loading by $defer
+If your service provider is only going to register bindings in the container (i.e., teach the
+container how to resolve a given class or interface), but not perform any other bootstrapping,
+you can “defer” its registrations, which means they won’t run unless one of their bindings is
+explicitly requested from the container. This can speed up your application’s average time to
+bootstrap.
+If you want to defer your service provider’s registrations, first give it a protected $defer
+property and set it to true, and then give it a provides() method that returns a list of bindings
+the provider provides.
+
+Deferring the registration of a service provider
+...
+class GitHubServiceProvider extends ServiceProvider
+{
+protected $defer = true;
+public function provides()
+{
+return [
+GitHubClient::class
+];
+}
+
 
 
 
