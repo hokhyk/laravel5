@@ -6703,7 +6703,45 @@ GitHubClient::class
 ];
 }
 
+## The Request Object
+Each Request object is intended to represent every relevant piece of information you could
+care to know about a user’s HTTP request.
+In native PHP code, you might find yourself looking to $_SERVER, $_GET, $_POST, and other
+combinations of globals and processing logic to get information about the current user’s
+request. 
 
+Symfony’s Request object instead collects all of the information necessary to represent a
+single HTTP request into a single object, and then tacks on convenience methods to make it
+easy to get useful information from it. The Illuminate Request object adds even more
+convenience methods to get information about the request it’s representing.
+
+##### CAPTURING A REQUEST  $request = Illuminate\Http\Request::capture();
+You’ll very likely never need to do this in a Laravel app, but if you ever need to capture your own Illuminate
+Request directly from PHP’s globals, you can use the capture() method:
+$request = Illuminate\Http\Request::capture();
+
+### Getting a Request Object in Laravel
+1.  Typehinting in a container-resolved method to receive a Request object
+...
+use Illuminate\Http\Request;
+class PeopleController extends Controller
+{
+public function index(Request $request)
+{
+$allInput = $request->all();
+}
+
+2. request() global helper
+You can also use the request() global helper, which allows you to call methods on it (e.g.,
+request()->input()) and also allows you to call it on its own to get an instance of $request:
+$request = request();
+$allInput = request()->all();
+
+3. app() global method
+And you can also use the app() global method to get an instance of Request. You can pass
+either the fully qualified class name or the shortcut, request:
+$request = app(Illuminate\Http\Request::class);
+$request = app('request');
 
 
 
