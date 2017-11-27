@@ -8151,6 +8151,159 @@ that cookie.
 The flash*() and old() methods are used for storing user input and retrieving it later, often
 after the input is validated and rejected.
 
+### the Response Object
+Similar to the Request object, there’s an Illuminate Response object that represents the
+response your application is sending to the end user, complete with headers, cookies, content,
+and anything else used for sending the end user’s browser instructions on rendering a page.
+Just like Request, the Illuminate\Http\Response object extends a Symfony class:
+Symfony\Component\HttpFoundation\Response. 
+
+#### Using and Creating Response Objects in Controllers
+In the end, any response object returned from a route definition will be converted into an
+HTTP response. It may define specific headers or specific content, set cookies, or whatever
+else, but eventually it will be converted into a response your users’ browsers can parse.
+
+Simplest possible HTTP response
+Route::get('route', function () {
+return new Illuminate\Http\Response('Hello!');
+});
+// Same, using global function:
+Route::get('route', function () {
+return response('Hello!');
+});
+
+Simple HTTP response with customized status and headers
+Route::get('route', function () {
+return response('Error!', 400)
+->header('X-Header-Name', 'header-value')
+->cookie('cookie-name', 'cookie-value');
+});
+
+##### setting headers  header()
+Setting headers
+We define a header on a response by using the header() fluent method, like in Example 10-5.
+The first parameter is the header name and the second is the header value.
+
+##### Adding cookies  cookie()
+Attaching a cookie to a response
+return response($content)
+->cookie('signup_dismissed', true);
+
+#### Specialized Response Types
+##### View responses
+Using the view() response type
+Route::get('/', function (XmlGetterService $xml) {
+$data = $xml->get();
+return response()
+->view('xml-structure', $data)
+->header('Content-Type', 'text/xml');
+});
+
+##### Download responses
+Using the download() response type
+public function export()
+{
+return response()
+->download('file.csv', 'export.csv', ['header' => 'value']);
+} p
+ublic function otherExport()
+{
+return response()->download('file.pdf');
+}
+
+##### File responses : file()
+The file response is similar to the download response, except it allows the browser to display
+the file instead of forcing a download. This is most common with images and PDFs.
+Using the file() response type
+public function invoice($id)
+{
+return response()->file("./invoices/{$id}.pdf", ['header' => 'value']);
+}
+
+##### JSON responses  json()
+JSON responses convert the passed data to JSON (with json_encode()) and set the ContentType to application/json. You can also optionally use the setCallback() method to create a
+JSONP response instead of JSON.
+Using the json() response type
+public function contacts()
+{
+return response()->json(Contact::all());
+} 
+
+public function jsonpContacts(Request $request)
+{
+return response()
+->json(Contact::all())
+->setCallback($request->input('callback'));
+} 
+
+public function nonEloquentContacts()
+{
+return response()->json(['Tom', 'Jerry']);
+}
+
+##### Redirect responses  redirect()
+Redirects aren’t commonly called on the response() helper, they’re still just a different sort of response. Redirects, returned from a Laravel route, send the user a redirect (often a 301) to another page or back to the previous page.
+You technically can call a redirect from response(), as in 
+return response()->redirectTo('/'). 
+But more commonly you’ll use the redirect-specific global helpers.
+
+There is a global redirect() function that can be used to create redirect responses, and a
+global back() function that is a shortcut to redirect()->back().
+
+Examples of using the redirect() global helper
+return redirect('account/payment');
+return redirect()->to('account/payment');
+return redirect()->route('account.payment');
+return redirect()->action('AccountController@showPayment');
+// If named route or controller needs parameters:
+return redirect()->route('contacts.edit', ['id' => 15]);
+return redirect()->action('ContactsController@edit', ['id' => 15]);
+
+You can also redirect “back” to the previous page, which is especially useful when handling
+and validating user input. a global back() function that is a shortcut to redirect()->back().
+Redirect back with input.
+public function store()
+{
+// If validation fails...
+return back()->withInput();
+}
+
+Finally, you can redirect and flash data to the session at the same time. This is common with
+error and success messages.
+Redirect with flashed data
+Route::post('contacts', function () {
+// store the contact...
+return redirect('dashboard')->with('message', 'Contact created!');
+});
+Route::get('dashboard', function () {
+// Get the flashed data from session--usually handled in Blade template
+echo session('message');
+});
+
+#### custom response macros
+You can also create your own custom response types using “macros”. This allows you to
+define a series of modifications to make to the response and its provided content.
+
+Let’s re-create the json() custom response type, just to see how it works. As always, you
+should probably create a custom service provider for these sorts of bindings, but for now
+we’ll just put it in AppServiceProvider.
+
+Creating a custom response macro
+...
+class AppServiceProvider
+{
+public function boot()
+{
+Response::macro('myJson', function ($content) {
+return response(json_encode($content))
+->headers(['Content-Type' => 'application/json']);
+});
+}
+Then, we can use it just like we would use the predefined json macro:
+return response()->myJson(['name' => 'Sangeetha']);
+This will return a response with the body of that array encoded for JSON, with the JSON-
+appropriate Content-Type header.
+
 
 
 
