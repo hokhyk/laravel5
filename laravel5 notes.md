@@ -4977,1063 +4977,1853 @@ Once you make these changes, every delete() and destroy() call will now set the 
 you can add soft-deleted items to a query:
 $allHistoricContacts = Contact::withTrashed()->get();
 
-you can use the trashed() method to see if a particular instance has been soft deleted:
-if ($contact->trashed()) {
-// do something
+you can use the trashed() method to see if a particular instance has been soft deleted:
+
+if ($contact->trashed()) {
+
+// do something
+
 }
 
-you can get only soft-deleted items:
+you can get only soft-deleted items:
+
 $deletedContacts = Contact::onlyTrashed()->get();
 
 ##### Restoring soft-deleted entities
-If you want to restore a soft-deleted item, you can run restore() on an instance or a query:
-$contact->restore();
-// or
-Contact::onlyTrashed()->where('vip', true)->restore();
+If you want to restore a soft-deleted item, you can run restore() on an instance or a query:
 
-##### Force-deleting soft-deleted entities
-You can delete a soft-deleted entity by calling forceDelete() on an entity or query:
-$contact->forceDelete();
-// or
+$contact->restore();
+
+// or
+
+Contact::onlyTrashed()->where('vip', true)->restore();
+
+
+##### Force-deleting soft-deleted entities
+
+You can delete a soft-deleted entity by calling forceDelete() on an entity or query:
+
+$contact->forceDelete();
+
+// or
+
 Contact::onlyTrashed()->forceDelete();
 
 ## Scopes
-Local and global scopes in Eloquent allow you to define prebuilt “scopes” (filters) that you
-can use either every time a model is queried (“global”) or every time you query it with a
+Local and global scopes in Eloquent allow you to define prebuilt “scopes” (filters) that you
+
+can use either every time a model is queried (“global”) or every time you query it with a
+
 particular method chain (“local”).
 
 ### local scopes
 1. $activeVips = Contact::activeVips()->get();
 
-class Contact
-{
-public function scopeActiveVips($query)
-{
-return $query->where('vip', true)->where('trial', false);
-}
-To define a local scope, we add a method to the Eloquent class that begins with “scope” and
-then contains the title-cased version of the scope name. This method is passed a query builder
+class Contact
+
+{
+
+public function scopeActiveVips($query)
+
+{
+
+return $query->where('vip', true)->where('trial', false);
+
+}
+
+To define a local scope, we add a method to the Eloquent class that begins with “scope” and
+
+then contains the title-cased version of the scope name. This method is passed a query builder
+
 and needs to return a query builder, 
 
-2. You can also define scopes that accept parameters:
+2. You can also define scopes that accept parameters:
 
-class Contact
-{
-public function scopeStatus($query, $status)
-{
-return $query->where('status', $status);
-}
 
-And you use them in the same way, just passing the parameter to the scope:
+class Contact
+
+{
+
+public function scopeStatus($query, $status)
+
+{
+
+return $query->where('status', $status);
+
+}
+
+
+And you use them in the same way, just passing the parameter to the scope:
+
 $friends = Contact::status('friend')->get();
 
 ### global scopes
-There are two ways to define a global scope: using a closure or using an entire class. In each,
+There are two ways to define a global scope: using a closure or using an entire class. In each,
+
 you’ll register the defined scope in the model’s boot() method. 
-1. Adding a global scope using a closure
-...
-class Contact extends Model
-{
-protected static function boot()
-{
-parent::boot();
-static::addGlobalScope('active', function (Builder $builder) {
-$builder->where('active', true);
-});
+1. Adding a global scope using a closure
+
+...
+
+class Contact extends Model
+
+{
+
+protected static function boot()
+
+{
+
+parent::boot();
+
+static::addGlobalScope('active', function (Builder $builder) {
+
+$builder->where('active', true);
+
+});
+
 }
 
-We just added a global scope, named active, and every query on this model will be
+We just added a global scope, named active, and every query on this model will be
+
 scoped to only rows with active set to true.
 
-2. Creating a global scope class 
-Create a class that implements Illuminate\Database\Eloquent\Scope, 
-which means it will have an apply() method that takes an instance of a query builder and an instance of the model.
+2. Creating a global scope class
+ 
+Create a class that implements
+ Illuminate\Database\Eloquent\Scope, 
+which means it will have an apply() method that
+ takes an instance of a query builder and an instance of the model.
 
-<?php
-namespace App\Scopes;
-use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
+<?php
 
-class ActiveScope implements Scope
-{
-public function apply(Builder $builder, Model $model)
-{
-return $builder->where('active', true);
-}
+namespace App\Scopes;
+
+use Illuminate\Database\Eloquent\Scope;
+
+use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Database\Eloquent\Builder;
+
+
+class ActiveScope implements Scope
+
+{
+
+public function apply(Builder $builder, Model $model)
+
+{
+
+return $builder->where('active', true);
+
 }
 
-To apply this scope to a model, once again override the parent’s boot() method and call addGlobalScope() on the class using static.
+}
 
-Applying a class-based global scope
-<?php
-use App\Scopes\ActiveScope;
-use Illuminate\Database\Eloquent\Model;
-class Contact extends Model
-{
-protected static function boot()
-{
-parent::boot();
-static::addGlobalScope(new ActiveScope);
-}
+T
+o apply this scope to a model, once again override the parent’s boot() method and call
+ addGlobalScope() on the class using static.
+
+Applying a class-based global scope
+
+<?php
+
+use App\Scopes\ActiveScope;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Contact extends Model
+
+{
+
+protected static function boot()
+
+{
+
+parent::boot();
+
+static::addGlobalScope(new ActiveScope);
+
+}
+
 }
 
 #### Removing global scopes
-There are three ways to remove a global scope, and all three use the withoutGlobalScope()
+There are three ways to remove a global scope, and all three use the withoutGlobalScope()
+
 or withoutGlobalScopes() methods. 
 
-1. If you’re removing a closure-based scope, the first parameter of that scope’s addGlobalScope() registration will be the key you used to enable it:
-$allContacts = Contact::withoutGlobalScope('active')->get();
+1. If you’re removing a closure-based scope, the first
+ parameter of that scope’s addGlobalScope() registration will be the key you used to enable it:
 
-2. If you’re removing a single class-based global scope, you can pass the class name to withoutGlobalScope() or withoutGlobalScopes():
+$allContacts = Contact::withoutGlobalScope('active')->get();
+
+
+2. If you’re removing a single class-based global scope, you can pass the class name to
+ withoutGlobalScope() or withoutGlobalScopes():
+
 Contact::withoutGlobalScope(ActiveScope::class)->get();
-Contact::withoutGlobalScopes([ActiveScope::class, VipScope::class])->get();
+Contact::withoutGlobalScopes([ActiveScope::class, VipScope::class])->get();
 
-3. Or, you can just disable all global scopes for a query:
+
+3. Or, you can just disable all global scopes for a query:
+
 Contact::withoutGlobalScopes()->get();
 
-### Customizing Field Interactions with Accessors, Mutators, and Attribute Casting (Eloquent setter, getter )
+### Customizing Field Interactions with Accessors, Mutators, and Attribute
+ Casting (Eloquent setter, getter )
 #### Accessors ( getters)
-Accessors allow you to define custom attributes on your Eloquent models for when you are
-reading data from the model instance. This may be because you want to change how a
-particular column is output, or because you want to create a custom attribute that doesn’t exist
-in the database table at all.
-You define an accessor by writing a method on your model with the following structure:
-get{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+Accessors allow you to define custom attributes on your Eloquent models for when you are
+
+reading data from the model instance. This may be because you want to change how a
+
+particular column is output, or because you want to create a custom attribute that doesn’t exist
+
+in the database table at all.
+
+You define an accessor by writing a method on your model with the following structure:
+
+get{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+
 accessor method would be named getFirstNameAttribute.
 
-1. Decorating a preexisting column with Eloquent accessors
-// Model definition:
-class Contact extends Model
-{
-public function getNameAttribute($value)
-{
-return $value ?: '(No name provided)';
-}
-} //
-Accessor usage:
+1. Decorating a preexisting column with Eloquent accessors
+
+// Model definition:
+
+class Contact extends Model
+
+{
+
+public function getNameAttribute($value)
+
+{
+
+return $value ?: '(No name provided)';
+
+}
+
+} //
+
+Accessor usage:
+
 $name = $contact->name;
 
-2. Defining an attribute with no backing column using Eloquent accessors
-// Model definition:
-class Contact extends Model
-{
-public function getFullNameAttribute()
-{
-return $this->first_name . ' ' . $this->last_name;
-}
-} //
-Accessor usage:
+2. Defining an attribute with no backing column using Eloquent accessors
+
+// Model definition:
+
+class Contact extends Model
+
+{
+
+public function getFullNameAttribute()
+
+{
+
+return $this->first_name . ' ' . $this->last_name;
+
+}
+
+} //
+
+Accessor usage:
+
 $fullName = $contact->full_name;
 
 #### mutators ( setters)
-Mutators work the same way as accessors, except they’re for determining how to process
+Mutators work the same way as accessors, except they’re for determining how to process
+
 setting the data instead of getting it.
 
-You define a mutator by writing a method on your model with the following structure:
-set{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+You define a mutator by writing a method on your model with the following structure:
+
+set{PascalCasedPropertyName}Attribute. So, if your property name is first_name, the
+
 mutator method would be named setFirstNameAttribute.
 
-1. Decorating setting the value of an attribute with Eloquent mutators
+1. Decorating setting the value of an attribute with Eloquent mutators
 
-// Defining the mutator
-class Order extends Model
-{
-public function setAmountAttribute($value)
-{
-$this->attributes['amount'] = $value > 0 ? $value : 0;
-}
-} //
-Using the mutator
-$order->amount = '15';
 
-This reveals that the way mutators are expected to “set” data on the model is by setting it in
+// Defining the mutator
+
+class Order extends Model
+
+{
+
+public function setAmountAttribute($value)
+
+{
+
+$this->attributes['amount'] = $value > 0 ? $value : 0;
+
+}
+
+} //
+
+Using the mutator
+
+$order->amount = '15';
+
+
+This reveals that the way mutators are expected to “set” data on the model is by setting it in
+
 $this->attributes with the column name as the key.
 
-2. Allowing for setting the value of a nonexistent attribute with Eloquent mutators
+2. Allowing for setting the value of a nonexistent attribute with Eloquent mutators
 
-// Defining the mutator
-class Order extends Model
-{
-public function setWorkgroupNameAttribute($workgroupName)
-{
-$this->attributes['email'] = "{$workgroupName}@ourcompany.com";
-}
+
+// Defining the mutator
+
+class Order extends Model
+
+{
+
+public function setWorkgroupNameAttribute($workgroupName)
+
+{
+
+$this->attributes['email'] = "{$workgroupName}@ourcompany.com";
+
+}
+
 } 
-// Using the mutator
+//
+ Using the mutator
+
 $order->workgroup_name = 'jstott';
 
-As you can probably guess, it’s relatively uncommon to create a mutator for a non-existent
-column, because it can be confusing to set one property and have it change a different column
+As you can probably guess, it’s relatively uncommon to create a mutator for a non-existent
+
+column, because it can be confusing to set one property and have it change a different column
+
 — but it is possible.
 
 #### attribute casting   using protected $casts 
 Possible attribute casting column types
 
-Type                  Description
-int|integer         Casts with PHP (int)
-real|float|double   Casts with PHP (float)
-string              Casts with PHP (string)
-bool|boolean        Casts with PHP (bool)
-object              Parses to/from JSON, as a stdClass object
-array               Parses to/from JSON, as an array
-collection          Parses to/from JSON, as a collection
-date|datetime       Parses from database DATETIME to Carbon, and back
-timestamp           Parses from database TIMESTAMP to Carbon, and back (can be used instead of Date mutators)
+Type                  Description
 
-Using attribute casting on an Eloquent model
-class Contact
-{
-protected $casts = [
-'vip' => 'boolean',
-'children_names' => 'array',
-'birthday' => 'date',
-];
+int|integer         Casts with PHP (int)
+
+real|float|double   Casts with PHP (float)
+
+string              Casts with PHP (string)
+
+bool|boolean        Casts with PHP (bool)
+
+object              Parses to/from JSON, as a stdClass object
+
+array               Parses to/from JSON, as an array
+
+collection          Parses to/from JSON, as a collection
+
+date|datetime       Parses from database DATETIME to Carbon, and back
+
+timestamp           Parses from database TIMESTAMP to Carbon, and back (can be used instead of D
+ate mutators)
+
+Using attribute casting on an Eloquent model
+
+class Contact
+
+{
+
+protected $casts = [
+
+'vip' => 'boolean',
+
+'children_names' => 'array',
+
+'birthday' => 'date',
+
+];
+
 }
 
-#### Date mutators (Defining columns to be mutated as timestamps)
-You can choose for particular columns to be mutated as timestamp columns by adding them to the dates array.
+#### D
+ate mutators (Defining columns to be mutated as timestamps
+)
+You can choose for particular columns to be mutated as timestamp columns by adding them to
+ the dates array.
 
-Defining columns to be mutated as timestamps
-class Contact
-{
-protected $dates = [
-'met_at'
-];
+Defining columns to be mutated as timestamps
+
+class Contact
+
+{
+
+protected $dates = [
+
+'met_at'
+
+];
+
 }
 
-By default, this array contains created_at and updated_at, so adding entries to dates just adds them to the list.
-However, there’s no difference between adding columns to this list and adding them to $this->casts as timestamp, so this is becoming a bit of an unnecessary feature now that attribute casting can cast timestamps.
+B
+y default, this array contains created_at and updated_at, so adding entries to dates just
+ adds them to the list.
+
+However, there’s no difference between adding columns to this list and adding them to $this-
+>casts as timestamp, so this is becoming a bit of an unnecessary feature now that attribute
+ casting can cast timestamps.
 
 ### Eloquent Collections
 #### basic connections in Laravel (Illuminate\Support\Collection)
-Laravel’s Collection objects (Illuminate\Support\Collection) are a little bit like arrays on
-steroids. The methods they expose on array-like objects are so helpful that, once you’ve been
-using them for a while, you’ll likely want to pull Illuminate into even non-Laravel projects
+Laravel’s Collection objects (Illuminate\Support\Collection) are a little bit like arrays on
+
+steroids. The methods they expose on array-like objects are so helpful that, once you’ve been
+
+using them for a while, you’ll likely want to pull Illuminate into even non-Laravel projects
+
 just for collections — which you can, with the Tightenco/Collect package.
 
-#####  the simplest way to create a collection. 
+#####  the
+ simplest way to create a collection. 
 Laravel also has a collect() helper.
 $collection = collect([1, 2, 3]);
 
-Now let’s say we want to filter out any even numbers:
-$odds = $collection->reject(function ($item) {
-return $item % 2 === 0;
-});
-Or what if we want to get a version of the array where each item is multiplied by 10? We can
-do that as follows:
-$multiplied = $collection->map(function ($item) {
-return $item * 10;
-});
-We can even get only the evens, multiply them all by 10, and reduce them to a single number
-by sum:
-$sum = $collection
-->filter(function ($item) {
-return $item % 2 == 0;
-})->map(function ($item) {
-return $item * 10;
+Now let’s say we want to filter out any even numbers:
+
+$odds = $collection->reject(function ($item) {
+
+return $item % 2 === 0;
+
+});
+
+Or what if we want to get a version of the array where each item is multiplied by 10? We can
+
+do that as follows:
+
+$multiplied = $collection->map(function ($item) {
+
+return $item * 10;
+
+});
+
+We can even get only the evens, multiply them all by 10, and reduce them to a single number
+
+by sum:
+
+$sum = $collection
+
+->filter(function ($item) {
+
+return $item % 2 == 0;
+
+})->map(function ($item) {
+
+return $item * 10;
+
 })->sum();
 
-They provide the same functionality as native PHP methods like array_map() and array_reduce(), but you don’t have to memorize PHP’s unpredictable parameter order, and the method chaining syntax is endlessly more readable.
+They provide the same functionality as native
+ PHP methods like array_map() and array_reduce(), but you don’t have to memorize PHP’s
+ unpredictable parameter order, and the method chaining syntax is endlessly more readable.
 
 ##### What Eloquent collections add (Illuminate\Database\Eloquent\Collection class)
-Each Eloquent collection is a normal collection, but extended for the particular needs of a
+Each Eloquent collection is a normal collection, but extended for the particular needs of a
+
 collection of Eloquent results to represent database rows.
-For example, every Eloquent collection has a method called modelKeys() that returns an array
-of the primary keys of every instance in the collection. find($id) looks for an instance that
-has the primary key of $id.
-One additional feature available here is the ability to define that any given model should
-return its results wrapped in a specific class of collection. So, if you want to add specific
-methods to any collection of objects of the Order class — possibly related to summarizing the
-financial details of your orders — you could create a custom OrderCollection that extends
+For example, every Eloquent collection has a method called modelKeys() that returns an array
+
+of the primary keys of every instance in the collection. find($id) looks for an instance that
+
+has the primary key of $id.
+
+One additional feature available here is the ability to define that any given model should
+
+return its results wrapped in a specific class of collection. So, if you want to add specific
+
+methods to any collection of objects of the Order class — possibly related to summarizing the
+
+financial details of your orders — you could create a custom OrderCollection that extends
+
 the Illuminate\Database\Eloquent\Collection class, and then register it in your model.
 
-1. Custom Collection classes for Eloquent models
-...
-class OrderCollection extends Collection
-{
-public function sumBillableAmount()
-{
-return $this->reduce(function ($carry, $order) {
-return $carry + ($order->billable ? $order->amount : 0);
-}, 0);
-}
-} .
-..
-class Order extends Model
-{
-public function newCollection(array $models = [])
-{
-return new OrderCollection($models);
-}
-Now, any time you get back a collection of Orders (e.g., from Order::all()) it’ll actually be
-an instance of the OrderCollection class:
-$orders = Order::all();
+1. Custom Collection classes for Eloquent models
+
+...
+
+class OrderCollection extends Collection
+
+{
+
+public function sumBillableAmount()
+
+{
+
+return $this->reduce(function ($carry, $order) {
+
+return $carry + ($order->billable ? $order->amount : 0);
+
+}, 0);
+
+}
+
+} .
+
+..
+
+class Order extends Model
+
+{
+
+public function newCollection(array $models = [])
+
+{
+
+return new OrderCollection($models);
+
+}
+
+Now, any time you get back a collection of Orders (e.g., from Order::all()) it’ll actually be
+
+an instance of the OrderCollection class:
+
+$orders = Order::all();
+
 $billableAmount = $orders->sumBillableAmount();
 
 ### Eloquent Serialization
-Serializing complex database records can be, well, complex, and this is one of the places
-many ORMs fall short. Thankfully, you get two powerful methods for free with Eloquent:
-toArray() and toJson(). Collections also have toArray() and toJson(), so all of these are
-valid:
-$contactArray = Contact::first()->toArray();
-$contactJson = Contact::first()->toJson();
-$contactsArray = Contact::all()->toArray();
-$contactsJson = Contact::all()->toJson();
+Serializing complex database records can be, well, complex, and this is one of the places
 
-You can also cast an Eloquent instance or collection to a string ($string = (string)
+many ORMs fall short. Thankfully, you get two powerful methods for free with Eloquent:
+
+toArray() and toJson(). Collections also have toArray() and toJson(), so all of these are
+
+valid:
+
+$contactArray = Contact::first()->toArray();
+
+$contactJson = Contact::first()->toJson();
+
+$contactsArray = Contact::all()->toArray();
+
+$contactsJson = Contact::all()->toJson();
+
+
+You can also cast an Eloquent instance or collection to a string ($string = (string)
+
 $contact;), but both models and collections will just run toJson() and return the result.
 
-1. Returning JSON from routes directly
+1. Returning JSON from routes directly
 
-// routes/web.php
-Route::get('api/contacts', function () {
-return Contact::all();
-});
-Route::get('api/contacts/{id}', function ($id) {
-return Contact::findOrFail($id);
+
+// routes/web.php
+
+Route::get('api/contacts', function () {
+
+return Contact::all();
+
+});
+
+Route::get('api/contacts/{id}', function ($id) {
+
+return Contact::findOrFail($id);
+
 });
 
 2. Hiding attributes from JSON
 
-It’s very common to use JSON returns in APIs, and it’s very common to want to hide certain
-attributes in these contexts, so Eloquent makes it easy to hide any attributes every time you
-cast to JSON.
+It’s very common to use JSON returns in APIs, and it’s very common to want to hide certain
 
-##### You can either blacklist attributes, hiding the ones you list: public $hidden, $visible, 
+attributes in these contexts, so Eloquent makes it easy to hide any attributes every time you
 
-class Contact extends Model
-{
-public $hidden = ['password', 'remember_token'];
+cast to JSON.
 
-##### or whitelist attributes, showing only the ones you list:
 
-class Contact extends Model
-{
-public $visible = ['name', 'email', 'status'];
+##### You can either blacklist attributes, hiding the ones you list:
+ public $hidden, $visible, 
 
-##### This also works for relationships:
+class Contact extends Model
 
-class User extends Model
-{
-public $hidden = ['contacts'];
-public function contacts()
-{
-return $this->hasMany(Contact::class);
+{
+
+public $hidden = ['password', 'remember_token'];
+
+
+##### or whitelist attributes, showing only the ones you list:
+
+
+class Contact extends Model
+
+{
+
+public $visible = ['name', 'email', 'status'];
+
+
+##### This also works for relationships:
+
+
+class User extends Model
+
+{
+
+public $hidden = ['contacts'];
+
+public function contacts()
+
+{
+
+return $this->hasMany(Contact::class);
+
 }
 
-##### There might be times when you want to make an attribute visible just for a single call. That’s
-possible, with the Eloquent method makeVisible():
+##### There might be times when you want to make an attribute visible just for a single call. That’s
+
+possible, with the Eloquent method makeVisible():
+
 
 $array = $user->makeVisible('remember_token')->toArray();
 
 ##### ADDING A GENERATED COLUMN TO ARRAY AND JSON OUTPUT: $appends
-If you have created an accessor for a column that doesn’t exist — for example, our full_name column — add it to the $appends array on the model to add it to the array and JSON output:
+If you have created an accessor for a column that doesn’t exist — for example, our full_name column — add it to the $appends array on the model to add it to the array and JSON output:
 
-class Contact extends Model
-{
-protected $appends = ['full_name'];
 
-public function getFullNameAttribute()
-{
+class Contact extends Model
+
+{
+
+protected $appends = ['full_name'];
+
+
+public function getFullNameAttribute()
+
+{
+
 return "{$this->first_name} {$this->last_name}";
 
 ### Eloquent Relationships
 #### one to one  : $this->hasOne
-Defining a one-to-one relationship
-class Contact extends Model
-{
-public function phoneNumber()
-{
-return $this->hasOne(PhoneNumber::class);
+Defining a one-to-one relationship
+
+class Contact extends Model
+
+{
+
+public function phoneNumber()
+
+{
+
+return $this->hasOne(PhoneNumber::class);
+
 }
 
-How should this be defined in your database? Since we’ve defined that the Contact has one PhoneNumber, Eloquent expects that the table supporting the PhoneNumber class (likely phone_numbers) has a contact_id column on it. If you named it something different (for instance, owner_id), you’ll need to change your definition:
+How should this be defined in your database? Since we’ve defined that the Contact has one
+ PhoneNumber, Eloquent expects that the table supporting the PhoneNumber class (likely
+ phone_numbers) has a contact_id column on it. If you named it something different (for
+ instance, owner_id), you’ll need to change your definition:
 
-return $this->hasOne(PhoneNumber::class, 'owner_id');
 
-Here’s how we access the phone number on a contact:
+return $this->hasOne(PhoneNumber::class, 'owner_id');
 
-$contact = Contact::first();
+
+Here’s how we access the phone number on a contact:
+
+
+$contact = Contact::first();
+
 $contactPhone = $contact->phoneNumber;
 
-Notice that we define the method in the Example with phoneNumber(), but we access it with ->phoneNumber.
-That’s the magic. You could also access it with ->phone_number. This will return a full Eloquent instance of the related PhoneNumber record.
+Notice that we define the method in the Example with phoneNumber(), but we access it with -
+>phoneNumber.
+That’s the magic. You could also access it with ->phone_number. This will
+ return a full Eloquent instance of the related PhoneNumber record.
 
-##### Defining a one-to-one relationship’s inverse : $this->belongsTo
-class PhoneNumber extends Model
-{
-public function contact()
-{
-return $this->belongsTo(Contact::class);
-}
-Then we access it the same way:
+##### Defining a one-to-one relationship’s inverse
+ : $this->belongsTo
+class PhoneNumber extends Model
+
+{
+
+public function contact()
+
+{
+
+return $this->belongsTo(Contact::class);
+
+}
+
+Then we access it the same way:
+
 $contact = $phoneNumber->contact;
 
 ##### INSERTING RELATED ITEMS
-Each relationship type has its own quirks for how to relate models, but here’s the core of how it works: pass an
-instance to save(), or an array of instances to saveMany(). You can also pass properties to create() and it’ll
-make a new instance for you:
+Each relationship type has its own quirks for how to relate models, but here’s the core of how it works: pass an
 
-$contact = Contact::first();
-$phoneNumber = new PhoneNumber;
-$phoneNumber->number = 8008675309;
-$contact->phoneNumbers()->save($phoneNumber);
+instance to save(), or an array of instances to saveMany(). You can also pass properties to create() and it’ll
 
-// or
-$contact->phoneNumbers()->saveMany([
-PhoneNumber::find(1),
-PhoneNumber::find(2),
-]);
+make a new instance for you:
 
-// or
-$contact->phoneNumbers()->create([
-'number' => '+13138675309'
+
+$contact = Contact::first();
+
+$phoneNumber = new PhoneNumber;
+
+$phoneNumber->number = 8008675309;
+
+$contact->phoneNumbers()->save($phoneNumber);
+
+
+// or
+
+$contact->phoneNumbers()->saveMany([
+
+PhoneNumber::find(1),
+
+PhoneNumber::find(2),
+
+]);
+
+
+// or
+
+$contact->phoneNumbers()->create([
+
+'number' => '+13138675309'
+
 ]);
 
 #### one to many 
-##### Defining a one-to-many relationship : $this->hasMany
+##### Defining a one-to-many relationship
+ : $this->hasMany
 
-class User extends Model
-{
-public function contacts()
-{
-return $this->hasMany(Contact::class);
-}
+class User extends Model
 
-Once again, this expects that the Contact model’s backing table (likely contacts) has a
-user_id column on it. If it doesn’t, override it by passing the correct column name as the
-second parameter of hasMany().
-We can get a user’s contacts as follows:
-$user = User::first();
-$usersContacts = $user->contacts;
-Just like with one to one, we use the name of the relationship method and call it as if it were a
-property instead of a method. However, this method returns a collection instead of a model
-instance. And this is a normal Eloquent collection, so you can have all sorts of fun with it:
+{
 
-$donors = $user->contacts->filter(function ($contact) {
-return $contact->status == 'donor';
-});
+public function contacts()
 
-$lifetimeValue = $contact->orders->reduce(function ($carry, $order) {
-return $carry + $order->amount;
+{
+
+return $this->hasMany(Contact::class);
+
+}
+
+
+Once again, this expects that the Contact model’s backing table (likely contacts) has a
+
+user_id column on it. If it doesn’t, override it by passing the correct column name as the
+
+second parameter of hasMany().
+
+We can get a user’s contacts as follows:
+
+$user = User::first();
+
+$usersContacts = $user->contacts;
+
+Just like with one to one, we use the name of the relationship method and call it as if it were a
+
+property instead of a method. However, this method returns a collection instead of a model
+
+instance. And this is a normal Eloquent collection, so you can have all sorts of fun with it:
+
+
+$donors = $user->contacts->filter(function ($contact) {
+
+return $contact->status == 'donor';
+
+});
+
+
+$lifetimeValue = $contact->orders->reduce(function ($carry, $order) {
+
+return $carry + $order->amount;
+
 }, 0);
 
-#####  Defining a one-to-many relationship’s inverse :$this->belongsTo
-class Contact extends Model
-{
-public function user()
-{
-return $this->belongsTo(User::class);
-}
-And just like one to one, we can access the User from the Contact:
+#####  Defining a one-to-many relationship’s inverse
+ :$this->belongsTo
+class Contact extends Model
+
+{
+
+public function user()
+
+{
+
+return $this->belongsTo(User::class);
+
+}
+
+And just like one to one, we can access the User from the Contact:
+
 $userName = $contact->user->name;
 
-##### ATTACHING AND DETACHING RELATED ITEMS FROM THE ATTACHED ITEM (this illustrates how reverse save is used on belongsTo )
+##### ATTACHING AND DETACHING RELATED ITEMS FROM THE
+ ATTACHED ITEM (this illustrates how reverse save is used on belongsTo )
 Most of the time we attach related items by running save() on the parent and passing in the related item, 
-as in 
+as in
+ 
 $user->contacts()->save($contact). 
 
-But if you want to perform the behaviors on the attached (“child”) item,
-you can use associate() and dissociate() on the method that returns the belongsTo():
+But if you want to perform the behaviors on the attached (“child”) item,
 
-$contact = Contact::first();
-$contact->user()->associate(User::first());
-$contact->save();
-// and later
-$contact->user()->dissociate();
+you can use associate() and dissociate() on the method that returns the belongsTo():
+
+
+$contact = Contact::first();
+
+$contact->user()->associate(User::first());
+
+$contact->save();
+
+// and later
+
+$contact->user()->dissociate();
+
 $contact->save();
 
 ##### Using relationships as query builders
-Until now, we’ve taken the method name (e.g., contacts()) and called it as if were a property
-(e.g., $user->contacts). What happens if we call it as a method? Instead of processing the
+Until now, we’ve taken the method name (e.g., contacts()) and called it as if were a property
+
+(e.g., $user->contacts). What happens if we call it as a method? Instead of processing the
+
 relationship, it will return a prescoped query builder.
 
 $donors = $user->contacts()->where('status', 'donor')->get();
 
 ##### Selecting only records that have a related item: has()
-You can also choose to select only records that meet particular criteria with regard to their
-related items using has():
-$postsWithComments = Post::has('comments')->get();
+You can also choose to select only records that meet particular criteria with regard to their
 
-You can also adjust the criteria further:
-$postsWithManyComments = Post::has('comments', '>=', 5)->get();
+related items using has():
 
-You can nest the criteria:
-$usersWithPhoneBooks = User::has('contacts.phoneNumbers')->get();
+$postsWithComments = Post::has('comments')->get();
 
-And finally, you can write custom queries on the related items:
-// Gets all contacts with a phone number containing the string "867-5309"
-$jennyIGotYourNumber = Contact::whereHas('phoneNumbers', function ($query) {
+
+You can also adjust the criteria further:
+
+$postsWithManyComments = Post::has('comments', '>=', 5)->get();
+
+
+You can nest the criteria:
+
+$usersWithPhoneBooks = User::has('contacts.phoneNumbers')->get();
+
+
+And finally, you can write custom queries on the related items:
+
+// Gets all contacts with a phone number containing the string "867-5309"
+
+$jennyIGotYourNumber = Contact::whereHas('phoneNumbers', function ($query) {
+
 $query->where('number', 'like', '%867-5309%');
 
 #### has many through : $this->hasManyThrough
-Defining a has-many-through relationship
-class User extends Model
-{
-public function phoneNumbers()
-{
-return $this->hasManyThrough(PhoneNumber::class, Contact::class);
+Defining a has-many-through relationship
+
+class User extends Model
+
+{
+
+public function phoneNumbers()
+
+{
+
+return $this->hasManyThrough(PhoneNumber::class, Contact::class);
+
 }
-You’d access this relationship using $user->phone_numbers, and as always you can customize
-the relationship key on the intermediate model (with the third parameter of
+You’d access this relationship using $user->phone_numbers, and as always you can customize
+
+the relationship key on the intermediate model (with the third parameter of
+
 hasmanyThrough()) and the relationship key on the distant model (with the fourth parameter).
 
 ### many to many 
-#### Defining a many-to-many relationship :$this->belongsToMany
-class User extends Model
-{
-public function contacts()
-{
-return $this->belongsToMany(Contact::class);
-}
+#### Defining a many-to-many relationship
+ :$this->belongsToMany
+class User extends Model
+
+{
+
+public function contacts()
+
+{
+
+return $this->belongsToMany(Contact::class);
+
 }
 
-Defining a many-to-many relationship’s inverse
-class Contact extends Model
-{
-public function users()
-{
-return $this->belongsToMany(User::class);
-}
+}
+
+Defining a many-to-many relationship’s inverse
+
+class Contact extends Model
+
+{
+
+public function users()
+
+{
+
+return $this->belongsToMany(User::class);
+
+}
+
 }
 
 #### pivot table and its conventional name rule.
-many-to-many relationships rely on a pivot table that connects the two. The
-conventional naming of this table is done by placing the two singular table names together,
-ordered alphabetically, and separating them by an underscore.
-So, since we’re linking users and contacts, our pivot table should be named contacts_users
-(if you’d like to customize the table name, pass it as the second parameter to the
-belongsToMany() methods). It needs two columns: contact_id and user_id.
-Just like with hasMany(), we get access to a collection of the related items, but this time it’s
+many-to-many relationships rely on a pivot table that connects the two. The
+
+conventional naming of this table is done by placing the two singular table names together,
+
+ordered alphabetically, and separating them by an underscore.
+
+So, since we’re linking users and contacts, our pivot table should be named contacts_users
+
+(if you’d like to customize the table name, pass it as the second parameter to the
+
+belongsToMany() methods). It needs two columns: contact_id and user_id.
+
+Just like with hasMany(), we get access to a collection of the related items, but this time it’s
+
 from both sides
 
-Accessing the related items from both sides of a many-to-many relationship
-$user = User::first();
-$user->contacts->each(function ($contact) {
-// do something
-});
-$contact = Contact::first();
-$contact->users->each(function ($user) {
-// do something
-});
+Accessing the related items from both sides of a many-to-many relationship
+
+$user = User::first();
+
+$user->contacts->each(function ($contact) {
+
+// do something
+
+});
+
+$contact = Contact::first();
+
+$contact->users->each(function ($user) {
+
+// do something
+
+});
+
 $donors = $user->contacts()->where('status', 'donor')->get();
 
-#### UNIQUE ASPECTS OF ATTACHING AND DETACHING MANY-TO-MANY RELATED ITEMS
-Since your pivot table can have its own properties, you need to be able to set those properties when you’re attaching a
-many-to-many related item. You can do that by passing an array as the second parameter to save():
-$user = User::first();
-$contact = Contact::first();
-$user->contacts()->save($contact, ['status' => 'donor']);
-Additionally, you can use attach() and detach() and, instead of passing in an instance of a related item, you can just
-pass an ID. They work just the same as save(), but can also accept an array of IDs without you needing to rename the
-method to something like attachMany():
-$user = User::first();
-$user->contacts()->attach(1);
-$user->contacts()->attach(2, ['status' => 'donor']);
-$user->contacts()->attach([1, 2, 3]);
-$user->contacts()->attach([
-1 => ['status' => 'donor'],
-2,
-3
-]);
-$user->contacts()->detach(1);
-$user->contacts()->detach([1, 2]);
-$user->contacts()->detach(); // Detaches all contacts
-You can also use updateExistingPivot() to make changes just to the pivot record:
-$user->contacts()->updateExistingPivot($contactId, [
-'status' => 'inactive'
-]);
-And if you’d like to replace the current relationships, effectively detaching all previous relationships and attaching new
-ones, you can pass an array to sync():
-$user->contacts()->sync([1, 2, 3]);
-$user->contacts()->sync([
-1 => ['status' => 'donor'],
-2,
-3
+#### UNIQUE ASPECTS OF ATTACHING AND DETACHING
+ MANY-TO-MANY RELATED ITEMS
+Since your pivot table can have its own properties, you need to be able to set those properties when you’re attaching a
+
+many-to-many related item. You can do that by passing an array as the second parameter to save():
+
+$user = User::first();
+
+$contact = Contact::first();
+
+$user->contacts()->save($contact, ['status' => 'donor']);
+
+Additionally, you can use attach() and detach() and, instead of passing in an instance of a related item, you can just
+
+pass an ID. They work just the same as save(), but can also accept an array of IDs without you needing to rename the
+
+method to something like attachMany():
+
+$user = User::first();
+
+$user->contacts()->attach(1);
+
+$user->contacts()->attach(2, ['status' => 'donor']);
+
+$user->contacts()->attach([1, 2, 3]);
+
+$user->contacts()->attach([
+
+1 => ['status' => 'donor'],
+
+2,
+
+3
+
+]);
+
+$user->contacts()->detach(1);
+
+$user->contacts()->detach([1, 2]);
+
+$user->contacts()->detach(); // Detaches all contacts
+
+You can also use updateExistingPivot() to make changes just to the pivot record:
+
+$user->contacts()->updateExistingPivot($contactId, [
+
+'status' => 'inactive'
+
+]);
+
+And if you’d like to replace the current relationships, effectively detaching all previous relationships and attaching new
+
+ones, you can pass an array to sync():
+
+$user->contacts()->sync([1, 2, 3]);
+
+$user->contacts()->sync([
+
+1 => ['status' => 'donor'],
+
+2,
+
+3
+
 ]);
 
 #### Getting data from the pivot table
-One thing that’s unique about many to many is that it’s our first relationship that has a pivot
-table. The less data you have on a pivot table, the better, but there are some cases where it’s
-valuable to store information on your pivot table — for example, you might want to store a
+One thing that’s unique about many to many is that it’s our first relationship that has a pivot
+
+table. The less data you have on a pivot table, the better, but there are some cases where it’s
+
+valuable to store information on your pivot table — for example, you might want to store a
+
 created_at field to see when this relationship was created.
 
 ##### defining columns  in pivot table using withPivot(), withTimestamps()
-In order to store these fields, you have to add them to the relationship definition, You can define specific fields using withPivot() or add created_at and updated_at timestamps using withTimestamps().
+In order to store these fields, you have to add them to the relationship definition, You can define specific fields using withPivot() or add created_at and
+ updated_at timestamps using withTimestamps().
 
-Adding fields to a pivot record
-public function contacts()
-{
-return $this->belongsToMany(Contact::class)
-->withTimestamps()
-->withPivot('status', 'preferred_greeting');
+Adding fields to a pivot record
+
+public function contacts()
+
+{
+
+return $this->belongsToMany(Contact::class)
+
+->withTimestamps()
+
+->withPivot('status', 'preferred_greeting');
+
 }
 
-##### Getting data from a related item’s pivot entry
-$user = User::first();
-$user->contacts->each(function ($contact) {
-echo sprintf(
-'Contact associated with this user at: %s',
-$contact->pivot->created_at
-);
+##### Getting data from a related item’s pivot entry
+
+$user = User::first();
+
+$user->contacts->each(function ($contact) {
+
+echo sprintf(
+
+'Contact associated with this user at: %s',
+
+$contact->pivot->created_at
+
+);
+
 });
 
 ### Polymorphic relationship  $this->morphsTo()  $this->morphMany
-Remember, our polymorphic relationship is where we have multiple Eloquent classes
-corresponding to the same relationship. We’re going to use Stars (like favorites) right now. A
-user can star both Contacts and Events, and that’s where the name polymorphic comes from:
+Remember, our polymorphic relationship is where we have multiple Eloquent classes
+
+corresponding to the same relationship. We’re going to use Stars (like favorites) right now. A
+
+user can star both Contacts and Events, and that’s where the name polymorphic comes from:
+
 a single interface to objects of multiple types.
 
-we’ll need three tables, and three models: Star, Contact, and Event (and, of course, User,
-but we’ll get there in a second). The contacts and events tables will just be as they normally
-are, and the stars table will contain an id field, a starrable_id, and a starrable_type. For
-each Star, you’ll be defining which “type” (e.g., Contact or Event) and which ID of that type
+we’ll need three tables, and three models: Star, Contact, and Event (and, of course, User,
+
+but we’ll get there in a second). The contacts and events tables will just be as they normally
+
+are, and the stars table will contain an id field, a starrable_id, and a starrable_type. For
+
+each Star, you’ll be defining which “type” (e.g., Contact or Event) and which ID of that type
+
 (e.g., 1) it is.
 
-Creating the models for a polymorphic starring system
-class Star extends Model
-{
-public function starrable()
-{
-return $this->morphsTo();
-}
+Creating the models for a polymorphic starring system
+
+class Star extends Model
+
+{
+
+public function starrable()
+
+{
+
+return $this->morphsTo();
+
 }
 
-class Contact extends Model
-{
-public function stars()
-{
-return $this->morphMany(Star::class, 'starrable');
-}
+}
+
+class Contact extends Model
+
+{
+
+public function stars()
+
+{
+
+return $this->morphMany(Star::class, 'starrable');
+
+}
+
 } 
 
-class Event extends Model
-{
-public function stars()
-{
-return $this->morphMany(Star::class, 'starrable');
-}
+c
+lass Event extends Model
+
+{
+
+public function stars()
+
+{
+
+return $this->morphMany(Star::class, 'starrable');
+
 }
 
-So, how do we create a Star?
-$contact = Contact::first();
-$contact->stars()->create();
-It’s that easy. The Contact is now starred.
+}
+
+S
+o, how do we create a Star?
+
+$contact = Contact::first();
+
+$contact->stars()->create();
+
+It’s that easy. The Contact is now starred.
+
 In order to find all of the Stars on a given Contact, we call the stars() method:
 
-Retrieving the instances of a polymorphic relationship
-$contact = Contact::first();
-$contact->stars->each(function ($star) {
-// Do stuff
-});
-If we have an instance of Star, we can get its target by calling the method we used to define its
+Retrieving the instances of a polymorphic relationship
+
+$contact = Contact::first();
+
+$contact->stars->each(function ($star) {
+
+// Do stuff
+
+});
+
+If we have an instance of Star, we can get its target by calling the method we used to define its
+
 morphTo(), which in this context is starrable(). 
 
-Retrieving the target of polymorphic instance
-$stars = Star::all();
-$stars->each(function ($star) {
-var_dump($star->starrable); // An instance of Contact or Event
-});
-Finally, you might be wondering, “What if I care who starred this contact?” That’s a great
-question; of course you do. It’s as simple as adding user_id to your stars table, and then
-setting up that a User has many Stars and a Star belongs to_ one User — a one-to-many
-relationship.The stars table becomes almost a pivot table between your User
+Retrieving the target of polymorphic instance
+
+$stars = Star::all();
+
+$stars->each(function ($star) {
+
+var_dump($star->starrable); // An instance of Contact or Event
+
+});
+
+Finally, you might be wondering, “What if I care who starred this contact?” That’s a great
+
+question; of course you do. It’s as simple as adding user_id to your stars table, and then
+
+setting up that a User has many Stars and a Star belongs to_ one User — a one-to-many
+
+relationship.The stars table becomes almost a pivot table between your User
+
 and your Contacts and Events.
 
-Extending a polymorphic system to differentiate by user
-class Star extends Model
-{
-public function starrable()
-{
-return $this->morphsTo;
+Extending a polymorphic system to differentiate by user
+
+class Star extends Model
+
+{
+
+public function starrable()
+
+{
+
+return $this->morphsTo;
+
 } 
 
-public function user()
-{
-return $this->belongsTo(User::class);
-}
+public function user()
+
+{
+
+return $this->belongsTo(User::class);
+
 }
 
-class User extends Model
-{
-public function stars()
-{
-return $this->hasMany(Star::class);
-}
 }
 
-That’s it! You can now run $star->user or $user->stars to find a list of a User’s Stars or to
-find the starring User from a Star. Also, when you create a new Star, you’ll now want to pass
-the User:
+c
+lass User extends Model
 
-$user = User::first();
-$event = Event::first();
+{
+
+public function stars()
+
+{
+
+return $this->hasMany(Star::class);
+
+}
+
+}
+
+That’s it! You can now run $star->user or $user->stars to find a list of a User’s Stars or to
+
+find the starring User from a Star. Also, when you create a new Star, you’ll now want to pass
+
+the User:
+
+
+$user = User::first();
+
+$event = Event::first();
+
 $event->stars()->create(['user_id' => $user->id]);
 
 ### Many to many polymorphic  $this->morphToMany  $this->morphedByMany
-The most complex and least common of the relationship types, many-to-many polymorphic
-relationships are like polymorphic relationships, except instead of being one to many they’re
+The most complex and least common of the relationship types, many-to-many polymorphic
+
+relationships are like polymorphic relationships, except instead of being one to many they’re
+
 many to many.
 
-The most common example for this relationship type is the tag, so I’ll keep it safe and use that
-as our example. Let’s imagine you want to be able to tag Contacts and Events. The uniqueness
-of many-to-many polymorphism is that it’s many to many: each tag may be applied to
-multiple items, and each tagged item might have multiple tags. And to add to that, it’s
-polymorphic: tags can be related to items of several different types. For the database, we’ll
-start with the normal structure of the polymorphic relationship but also add a pivot table.
-This means we’ll need a contacts table, an events table, and a tags table, all shaped like
-normal with an ID and whatever properties you want, and a new taggables table, which will
-have a tag_id, a taggable_id, and a taggable_type. Each entry into the taggables table will
+The most common example for this relationship type is the tag, so I’ll keep it safe and use that
+
+as our example. Let’s imagine you want to be able to tag Contacts and Events. The uniqueness
+
+of many-to-many polymorphism is that it’s many to many: each tag may be applied to
+
+multiple items, and each tagged item might have multiple tags. And to add to that, it’s
+
+polymorphic: tags can be related to items of several different types. For the database, we’ll
+
+start with the normal structure of the polymorphic relationship but also add a pivot table.
+
+This means we’ll need a contacts table, an events table, and a tags table, all shaped like
+
+normal with an ID and whatever properties you want, and a new taggables table, which will
+
+have a tag_id, a taggable_id, and a taggable_type. Each entry into the taggables table will
+
 relate a tag with one of the taggable content types.
 
-Defining a polymorphic many-to-many relationship
-class Contact extends Model
-{
-public function tags()
-{
-return $this->morphToMany(Tag::class, 'taggable');
-}
+Defining a polymorphic many-to-many relationship
+
+class Contact extends Model
+
+{
+
+public function tags()
+
+{
+
+return $this->morphToMany(Tag::class, 'taggable');
+
+}
+
 } 
 
-class Event extends Model
-{
-public function tags()
-{
-return $this->morphToMany(Tag::class, 'taggable');
-}
+c
+lass Event extends Model
+
+{
+
+public function tags()
+
+{
+
+return $this->morphToMany(Tag::class, 'taggable');
+
 }
 
-class Tag extends Model
-{
-public function contacts()
-{
-return $this->morphedByMany(Contact::class, 'taggable');
 }
 
-public function events()
-{
-return $this->morphedByMany(Event::class, 'taggable');
-}
+c
+lass Tag extends Model
+
+{
+
+public function contacts()
+
+{
+
+return $this->morphedByMany(Contact::class, 'taggable');
+
 }
 
-Here’s how to create your first tag:
-$tag = Tag::firstOrCreate(['name' => 'likes-cheese']);
-$contact = Contact::first();
+public function events()
+
+{
+
+return $this->morphedByMany(Event::class, 'taggable');
+
+}
+
+}
+
+Here’s how to create your first tag:
+
+$tag = Tag::firstOrCreate(['name' => 'likes-cheese']);
+
+$contact = Contact::first();
+
 $contact->tags()->attach($tag->id);
 
-Accessing the related items from both sides of a many-to-many polymorphic
-relationship
-$contact = Contact::first();
-$contact->tags->each(function ($tag) {
-// Do stuff
-});
-$tag = Tag::first();
-$tag->contacts->each(function ($contact) {
-// Do stuff
+Accessing the related items from both sides of a many-to-many polymorphic
+
+relationship
+
+$contact = Contact::first();
+
+$contact->tags->each(function ($tag) {
+
+// Do stuff
+
+});
+
+$tag = Tag::first();
+
+$tag->contacts->each(function ($contact) {
+
+// Do stuff
+
 });
 
 ### Child Records Updating Parent Record Timestamps :
 #### using protected $touches
-any Eloquent models by default will have created_at and updated_at timestamps.
-Eloquent will set the updated_at timestamp automatically any time you make any changes to a record.
+any Eloquent models by default will have created_at and updated_at timestamps.
 
-When a related item either belongsTo() or belongsToMany() another item, it might be
-valuable to mark the other item as updated any time the related item is updated. For example,
-if a PhoneNumber is updated, the Contact it’s connected to should be marked as having been
+Eloquent will set the updated_at timestamp automatically any time you make any changes to a
+ record.
+
+When a related item either belongsTo() or belongsToMany() another item, it might be
+
+valuable to mark the other item as updated any time the related item is updated. For example,
+
+if a PhoneNumber is updated, the Contact it’s connected to should be marked as having been
+
 updated as well.
 
-Updating a parent record any time the child record is updated
-class PhoneNumber extends Model
-{
-protected $touches = ['contact'];
-public function contact()
-{
-return $this->belongsTo(Contact::class);
+Updating a parent record any time the child record is updated
+
+class PhoneNumber extends Model
+
+{
+
+protected $touches = ['contact'];
+
+public function contact()
+
+{
+
+return $this->belongsTo(Contact::class);
+
 }
 
-#### Eager loading (to avoid the datbase load so-called N+1 problem)
-The problem with lazy loading is that it can introduce significant database load (often the N+1 problem).
-If you are loading a model instance and you know you’ll be working with its relationships,
-you can instead choose to “eager-load” one or many of its sets of related items:
-$contacts = Contact::with('phoneNumbers')->get();
-Using the with() method with a retrieval gets all of the items related to the pulled item(s), and
-as you can see in this example, you pass it the name of the method the relationship is defined by.
+#### Eager loading
+ (to avoid the datbase load so-called N+1 problem)
+The problem with lazy loading is that it can
+ introduce significant database load (often the N+1 problem).
+I
+f you are loading a model instance and you know you’ll be working with its relationships,
 
-When we use eager loading, instead of pulling the related items one at a time when they’re requested (selecting one phone number each time a foreach loop runs), we have a single query to pull the initial items (selecting all contacts) and a second query to pull all their related items (selecting all phone numbers owned by the contacts we just pulled).
+you can instead choose to “eager-load” one or many of its sets of related items:
 
-You can eager-load multiple relationships by passing multiple parameters to the with() call:
+$contacts = Contact::with('phoneNumbers')->get();
 
-$contacts = Contact::with('phoneNumbers', 'addresses')->get();
+Using the with() method with a retrieval gets all of the items related to the pulled item(s), and
 
-And you can nest eager loading to eager-load the relationships of relationships:
+as you can see in this example, you pass it the name of the method the relationship is defined
+ by.
+
+When we use eager loading, instead of pulling the related items one at a time when they’re
+ requested (selecting one phone number each time a foreach loop runs), we have a single
+ query to pull the initial items (selecting all contacts) and a second query to pull all their
+ related items (selecting all phone numbers owned by the contacts we just pulled).
+
+
+You can eager-load multiple relationships by passing multiple parameters to the with() call:
+
+
+$contacts = Contact::with('phoneNumbers', 'addresses')->get();
+
+
+And you can nest eager loading to eager-load the relationships of relationships:
+
 
 $authors = Author::with('posts.comments')->get();
 
 
-##### Constraining eager loads
-If you want to eager-load a relationship, but not all of the items, you can pass a closure to
+##### Constraining eager loads
 
-with() to define exactly which related items to eager-load:
-$contacts = Contact::with(['addresses' => function ($query) {
-$query->where('mailable', true);
-}])->get();
+If you want to eager-load a relationship, but not all of the items, you can pass a closure to
 
-##### Lazy eager loading
-I know it sounds crazy, because we just defined eager loading as sort of the opposite of lazy
-loading, but sometimes you don’t know you want to perform an eager-load query until after
-the initial instances have been pulled. You can still perform an eager load after the fact, with
-lazy eager loading:
-$contacts = Contact::all();
-if ($showPhoneNumbers) {
-$contacts->load('phoneNumbers');
+
+with() to define exactly which related items to eager-load:
+
+$contacts = Contact::with(['addresses' => function ($query) {
+
+$query->where('mailable', true);
+
+}])->get();
+
+
+##### Lazy eager loading
+
+I know it sounds crazy, because we just defined eager loading as sort of the opposite of lazy
+
+loading, but sometimes you don’t know you want to perform an eager-load query until after
+
+the initial instances have been pulled. You can still perform an eager load after the fact, with
+
+lazy eager loading:
+
+$contacts = Contact::all();
+
+if ($showPhoneNumbers) {
+
+$contacts->load('phoneNumbers');
+
 }
 
-##### Eager loading only the count
-If you want to eager-load relationships but only so you can have access to the count of items
-in each relationship, you can try withCount():
-$authors = Author::withCount('posts')->get();
-// adds a "posts_count" integer to each Author with a count of that
+##### Eager loading only the count
+
+If you want to eager-load relationships but only so you can have access to the count of items
+
+in each relationship, you can try withCount():
+
+$authors = Author::withCount('posts')->get();
+
+// adds a "posts_count" integer to each Author with a count of that
+
 // Author's number of related posts
 
 
 ### Eloquent Events
-Eloquent models fire events out into the void of your application every time certain actions
-happen, regardless of whether you’re listening. If you’re familiar with pub/sub, it’s this same
+Eloquent models fire events out into the void of your application every time certain actions
+
+happen, regardless of whether you’re listening. If you’re familiar with pub/sub, it’s this same
+
 model.
 
-Here’s a quick rundown of binding a listener to when a new Contact is created. We’re going
-to bind it in the boot() method of AppServiceProvider, and let’s imagine we’re notifying a
-third-party service every time we create a new Contact.
-Example 8-51. Binding a listener to an Eloquent event
-class AppServiceProvider extends ServiceProvider
-{
-public function boot()
-{
-$thirdPartyService = new SomeThirdPartyService;
-Contact::creating(function ($contact) use ($thirdPartyService) {
-try {
-$thirdPartyService->addContact($contact);
-} catch (Exception $e) {
-Log::error('Failed adding contact to ThirdPartyService; cancelled.');
-return false;
-}
-});
-}
-We can see a few things in Example 8-51. First, we use Modelname::eventName() as the
-method, and pass it a closure. The closure gets access to the model instance that is being
-operated on. Second, we’re going to need to define this listener in a service provider
-somewhere. And third, if we return false, the operation will cancel and the save() or
-update() will be cancelled.
-Here are the events that every Eloquent model fires:
-creating
-created
-updating
-updated
-saving
-saved
-deleting
-deleted
-restoring
-restored
-Most of these should be pretty clear, except possibly restoring and restored, which fire
-when you’re restoring a soft-deleted row. Also, saving is fired for both creating and
+Here’s a quick rundown of binding a listener to when a new Contact is created. We’re going
+
+to bind it in the boot() method of AppServiceProvider, and let’s imagine we’re notifying a
+
+third-party service every time we create a new Contact.
+
+Example 8-51. Binding a listener to an Eloquent event
+
+class AppServiceProvider extends ServiceProvider
+
+{
+
+public function boot()
+
+{
+
+$thirdPartyService = new SomeThirdPartyService;
+
+Contact::creating(function ($contact) use ($thirdPartyService) {
+
+try {
+
+$thirdPartyService->addContact($contact);
+
+} catch (Exception $e) {
+
+Log::error('Failed adding contact to ThirdPartyService; cancelled.');
+
+return false;
+
+}
+
+});
+
+}
+
+We can see a few things in Example 8-51. First, we use Modelname::eventName() as the
+
+method, and pass it a closure. The closure gets access to the model instance that is being
+
+operated on. Second, we’re going to need to define this listener in a service provider
+
+somewhere. And third, if we return false, the operation will cancel and the save() or
+
+update() will be cancelled.
+
+Here are the events that every Eloquent model fires:
+
+creating
+
+created
+
+updating
+
+updated
+
+saving
+
+saved
+
+deleting
+
+deleted
+
+restoring
+
+restored
+
+Most of these should be pretty clear, except possibly restoring and restored, which fire
+
+when you’re restoring a soft-deleted row. Also, saving is fired for both creating and
+
 updating and saved is fired for both created and updated.
 
 # User Authentication and Authorization
-## The User Model and Migration
-We are able to fill out the name, email, and password properties when
-creating a new user, and the password and remember_token properties are excluded when
+## The User Model and Migration
+
+We are able to fill out the name, email, and password properties when
+
+creating a new user, and the password and remember_token properties are excluded when
+
 outputting the user as JSON.
 
-<?php
-// App\User
-namespace App;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-class User extends Authenticatable
-{
-use Notifiable;
-/*** The attributes that are mass assignable.
-**
-@var array
-*/
-protected $fillable = [
-'name', 'email', 'password',
-];
+<?php
 
-/*** The attributes excluded from the model's JSON form.
-**
-@var array
-*/
-protected $hidden = [
-'password', 'remember_token',
-];
+// App\User
+
+namespace App;
+
+use Illuminate\Notifications\Notifiable;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+
+{
+
+use Notifiable;
+
+/**
+* The attributes that are mass assignable.
+
+**
+
+@var array
+
+*/
+
+protected $fillable = [
+
+'name', 'email', 'password',
+
+];
+
+
+/*** The attributes excluded from the model's JSON form.
+
+**
+
+@var array
+
+*/
+
+protected $hidden = [
+
+'password', 'remember_token',
+
+];
+
 }
 
-<?php
-// Illuminate\Foundation\Auth\User
-namespace Illuminate\Foundation\Auth;
-use Illuminate\Auth\Authenticatable;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Auth\Passwords\CanResetPassword;
-use Illuminate\Foundation\Auth\Access\Authorizable;
-use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
-use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
-use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
-class User extends Model implements
-AuthenticatableContract,
-AuthorizableContract,
-CanResetPasswordContract
-{
-use Authenticatable, Authorizable, CanResetPassword;
+<?php
+
+// Illuminate\Foundation\Auth\User
+
+namespace Illuminate\Foundation\Auth;
+
+use Illuminate\Auth\Authenticatable;
+
+use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Auth\Passwords\CanResetPassword;
+
+use Illuminate\Foundation\Auth\Access\Authorizable;
+
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+
+class User extends Model implements
+
+AuthenticatableContract,
+
+AuthorizableContract,
+
+CanResetPasswordContract
+
+{
+
+use Authenticatable, Authorizable, CanResetPassword;
+
 }
 
-### CONTRACTS AND INTERFACES
-You may have noticed that sometimes I write the word “contract” and sometimes “interface,” and that almost all of the interfaces in Laravel are under the Contracts namespace. A PHP interface is essentially an agreement between two classes that one of the classes will “behave” a certain way. It’s a bit like a contract between them, and thinking about it as a contract gives a bit more inherent meaning to the name than calling it an interface does.
-In the end, though, they’re the same thing: an agreement that a class will provide certain methods with a certain signature. On a related note, the Illuminate\Contracts namespace contains a group of interfaces that Laravel components implement and typehint. This makes it easy to develop similar components that implement the same interfaces and swap them into your application in place of the stock Illuminate components. When the Laravel core and components typehint a mailer, for example, they don’t typehint the Mailer class. Instead, they typehint the Mailer contract (interface), making it easy to provide your own mailer. To learn more about how to do this, take a look at Chapter 11.
+### CONTRACTS AND INTERFACES
+
+You may have noticed that sometimes I write the word “contract” and sometimes “interface,” and that almost all of the
+ interfaces in Laravel are under the Contracts namespace.
+ A PHP interface is essentially an agreement between two classes that one of the classes will “behave” a certain way. It’s
+ a bit like a contract between them, and thinking about it as a contract gives a bit more inherent meaning to the name than
+ calling it an interface does.
+
+In the end, though, they’re the same thing: an agreement that a class will provide certain methods with a certain signature.
+ On a related note, the Illuminate\Contracts namespace contains a group of interfaces that Laravel components
+ implement and typehint. This makes it easy to develop similar components that implement the same interfaces and swap
+ them into your application in place of the stock Illuminate components. When the Laravel core and components typehint
+ a mailer, for example, they don’t typehint the Mailer class. Instead, they typehint the Mailer contract (interface), making
+ it easy to provide your own mailer. To learn more about how to do this, take a look at Chapter 11.
 
 ## Using the auth() Global Helper and the Auth Facade
-The auth() global helper is the easiest way to interact with the status of the authenticated user
-throughout your app. You can also inject an instance of Illuminate\Auth\AuthManager and
+The auth() global helper is the easiest way to interact with the status of the authenticated user
+
+throughout your app. You can also inject an instance of Illuminate\Auth\AuthManager and
+
 get the same functionality, or use the Auth facade.
 
-The most common usages are to check whether a user is logged in (auth()->check() returns
-true if the current user is logged in; auth()->guest() returns true if the user is not logged
-in) and to get the currently logged-in user (use auth()->user(), or auth()->id() for just the
+The most common usages are to check whether a user is logged in (auth()->check() returns
+
+true if the current user is logged in; auth()->guest() returns true if the user is not logged
+
+in) and to get the currently logged-in user (use auth()->user(), or auth()->id() for just the
+
 ID; both return null if no user is logged in).
 
-Sample usage of the auth() global helper in a controller
-public function dashboard()
-{
-if (auth()->guest()) {
-return redirect('sign-up');
-} r
-eturn view('dashboard')
-->with('user', auth()->user());
+Sample usage of the auth() global helper in a controller
+
+public function dashboard()
+
+{
+
+if (auth()->guest()) {
+
+return redirect('sign-up');
+
+} r
+
+eturn view('dashboard')
+
+->with('user', auth()->user());
+
 }
 
-## The Auth Controllers in the Auth-namespaced controllers: RegisterController, LoginController,ResetPasswordController, and ForgotPasswordController.
+## The Auth Controllers in the Auth-namespaced controllers: RegisterController, LoginController,
+ResetPasswordController, and ForgotPasswordController.
 
-### RegisterController
-The controller itself just contains a few hooks that the traits will call at given points. That
-makes it easy to customize a few common behaviors without having to dig deeply into the
-code that makes it all work.
-The $redirectTo property defines where users will be redirected after registration. The
-validator() method defines how to validate registrations. And the create() method defines
+### RegisterController
+
+The controller itself just contains a few hooks that the traits will call at given points. That
+
+makes it easy to customize a few common behaviors without having to dig deeply into the
+
+code that makes it all work.
+
+The $redirectTo property defines where users will be redirected after registration. The
+
+validator() method defines how to validate registrations. And the create() method defines
+
 how to create a new user based on an incoming registration. 
 
-Laravel’s default RegisterController
-...
-class RegisterController extends Controller
-{
-use RegistersUsers;
-protected $redirectTo = '/home';
-...
-protected function validator(array $data)
-{
-return Validator::make($data, [
-'name' => 'required|max:255',
-'email' => 'required|email|max:255|unique:users',
-'password' => 'required|min:6|confirmed',
-]);
-} p
-rotected function create(array $data)
-{
-return User::create([
-'name' => $data['name'],
-'email' => $data['email'],
-'password' => bcrypt($data['password']),
-]);
-}
+Laravel’s default RegisterController
+
+...
+
+class RegisterController extends Controller
+
+{
+
+use RegistersUsers;
+
+protected $redirectTo = '/home';
+
+...
+
+protected function validator(array $data)
+
+{
+
+return Validator::make($data, [
+
+'name' => 'required|max:255',
+
+'email' => 'required|email|max:255|unique:users',
+
+'password' => 'required|min:6|confirmed',
+
+]);
+
+} p
+
+rotected function create(array $data)
+
+{
+
+return User::create([
+
+'name' => $data['name'],
+
+'email' => $data['email'],
+
+'password' => bcrypt($data['password']),
+
+]);
+
 }
 
-#### RegistersUsers trait
-The RegistersUsers trait, which the RegisterController imports, handles a few primary
-functions for the registration process. First, it shows users the registration form view, with the
-showRegistrationForm() method. If you want new users to register with a view other than
-auth.register you can override the showRegistrationForm() method in your
-RegisterController.
-Next, it handles the POST of the registration form with the register() method. This method
-passes the user’s registration input to the validator from the validator() method of your
+}
+
+#### R
+egistersUsers trait
+The RegistersUsers trait, which the RegisterController imports, handles a few primary
+
+functions for the registration process. First, it shows users the registration form view, with the
+
+showRegistrationForm() method. If you want new users to register with a view other than
+
+auth.register you can override the showRegistrationForm() method in your
+
+RegisterController.
+
+Next, it handles the POST of the registration form with the register() method. This method
+
+passes the user’s registration input to the validator from the validator() method of your
+
 RegisterController, and then on to the create() method.
 
-And finally, the redirectPath() method (pulled in via the RedirectsUsers trait) defines
-where users should be redirected after a successful registration. You can define this URI with
-the redirectTo property on your controller, or you can override the redirectPath() method
+And finally, the redirectPath() method (pulled in via the RedirectsUsers trait) defines
+
+where users should be redirected after a successful registration. You can define this URI with
+
+the redirectTo property on your controller, or you can override the redirectPath() method
+
 and return whatever you want.
 
-If you want this trait to use a different auth guard than the default (you’ll learn more about
-guards in “Guards”), you can override the auth() method and have it return whichever guard
+If you want this trait to use a different auth guard than the default (you’ll learn more about
+
+guards in “Guards”), you can override the auth() method and have it return whichever guard
+
 you’d like.
 
 ### LoginController
 
 #### AuthenticatesUsers traint
-The AuthenticatesUsers trait is responsible for showing users the login form, validating
-their logins, throttling failed logins, handling logouts, and redirecting users after a successful
+The AuthenticatesUsers trait is responsible for showing users the login form, validating
+
+their logins, throttling failed logins, handling logouts, and redirecting users after a successful
+
 login.
 
-The showLoginForm() method defaults to showing the user the auth.login view, but you can
-override it if you’d like it to use a different view.
-The login() method accepts the POST from the login form. It validates the request using the
-validateLogin() method, which you can override if you’d like to customize the validation. It
-then hooks into the functionality of the ThrottlesLogins trait, which we’ll cover shortly, to
-reject users with too many failed logins. And finally, it redirects the user, either to her
-intended path (if the user was redirected to the login page when attempting to visit a page
-within the app) or to the path defined by the redirectPath() method, which returns your
-$redirectTo property.
-The trait calls the empty authenticated() method after a successful login, so if you’d like to
-perform any sort of behavior in response to a successful login, just override this method in
-your LoginController.
-There’s a username() method that defines which of your users columns is the “username”;
-this defaults to email but you can change that by overwriting the username() method in your
-controller to return the name of your username column.
-And, like in the RegistersUsers trait, you can override the guard() method to define which
+The showLoginForm() method defaults to showing the user the auth.login view, but you can
+
+override it if you’d like it to use a different view.
+
+The login() method accepts the POST from the login form. It validates the request using the
+
+validateLogin() method, which you can override if you’d like to customize the validation. It
+
+then hooks into the functionality of the ThrottlesLogins trait, which we’ll cover shortly, to
+
+reject users with too many failed logins. And finally, it redirects the user, either to her
+
+intended path (if the user was redirected to the login page when attempting to visit a page
+
+within the app) or to the path defined by the redirectPath() method, which returns your
+
+$redirectTo property.
+
+The trait calls the empty authenticated() method after a successful login, so if you’d like to
+
+perform any sort of behavior in response to a successful login, just override this method in
+
+your LoginController.
+
+There’s a username() method that defines which of your users columns is the “username”;
+
+this defaults to email but you can change that by overwriting the username() method in your
+
+controller to return the name of your username column.
+
+And, like in the RegistersUsers trait, you can override the guard() method to define which
+
 auth guard (more on that in “Guards”) this controller should use.
 
-#### ThrottlesLogins trait
-The ThrottlesLogins trait is an interface to Laravel’s Illuminate\Cache\RateLimiter class,
-which is a utility to rate-limit any event using the cache. This trait applies rate limiting to user
-logins, limiting users from using the login form if they’ve had too many failed logins within
-a certain amount of time. This functionality does not exist in Laravel 5.1.
-If you import the ThrottlesLogins trait, all of its methods are protected, which means they
-can’t actually be accessed as routes. Instead, the AuthenticatesUsers trait looks to see whether
-you’ve imported the ThrottlesLogins trait, and if so, it’ll attach its functionality to your
-logins without any work on your part. Since the default LoginController imports both, you’ll
-get this functionality for free if you use the auth scaffold.
-ThrottlesLogins limits any given combination of username and IP address to 5 attempts per
-60 seconds. Using the cache, it increments the “failed login” count of a given username/IP
-address combination, and if any user reaches 5 failed login attempts within 60 seconds, it
-redirects that user back to the login page with an appropriate error until the 60 seconds is
+#### ThrottlesLogins trait
+
+The ThrottlesLogins trait is an interface to Laravel’s Illuminate\Cache\RateLimiter class,
+
+which is a utility to rate-limit any event using the cache. This trait applies rate limiting to user
+
+logins, limiting users from using the login form if they’ve had too many failed logins within
+
+a certain amount of time. This functionality does not exist in Laravel 5.1.
+
+If you import the ThrottlesLogins trait, all of its methods are protected, which means they
+
+can’t actually be accessed as routes. Instead, the AuthenticatesUsers trait looks to see whether
+
+you’ve imported the ThrottlesLogins trait, and if so, it’ll attach its functionality to your
+
+logins without any work on your part. Since the default LoginController imports both, you’ll
+
+get this functionality for free if you use the auth scaffold.
+
+ThrottlesLogins limits any given combination of username and IP address to 5 attempts per
+
+60 seconds. Using the cache, it increments the “failed login” count of a given username/IP
+
+address combination, and if any user reaches 5 failed login attempts within 60 seconds, it
+
+redirects that user back to the login page with an appropriate error until the 60 seconds is
+
 over.
 
 #### ResetPasswordController
-The ResetPasswordController simply pulls in the ResetsPasswords trait. This trait provides
-validation and access to basic password reset views, and then uses an instance of Laravel’s
-PasswordBroker class (or anything else implementing the PasswordBroker interface, if you
-choose to write your own) to handle sending password reset emails and actually resetting the
+The ResetPasswordController simply pulls in the ResetsPasswords trait. This trait provides
+
+validation and access to basic password reset views, and then uses an instance of Laravel’s
+
+PasswordBroker class (or anything else implementing the PasswordBroker interface, if you
+
+choose to write your own) to handle sending password reset emails and actually resetting the
+
 passwords.
-Just like the other traits we’ve covered, it handles showing the reset password view
-(showResetForm() shows the auth.passwords.reset view), and the POST request that is sent
-from that view (reset() validates and sends the appropriate response). The resetPassword()
-method actually resets the password, and you can customize the broker with broker() and the
-auth guard with guard().
-If you’re interested in customizing any of this behavior, just override the specific method you
+Just like the other traits we’ve covered, it handles showing the reset password view
+
+(showResetForm() shows the auth.passwords.reset view), and the POST request that is sent
+
+from that view (reset() validates and sends the appropriate response). The resetPassword()
+
+method actually resets the password, and you can customize the broker with broker() and the
+
+auth guard with guard().
+
+If you’re interested in customizing any of this behavior, just override the specific method you
+
 want to customize in your controller.
 
 #### ForgotPasswordController
-The ForgotPasswordController simply pulls in the SendsPasswordResetEmails trait. It shows
-the auth.passwords.email form with the showLinkRequestForm() method, and handles the
-POST of that form with the sendResetLinkEmail() method. You can customize the broker with
+The ForgotPasswordController simply pulls in the SendsPasswordResetEmails trait. It shows
+
+the auth.passwords.email form with the showLinkRequestForm() method, and handles the
+
+POST of that form with the sendResetLinkEmail() method. You can customize the broker with
+
 the broker() method.
 
 ### Auth::routes()
-Now that we have the auth controllers providing some methods for a series of pre-defined
-routes, we’ll want our users to actually be able to hit those routes. We could add all these
-routes manually to routes/web.php, but there’s already a convenience tool for that, called
-Auth::routes():
-// routes/web.php
+Now that we have the auth controllers providing some methods for a series of pre-defined
+
+routes, we’ll want our users to actually be able to hit those routes. We could add all these
+
+routes manually to routes/web.php, but there’s already a convenience tool for that, called
+
+Auth::routes():
+
+// routes/web.php
+
 Auth::routes();
 
 
@@ -6044,7 +6834,8 @@ Auth::routes();
     
 // Illuminate/Routing/Router.php
 
-The routes provided by Auth::routes()
+The routes provided by Auth::routes()
+
 
    public function auth()
     {
@@ -6065,692 +6856,1300 @@ The routes provided by Auth::routes()
     }
 
 ### The Auth Scaffold
-At this point you have a migration, a model, controllers, and routes for your authentication
-system. But what about your views?
-Laravel handles that by providing an auth scaffold (new in Laravel 5.2), which is intended to
-be run on a new application and provide you with even more skeleton code to get your auth
+At this point you have a migration, a model, controllers, and routes for your authentication
+
+system. But what about your views?
+
+Laravel handles that by providing an auth scaffold (new in Laravel 5.2), which is intended to
+
+be run on a new application and provide you with even more skeleton code to get your auth
+
 system running quickly.
-The auth scaffold takes care of adding Auth::routes() to your routes file, adds a view for
-each route, and creates a HomeController to serve as the landing page for logged-in users; it
+The auth scaffold takes care of adding Auth::routes() to your routes file, adds a view for
+
+each route, and creates a HomeController to serve as the landing page for logged-in users; it
+
 also routes to the index() method of HomeController at the /home URI.
 #### php artisan make:auth 
-the following files will be made available to you:
+the following files will be made available to you:
 
-app/Http/Controllers/HomeController.php
-resources/views/auth/login.blade.php
-resources/views/auth/register.blade.php
-resources/views/auth/passwords/email.blade.php
-resources/views/auth/passwords/reset.blade.php
-resources/views/layouts/app.blade.php
+
+app/Http/Controllers/HomeController.php
+
+resources/views/auth/login.blade.php
+
+resources/views/auth/register.blade.php
+
+resources/views/auth/passwords/email.blade.php
+
+resources/views/auth/passwords/reset.blade.php
+
+resources/views/layouts/app.blade.php
+
 resources/views/home.blade.php
 
-#### Let’s review quickly the steps from new site to full authentication system:
-laravel new MyApp
-cd MyApp
-php artisan make:auth
-php artisan migrate
+#### Let’s review quickly the steps from new site to full authentication system:
 
-That’s it. Run those commands, and you will have a landing page and a bootstrap-based user
-registration, login, logout, and password reset system, with a basic landing page for all
+laravel new MyApp
+
+cd MyApp
+
+php artisan make:auth
+
+php artisan migrate
+
+
+That’s it. Run those commands, and you will have a landing page and a bootstrap-based user
+
+registration, login, logout, and password reset system, with a basic landing page for all
+
 authenticated users.
 
 ### “Remember Me”
-1. Attempting a user authentication
-if (auth()->attempt([
-'email' => request()->input('email'),
-'password' => request()->input('password')
-])) {
-// Handle the successful login
+1. Attempting a user authentication
+
+if (auth()->attempt([
+
+'email' => request()->input('email'),
+
+'password' => request()->input('password')
+
+])) {
+
+// Handle the successful login
+
 }
 
-2. Attempting a user authentication with a “remember me” checkbox check
-if (auth()->attempt([
-'email' => request()->input('email'),
-'password' => request()->input('password')
-]), request()->has('remember')) {
-// Handle the successful login
+2. Attempting a user authentication with a “remember me” checkbox check
+
+if (auth()->attempt([
+
+'email' => request()->input('email'),
+
+'password' => request()->input('password')
+
+]), request()->has('remember')) {
+
+// Handle the successful login
+
 }
-You can see that we checked whether the input has a remember property, which will return a
-boolean. This allows our users to decide if they want to be remembered with a checkbox in
+Yo
+u can see that we checked whether the input has a remember property, which will return a
+
+boolean. This allows our users to decide if they want to be remembered with a checkbox in
+
 the login form.
 
-And later, if you need to manually check whether the current user was authenticated by a
-remember token, there’s a method for that: auth()->viaRemember() returns a boolean
-indicating whether or not the current user authenticated via a remember token. This will allow
-you to prevent certain higher-sensitivity features from being accessible by remember token,
+And later, if you need to manually check whether the current user was authenticated by a
+
+remember token, there’s a method for that: auth()->viaRemember() returns a boolean
+
+indicating whether or not the current user authenticated via a remember token. This will allow
+
+you to prevent certain higher-sensitivity features from being accessible by remember token,
+
 and you can require users to reenter their passwords.
 
 ### Manually Authenticating Users
-The most common case for user authentication is that you’ll allow the users to provide their
-credentials, and then use auth()->attempt() to see whether the provided credentials match
-any real users. If so, you log them in.
-But sometimes there are contexts where it’s valuable for you to be able to choose to log a user
-in on your own. For example, you may want to allow admin users to switch users.
+The most common case for user authentication is that you’ll allow the users to provide their
 
-1. There are two methods that make this possible. First, you can just pass a user ID:
-auth()->loginUsingId(5);
+credentials, and then use auth()->attempt() to see whether the provided credentials match
 
-2. Second, you can pass a User object (or any other object that implements the
-Illuminate\Contracts\Auth\Authenticatable contract):
+any real users. If so, you log them in.
+
+But sometimes there are contexts where it’s valuable for you to be able to choose to log a user
+
+in on your own. For example, you may want to allow admin users to switch users.
+
+
+1. There are two methods that make this possible. First, you can just pass a user ID:
+
+auth()->loginUsingId(5);
+
+
+2. Second, you can pass a User object (or any other object that implements the
+
+Illuminate\Contracts\Auth\Authenticatable contract):
+
 auth()->login($user);
 
 ## Auth Middleware
 Laravel comes with the route Auth middleware out of the box.
-Route middleware defined in App\Http\Kernel:
-protected $routeMiddleware = [
-'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
-'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
-'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
-'can' => \Illuminate\Auth\Middleware\Authorize::class,
-'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+Route middleware defined in App\Http\Kernel:
+
+protected $routeMiddleware = [
+
+'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
+
+'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
+
+'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+
+'can' => \Illuminate\Auth\Middleware\Authorize::class,
+
+'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+
+'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
+
 ];
-Three of the default route middleware are authentication-related: auth restricts route access to
-authenticated users, auth.basic restricts access to authenticated users using HTTP Basic
-Authentication, and guest restricts access to unauthenticated users. can is used for authorizing
+Three of the default route middleware are authentication-related: auth restricts route access to
+
+authenticated users, auth.basic restricts access to authenticated users using HTTP Basic
+
+Authentication, and guest restricts access to unauthenticated users. can is used for authorizing
+
 user access to given routes.
 
-It’s most common to use auth for your authenticated-user-only sections and guest for any
-routes you don’t want authenticated users to see (like the login form). auth.basic is a much
+It’s most common to use auth for your authenticated-user-only sections and guest for any
+
+routes you don’t want authenticated users to see (like the login form). auth.basic is a much
+
 less commonly used middleware for authenticating via request headers.
 
-### Sample routes protected by auth middleware
-Route::group(['middleware' => 'auth'], function () {
-Route::get('account', 'AccountController@dashboard');
-});
+### Sample routes protected by auth middleware
+
+Route::group(['middleware' => 'auth'], function () {
+
+Route::get('account', 'AccountController@dashboard');
+
+});
+
 Route::get('login', 'Auth\LoginController@getLogin')->middleware('guest');
 
 ## Guards
-Every aspect of Laravel’s authentication system is routed through something called a guard.
-Each guard is a combination of two pieces: a driver that defines how it persists and retrieves
-the authentication state (for example, session), and a provider that allows you to get a user by
+Every aspect of Laravel’s authentication system is routed through something called a guard.
+
+Each guard is a combination of two pieces: a driver that defines how it persists and retrieves
+
+the authentication state (for example, session), and a provider that allows you to get a user by
+
 certain criteria (for example, users).
-Out of the box Laravel has two guards: web and api. web is the more traditional authentication
-style, using the session driver and the basic user provider. api also uses the same user
+Out of the box Laravel has two guards: web and api. web is the more traditional authentication
+
+style, using the session driver and the basic user provider. api also uses the same user
+
 provider, but it uses the token driver instead of the session to authenticate each request.
 
 ### changing the default Guard in config/auth.php
-You can change this
-guard by changing the auth.defaults.guard setting in config/auth.php:
-'defaults' => [
-'guard' => 'web', // Change the default here
-'passwords' => 'users',
+You can change this
+
+guard by changing the auth.defaults.guard setting in config/auth.php:
+
+'defaults' => [
+
+'guard' => 'web', // Change the default here
+
+'passwords' => 'users',
+
 ],
 
 ### Using Other Guards Without Changing the Default
-If you want to use another guard, but not change the default, you can start your Auth calls with
-guard():
-$apiUser = auth()->guard('api')->user();
+If you want to use another guard, but not change the default, you can start your Auth calls with
+
+guard():
+
+$apiUser = auth()->guard('api')->user();
+
 This will, just for this call, get the current user using the api guard.
 
 ### Adding a New Guard
-You can add a new guard at any time in config/auth.php, in the auth.guards setting:
-'guards' => [
-'trainees' => [
-'driver' => 'session',
-'provider' => 'trainees',
-],
-],
-As you can see here, we’ve created a new guard (in addition to web and api) named trainees.
-Let’s imagine, for the rest of this section, that we’re building an app where our users are
-physical trainers and they each have their own users — trainees — who can log in to their
-subdomains. So, we need a separate guard for them.
-The only two options for driver are token and session. Out of the box, the only option for
+You can add a new guard at any time in config/auth.php, in the auth.guards setting:
+
+'guards' => [
+
+'trainees' => [
+
+'driver' => 'session',
+
+'provider' => 'trainees',
+
+],
+
+],
+
+As you can see here, we’ve created a new guard (in addition to web and api) named trainees.
+
+Let’s imagine, for the rest of this section, that we’re building an app where our users are
+
+physical trainers and they each have their own users — trainees — who can log in to their
+
+subdomains. So, we need a separate guard for them.
+
+The only two options for driver are token and session. Out of the box, the only option for
+
 provider is users, but you can create your own provider easily.
 
 #### Creating a Custom User Provider
-Just below where the guards are defined in config/auth.php, there’s an auth.providers
-section that defines the available providers. Let’s create a new provider named trainees:
-'providers' => [
-'users' => [
-'driver' => 'eloquent',
-'model' => App\User::class,
-],
-'trainees' => [
-'driver' => 'eloquent',
-'model' => App\Trainee::class,
-],
-],
-The two options for driver are eloquent and database; if you use eloquent, you’ll need a
-model property that contains an Eloquent class name (the model to use for your User class),
-and if you use database, you’ll need a table property to define which table it should
-authenticate against.
-In our example, you can see that this application has a User and a Trainee, and they need to be
-authenticated separately. This way, the code can differentiate between auth()->guard(users)
-and auth()->guard(trainees).
-One last note: the auth route middleware can take a parameter that is the guard name. So, you
-can guard certain routes with a specific guard:
-Route::group(['middleware' => 'auth:trainees'], function () {
-// Trainee-only routes here
+Just below where the guards are defined in config/auth.php, there’s an auth.providers
+
+section that defines the available providers. Let’s create a new provider named trainees:
+
+'providers' => [
+
+'users' => [
+
+'driver' => 'eloquent',
+
+'model' => App\User::class,
+
+],
+
+'trainees' => [
+
+'driver' => 'eloquent',
+
+'model' => App\Trainee::class,
+
+],
+
+],
+
+The two options for driver are eloquent and database; if you use eloquent, you’ll need a
+
+model property that contains an Eloquent class name (the model to use for your User class),
+
+and if you use database, you’ll need a table property to define which table it should
+
+authenticate against.
+
+In our example, you can see that this application has a User and a Trainee, and they need to be
+
+authenticated separately. This way, the code can differentiate between auth()->guard(users)
+
+and auth()->guard(trainees).
+
+One last note: the auth route middleware can take a parameter that is the guard name. So, you
+
+can guard certain routes with a specific guard:
+
+Route::group(['middleware' => 'auth:trainees'], function () {
+
+// Trainee-only routes here
+
 });
 
-### Custom User Providers for Nonrelational Databases
-The user provider creation flow just described still relies on the same UserProvider class,
-which means it’s expecting to pull the identifying information out of a relational database. But
-if you’re using Mongo or Riak or something similar, you’ll actually need to create your own
-class.
-To do this, create a new class that implements the Illuminate\Contracts\Auth\UserProvider
-interface, and then bind it in AuthServiceProvider@boot:
-auth()->provider('riak', function ($app, array $config) {
-// Return an instance of Illuminate\Contracts\Auth\UserProvider...
-return new RiakUserProvider($app['riak.connection']);
+### Custom User Providers for Nonrelational Databases
+
+The user provider creation flow just described still relies on the same UserProvider class,
+
+which means it’s expecting to pull the identifying information out of a relational database. But
+
+if you’re using Mongo or Riak or something similar, you’ll actually need to create your own
+
+class.
+
+To do this, create a new class that implements the Illuminate\Contracts\Auth\UserProvider
+
+interface, and then bind it in AuthServiceProvider@boot:
+
+auth()->provider('riak', function ($app, array $config) {
+
+// Return an instance of Illuminate\Contracts\Auth\UserProvider...
+
+return new RiakUserProvider($app['riak.connection']);
+
 })
 
 
 ## Auth Events
-Laravel’s event system is a basic pub/sub framework. 
-There are system- and user-generated events that are broadcast, and the user has
+Laravel’s event system is a basic pub/sub
+ framework. 
+There are system- and user-generated events that are broadcast, and the user has
+
 the ability to create event listeners that do certain things in response to certain events.
-Authentication events generated by the framework
-protected $listen = [
-'Illuminate\Auth\Events\Attempting' => [],
-'Illuminate\Auth\Events\Login' => [],
-'Illuminate\Auth\Events\Logout' => [],
-'Illuminate\Auth\Events\Lockout' => [],
+Authentication events generated by the framework
+
+protected $listen = [
+
+'Illuminate\Auth\Events\Attempting' => [],
+
+'Illuminate\Auth\Events\Login' => [],
+
+'Illuminate\Auth\Events\Logout' => [],
+
+'Illuminate\Auth\Events\Lockout' => [],
+
 ];
 
 ## Authorization (ACL) and Roles
-Laravel’s authorization system enables you to determine whether a user is authorized to do a particular thing, which you’ll check using a few primary verbs: can, cannot, allows, and denies. The access control list (ACL) system is new in Laravel 5.2.
-Most of this authorization control will be performed using the Gate facade, but there are also
-convenience helpers in your controllers, on the User model, as middleware, and available as
+Laravel’s authorization system enables you to determine whether a user
+ is authorized to do a particular thing, which you’ll check using a few primary verbs: can,
+ cannot, allows, and denies. The access control list (ACL) system is new in Laravel 5.2.
+Most of this authorization control will be performed using the Gate facade, but there are also
+
+convenience helpers in your controllers, on the User model, as middleware, and available as
+
 Blade directives. 
 
-if (Gate::denies('edit', $contact)) {
-abort(403);
+if (Gate::denies('edit', $contact)) {
+
+abort(403);
+
 } 
-if (! Gate::check('create', Contact::class)) {
-abort(403);
+i
+f (! Gate::check('create', Contact::class)) {
+
+abort(403);
+
 }
 
 ### Defining Authorization Rules
-The default place to define authorization rules is the boot() method of the AuthServiceProvider. It should already have an instance of Illuminate\Contracts\Auth\Access\Gate (aliased as GateContract) typehinted and injected as $gate.
+The default place to define authorization rules is the boot() method of the
+ AuthServiceProvider. It should already have an instance of
+ Illuminate\Contracts\Auth\Access\Gate (aliased as GateContract) typehinted and injected
+ as $gate.
 
-An authorization rule is called an ability, and is comprised of two things: a string key (e.g.,
+An authorization rule is called an ability, and is comprised of two things: a string key (e.g.,
+
 update-contact) and a closure that returns a boolean.
-Example 9-10. Sample ability for updating a contact
-class AuthServiceProvider extends ServiceProvider
-{
-public function boot(GateContract $gate)
-{
-$this->registerPolicies($gate);
-$gate->define('update-contact', function ($user, $contact) {
-return $user->id === $contact->user_id;
-});
-}
+Example 9-10. Sample ability for updating a contact
+
+class AuthServiceProvider extends ServiceProvider
+
+{
+
+public function boot(GateContract $gate)
+
+{
+
+$this->registerPolicies($gate);
+
+$gate->define('update-contact', function ($user, $contact) {
+
+return $user->id === $contact->user_id;
+
+});
+
 }
 
-First, you want to define a key. In naming this key, you should consider what string makes
-sense in your code’s flow to refer to the ability you’re providing the user. You can see the
-code sample uses the convention {verb}-{modelName}: create-contact, update-contact,
-etc.
-Second, you define the closure. The first parameter will be the currently authenticated user,
-and all parameters after that will be the object(s) you’re checking for access to — in this
+}
+
+First, you want to define a key. In naming this key, you should consider what string makes
+
+sense in your code’s flow to refer to the ability you’re providing the user. You can see the
+
+code sample uses the convention {verb}-{modelName}: create-contact, update-contact,
+
+etc.
+
+Second, you define the closure. The first parameter will be the currently authenticated user,
+
+and all parameters after that will be the object(s) you’re checking for access to — in this
+
 instance, the contact.
 
-So, given those two objects, we can check whether the user is authorized to update this contact.
-You can write this logic however you want, but in the app we’re looking at at the moment,
-authorization depends on being the creator of the contact row. The closure will return true
+So, given those two objects, we can check whether the user is authorized to update this contact.
+
+You can write this logic however you want, but in the app we’re looking at at the moment,
+
+authorization depends on being the creator of the contact row. The closure will return true
+
 (authorized) if the current user created the contact, and false (unauthorized) if not.
 
-Just like with route definitions, you could also use a class and method instead of a closure to
-resolve this definition:
+Just like with route definitions, you could also use a class and method instead of a closure to
+
+resolve this definition:
+
 $gate->define('update-contact', 'ContactACLChecker@updateContact');
 
 ### The Gate Facade ( and Injecting Gate)
-1. Example 9-11. Basic Gate facade usage
-if (Gate::allows('update-contact', $contact)) {
-// Update contact
-} //
-or...
-if (Gate::denies('update-contact', $contact)) {
-abort(403);
+1. Example 9-11. Basic Gate facade usage
+
+if (Gate::allows('update-contact', $contact)) {
+
+// Update contact
+
+} //
+
+or...
+
+if (Gate::denies('update-contact', $contact)) {
+
+abort(403);
+
 }
 
 
-2. Abilities with multiple parameters
-// Definition
-$gate->define('add-contact-to-group', function ($user, $contact, $group) {
-return $user->id === $contact->user_id && $user->id === $group->user_id;
-});
-// Usage
-if (Gate::denies('add-contact-to-group', [$contact, $group])) {
-abort(403);
+2. Abilities with multiple parameters
+
+// Definition
+
+$gate->define('add-contact-to-group', function ($user, $contact, $group) {
+
+return $user->id === $contact->user_id && $user->id === $group->user_id;
+
+});
+
+// Usage
+
+if (Gate::denies('add-contact-to-group', [$contact, $group])) {
+
+abort(403);
+
 }
 
-3. And if you need to check authorization for a user other than the currently authenticated user,
-try forUser(), like in Example 9-13.
-Example 9-13. Specifying the user for Gate
-if (Gate::forUser($user)->denies('create-contact')) {
-abort(403);
+3. A
+nd if you need to check authorization for a user other than the currently authenticated user,
+
+try forUser(), like in Example 9-13.
+
+Example 9-13. Specifying the user for Gate
+
+if (Gate::forUser($user)->denies('create-contact')) {
+
+abort(403);
+
 }
 
 ### the Authorize Middleware   //route authorization
-If you want to authorize entire routes, you can use the Authorize middleware (which has a
-shortcut of can), like in Example 9-14.
-Example 9-14. Using the Authorize middleware
-Route::get('people/create', function () {
-// Create person...
-})->middleware('can:create-person');
-Route::get('people/{person}/edit', function () {
-// Create person...
-})->middleware('can:create,person');
-Here, the {person} parameter (whether it’s defined as a string or as a bound route model) will
+If you want to authorize entire routes, you can use the Authorize middleware (which has a
+
+shortcut of can), like in Example 9-14.
+
+Example 9-14. Using the Authorize middleware
+
+Route::get('people/create', function () {
+
+// Create person...
+
+})->middleware('can:create-person');
+
+Route::get('people/{person}/edit', function () {
+
+// Create person...
+
+})->middleware('can:create,person');
+
+Here, the {person} parameter (whether it’s defined as a string or as a bound route model) will
+
 be passed to the ability method as an additional parameter.
 
 ### controller authorization
-The parent App\Http\Controllers\Controller class in Laravel imports the
-AuthorizesRequests trait, which provides three methods for authorization: authorize(),
+The parent App\Http\Controllers\Controller class in Laravel imports the
+
+AuthorizesRequests trait, which provides three methods for authorization: authorize(),
+
 authorizeForUser(), and authorizeResource().
 
-1. authorize() takes an ability key and an object (or array of objects) as parameters, and if the
-authorization fails, it’ll quit the application with a 403 (Unauthorized) status code. That means
-this feature can turn three lines of authorization code into just one, as you can see in
-Example 9-15.
+1. authorize() takes an ability key and an object (or array of objects) as parameters, and if the
 
-Example 9-15. Simplifying controller authorization with authorize()
-// From this:
-public function show($contactId)
-{
-$contact = Contact::findOrFail($contactId);
-if (Gate::cannot('update-contact', $contact)) {
-abort(403);
-}
-} //
-To this:
-public function show($contactId)
-{
-$contact = Contact::findOrFail($contactId);
-$this->authorize('update-contact', $contact);
-} 
+authorization fails, it’ll quit the application with a 403 (Unauthorized) status code. That means
 
-2. authorizeForUser() is the same, but allows you to pass in a User object instead of defaulting
-to the currently authenticated user:
-$this->authorizeForUser($user, 'update-contact', $contact);
+this feature can turn three lines of authorization code into just one, as you can see in
 
-3. authorizeResource(), called once in the controller constructor, maps a predefined set of
-authorization rules to each of the RESTful controller methods in that controller — something
-like Example 9-16.
+Example 9-15.
 
-Example 9-16. The authorization-to-method mappings of authorizeResource()
-...
-class ContactsController extends Controller
-{
-public function __construct()
-{
-// This call does everything you see in the methods below.
-// If you put this here, you can remove all authorize
-// calls in the individual resource methods here.
-$this->authorizeResource(Contact::class);
-} p
-ublic function index()
-{
-$this->authorize('view', Contact::class);
-} p
-ublic function create()
-{
-$this->authorize('create', Contact::class);
-} p
-ublic function store(Request $request)
-{
-$this->authorize('create', Contact::class);
-} p
-ublic function show(Contact $contact)
-{
-$this->authorize('view', $contact);
-} p
-ublic function edit(Contact $contact)
-{
-$this->authorize('update', $contact);
-} p
-ublic function update(Request $request, Contact $contact)
-{
-$this->authorize('update', $contact);
-} p
-ublic function destroy(Contact $contact)
-{
-$this->authorize('delete', $contact);
-}
+
+Example 9-15. Simplifying controller authorization with authorize()
+
+// From this:
+
+public function show($contactId)
+
+{
+
+$contact = Contact::findOrFail($contactId);
+
+if (Gate::cannot('update-contact', $contact)) {
+
+abort(403);
+
+}
+
+} //
+
+To this:
+
+public function show($contactId)
+
+{
+
+$contact = Contact::findOrFail($contactId);
+
+$this->authorize('update-contact', $contact);
+
+} 
+
+
+2. authorizeForUser() is the same, but allows you to pass in a User object instead of defaulting
+
+to the currently authenticated user:
+
+$this->authorizeForUser($user, 'update-contact', $contact);
+
+
+3. authorizeResource(), called once in the controller constructor, maps a predefined set of
+
+authorization rules to each of the RESTful controller methods in that controller — something
+
+like Example 9-16.
+
+
+Example 9-16. The authorization-to-method mappings of authorizeResource()
+
+...
+
+class ContactsController extends Controller
+
+{
+
+public function __construct()
+
+{
+
+// This call does everything you see in the methods below.
+
+// If you put this here, you can remove all authorize
+
+// calls in the individual resource methods here.
+
+$this->authorizeResource(Contact::class);
+
+} p
+
+ublic function index()
+
+{
+
+$this->authorize('view', Contact::class);
+
+} p
+
+ublic function create()
+
+{
+
+$this->authorize('create', Contact::class);
+
+} p
+
+ublic function store(Request $request)
+
+{
+
+$this->authorize('create', Contact::class);
+
+} p
+
+ublic function show(Contact $contact)
+
+{
+
+$this->authorize('view', $contact);
+
+} p
+
+ublic function edit(Contact $contact)
+
+{
+
+$this->authorize('update', $contact);
+
+} p
+
+ublic function update(Request $request, Contact $contact)
+
+{
+
+$this->authorize('update', $contact);
+
+} p
+
+ublic function destroy(Contact $contact)
+
+{
+
+$this->authorize('delete', $contact);
+
+}
+
 }
 
 ### checking on the user instance
-If you’re not in a controller, you’re more likely to be checking the capabilities of a specific
-user than the currently authenticated user. That’s already possible with the Gate facade using
+If you’re not in a controller, you’re more likely to be checking the capabilities of a specific
+
+user than the currently authenticated user. That’s already possible with the Gate facade using
+
 the forUser() method, but sometimes the syntax can feel a little off.
 
-Thankfully, the Authorizable trait on the User class provides three methods to make a more
-readable authorization feature: $user->can(), $user->cant(), and $user->cannot(). As you
-can probably guess, cant() and cannot() do the same thing, and can() is their exact inverse.
-That means you can do something like Example 9-17.
-Example 9-17. Checking authorization on a user instance
-$user = User::find(1);
-if ($user->can('create-contact')) {
-// do something
-} B
-ehind the scenes, these methods are just passing your params to Gate; in the preceding
+Thankfully, the Authorizable trait on the User class provides three methods to make a more
+
+readable authorization feature: $user->can(), $user->cant(), and $user->cannot(). As you
+
+can probably guess, cant() and cannot() do the same thing, and can() is their exact inverse.
+
+That means you can do something like Example 9-17.
+
+Example 9-17. Checking authorization on a user instance
+
+$user = User::find(1);
+
+if ($user->can('create-contact')) {
+
+// do something
+
+} B
+
+ehind the scenes, these methods are just passing your params to Gate; in the preceding
+
 example, Gate::forUser($user)->can('create-contact').
 
 ### Blade Checks
-Blade also has a little convenience helper: a @can directive. Example 9-18 illustrates its usage.
-Example 9-18. Using Blade’s @can directive
-<nav>
-<a href="/">Home</a>
-@can('edit-contact', $contact)
-<a href="{{ route('contacts.edit', [$contact->id]) }}">Edit This Contact</a>
-@endcan
-</nav>
-You can also use @else in between @can and @endcan, and you can use @cannot and
-@endcannot as in Example 9-19.
-Example 9-19. Using Blade’s @cannot directive
-<h1>{{ $contact->name }}</h1>
-@cannot('edit-contact', $contact)
-LOCKED
+Blade also has a little convenience helper: a @can directive. Example 9-18 illustrates its usage.
+
+Example 9-18. Using Blade’s @can directive
+
+<nav>
+
+<a href="/">Home</a>
+
+@can('edit-contact', $contact)
+
+<a href="{{ route('contacts.edit', [$contact->id]) }}">Edit This Contact</a>
+
+@endcan
+
+</nav>
+
+You can also use @else in between @can and @endcan, and you can use @cannot and
+
+@endcannot as in Example 9-19.
+
+Example 9-19. Using Blade’s @cannot directive
+
+<h1>{{ $contact->name }}</h1>
+
+@cannot('edit-contact', $contact)
+
+LOCKED
+
 @endcannot
 
 ### Intercepting Checks ( for superuser authorization)
-If you’ve ever built an app with an admin user class, you’ve probably looked at all of the
-simple authorization closures so far in this chapter and thought about how you could add a
-superuser class that overrides these checks in every case. Thankfully, there’s already a tool
-for that.
-In AuthServiceProvider, where you’re already defining your abilities, you can also add a
-before() check that runs before all the others and can optionally override them, like in
-Example 9-20.
+If you’ve ever built an app with an admin user class, you’ve probably looked at all of the
 
-Example 9-20. Overriding Gate checks with before()
-$gate->before(function ($user, $ability) {
-if ($user->isOwner()) {
-return true;
-}
-});
-Note that the string name for the ability is also passed in, so you can differentiate your before
+simple authorization closures so far in this chapter and thought about how you could add a
+
+superuser class that overrides these checks in every case. Thankfully, there’s already a tool
+
+for that.
+
+In AuthServiceProvider, where you’re already defining your abilities, you can also add a
+
+before() check that runs before all the others and can optionally override them, like in
+
+Example 9-20.
+
+
+Example 9-20. Overriding Gate checks with before()
+
+$gate->before(function ($user, $ability) {
+
+if ($user->isOwner()) {
+
+return true;
+
+}
+
+});
+
+Note that the string name for the ability is also passed in, so you can differentiate your before
+
 hooks based on your ability naming scheme.
 
 ### Policies 
-Authorization policies are organizational structures that help you group your authorization
-logic based on the resource you’re controlling access to. They make it easy to manage
-defining authorization rules for behavior toward a particular Eloquent model (or other PHP
+Authorization policies are organizational structures that help you group your authorization
+
+logic based on the resource you’re controlling access to. They make it easy to manage
+
+defining authorization rules for behavior toward a particular Eloquent model (or other PHP
+
 class), all together in a single location.
 
-#### Generating policies (php artisan make:policy ContactPolicy)
-Policies are PHP classes, which can be generated with an Artisan command:
-##### php artisan make:policy ContactPolicy
-Once they’re generated, they need to be registered. The AuthServiceProvider has a
-$policies property, which is an array. The key of each item is the class name of the protected
-resource (usually, but not always, an Eloquent class), and the value is the policy class name:
-class AuthServiceProvider extends ServiceProvider
-{
-protected $policies = [
-Contact::class => ContactPolicy::class,
-]
-A policy class that’s generated by Artisan doesn’t have any special properties or methods. But
-every method that you add is now mapped as an ability key for this object.
-Let’s define an update() method to take a look at how it works (Example 9-21).
-Example 9-21. A sample update() policy method
-<?php
-namespace App\Policies;
-class ContactPolicy
-{
-public function update($user, $contact)
-{
-return $user->id === $contact->user_id;
-}
+#### Generating policies
+ (php artisan make:policy ContactPolicy
+)
+Policies are PHP classes, which can be generated with an Artisan command:
+
+##### php artisan make:policy ContactPolicy
+
+Once they’re generated, they need to be registered. The AuthServiceProvider has a
+
+$policies property, which is an array. The key of each item is the class name of the protected
+
+resource (usually, but not always, an Eloquent class), and the value is the policy class name:
+
+class AuthServiceProvider extends ServiceProvider
+
+{
+
+protected $policies = [
+
+Contact::class => ContactPolicy::class,
+
+]
+
+A policy class that’s generated by Artisan doesn’t have any special properties or methods. But
+
+every method that you add is now mapped as an ability key for this object.
+
+Let’s define an update() method to take a look at how it works (Example 9-21).
+
+Example 9-21. A sample update() policy method
+
+<?php
+
+namespace App\Policies;
+
+class ContactPolicy
+
+{
+
+public function update($user, $contact)
+
+{
+
+return $user->id === $contact->user_id;
+
+}
+
 } 
 
-Notice that the contents of this method look exactly like they would in a Gate definition.
+N
+otice that the contents of this method look exactly like they would in a Gate definition.
 
 #### checking policies
-If there’s a policy defined for a resource type, the Gate will use the first parameter to figure
-out which method to check on your policy. If you run Gate::allows('update', $contact), it
-will check the ContactPolicy@update method for authorization.
-This also works for the Authorize middleware and for User model checking and Blade
+If there’s a policy defined for a resource type, the Gate will use the first parameter to figure
+
+out which method to check on your policy. If you run Gate::allows('update', $contact), it
+
+will check the ContactPolicy@update method for authorization.
+
+This also works for the Authorize middleware and for User model checking and Blade
+
 checking, as seen in Example 9-22.
 
-Example 9-22. Checking authorization against a policy
-// Gate
-if (Gate::denies('update', $contact)) {
-abort(403);
-} //
-Gate if you don't have an explicit instance
-if (! Gate::check('create', Contact::class)) {
-abort(403);
-} //
-User
-if ($user->can('update', $contact)) {
-// Do stuff
-} //
-Blade
-@can('update', $contact)
-<!-- show stuff -->
-@endcan
-Additionally, there’s a policy() helper that allows you to retrieve a policy class and run its
-methods:
-if (policy($contact)->update($user, $contact)) {
-// Do stuff
+Example 9-22. Checking authorization against a policy
+
+// Gate
+
+if (Gate::denies('update', $contact)) {
+
+abort(403);
+
+} //
+
+Gate if you don't have an explicit instance
+
+if (! Gate::check('create', Contact::class)) {
+
+abort(403);
+
+} //
+
+User
+
+if ($user->can('update', $contact)) {
+
+// Do stuff
+
+} //
+
+Blade
+
+@can('update', $contact)
+
+<!-- show stuff -->
+
+@endcan
+
+Additionally, there’s a policy() helper that allows you to retrieve a policy class and run its
+
+methods:
+
+if (policy($contact)->update($user, $contact)) {
+
+// Do stuff
+
 }
 
 #### overriding policies
-Just like with normal ability definitions, policies can define a before() method that allows
-you to override any call before it’s even processed (see Example 9-23).
-Example 9-23. Overriding policies with the before() method
-public function before($user, $ability)
-{
-if ($user->isAdmin()) {
-return true;
-}
+Just like with normal ability definitions, policies can define a before() method that allows
+
+you to override any call before it’s even processed (see Example 9-23).
+
+Example 9-23. Overriding policies with the before() method
+
+public function before($user, $ability)
+
+{
+
+if ($user->isAdmin()) {
+
+return true;
+
 }
 
-#### PASSPORT AND OAUTH
-There’s a Laravel package called Passport that makes it easy to set up your own OAuth server as a part of your Laravel app. Take a look at “API Authentication with Laravel Passport” to learn more about how it works.
+}
+
+#### PASSPORT AND OAUTH
+
+There’s a Laravel package called Passport that makes it easy to set up your own OAuth server as a part of your Laravel
+ app. Take a look at “API Authentication with Laravel Passport” to learn more about how it works.
 
 ### Testing using ->be() method
- the simplest option is to use the ->be() method to simulate being logged in as a user.
-1. Authenticating as a user in application tests
-public function test_it_creates_a_new_contact()
-{
-$user = factory(User::class)->create();
-$this->be($user);
-$this->post('contacts', [
-'email' => 'my@email.com'
-]);
-$this->seeInDatabase('contacts', [
-'email' => 'my@email.com',
-'user_id' => $user->id,
-]);
+ the simplest option is to use
+ the ->be() method to simulate being logged in as a user.
+1. Authenticating as a user in application tests
+
+public function test_it_creates_a_new_contact()
+
+{
+
+$user = factory(User::class)->create();
+
+$this->be($user);
+
+$this->post('contacts', [
+
+'email' => 'my@email.com'
+
+]);
+
+$this->seeInDatabase('contacts', [
+
+'email' => 'my@email.com',
+
+'user_id' => $user->id,
+
+]);
+
 }
 
-2. Testing authorization rules
-public function test_non_admins_cant_create_users()
-{
-$user = factory(User::class)->create([
-'admin' => false
-]);
-$this->be($user);
-$this->post('users', ['email' => 'my@email.com']);
-$this->dontSeeInDatabase('users', [
-'email' => 'my@email.com'
-]);
+2. Testing authorization rules
+
+public function test_non_admins_cant_create_users()
+
+{
+
+$user = factory(User::class)->create([
+
+'admin' => false
+
+]);
+
+$this->be($user);
+
+$this->post('users', ['email' => 'my@email.com']);
+
+$this->dontSeeInDatabase('users', [
+
+'email' => 'my@email.com'
+
+]);
+
 }
 
-3. test for a 403 response like in Example 9-26.
-Example 9-26. Testing authorization rules by checking status code
-public function test_non_admins_cant_create_users()
-{
-$user = factory(User::class)->create([
-'admin' => false
-]);
-$this->be($user);
-$this->post('users', ['email' => 'my@email.com']);
-$this->assertResponseStatus(403);
+3. test for a 403 response like in Example 9-26.
+
+Example 9-26. Testing authorization rules by checking status code
+
+public function test_non_admins_cant_create_users()
+
+{
+
+$user = factory(User::class)->create([
+
+'admin' => false
+
+]);
+
+$this->be($user);
+
+$this->post('users', ['email' => 'my@email.com']);
+
+$this->assertResponseStatus(403);
+
 }
 
-4. test our authentication (sign up and sign in) routes work, as illustrated in
-Example 9-27.
-Example 9-27. Testing authentication routes
-public function test_users_can_register()
-{
-$this->post('register', [
-'name' => 'Sal Leibowitz',
-'email' => 'sal@leibs.net',
-'password' => 'abcdefg123',
-'password_confirmation' => 'abcdefg123',
-]);
-$this->followRedirects()->assertResponseOk();
-$this->seeInDatabase('users', [
-'name' => 'Sal Leibowitz',
-'email' => 'sal@leibs.net',
-]);
-} p
-ublic function test_users_can_log_in()
-{
-$user = factory(User::class)->create([
-'password' => bcrypt('abcdefg123')
-]);
-$this->post('login', [
-'email' => $user->email,
-'password' => 'abcdefg123',
-]);
-$this->followRedirects()->assertResponseOk();
-$this->assertTrue(auth()->check());
-} Yo
-u could also use the integration test features to direct the test to “click” your authentication
+4. test our authentication (sign up and sign in) routes work, as illustrated in
+
+Example 9-27.
+
+Example 9-27. Testing authentication routes
+
+public function test_users_can_register()
+
+{
+
+$this->post('register', [
+
+'name' => 'Sal Leibowitz',
+
+'email' => 'sal@leibs.net',
+
+'password' => 'abcdefg123',
+
+'password_confirmation' => 'abcdefg123',
+
+]);
+
+$this->followRedirects()->assertResponseOk();
+
+$this->seeInDatabase('users', [
+
+'name' => 'Sal Leibowitz',
+
+'email' => 'sal@leibs.net',
+
+]);
+
+} p
+
+ublic function test_users_can_log_in()
+
+{
+
+$user = factory(User::class)->create([
+
+'password' => bcrypt('abcdefg123')
+
+]);
+
+$this->post('login', [
+
+'email' => $user->email,
+
+'password' => 'abcdefg123',
+
+]);
+
+$this->followRedirects()->assertResponseOk();
+
+$this->assertTrue(auth()->check());
+
+} Yo
+
+u could also use the integration test features to direct the test to “click” your authentication
+
 fields and “submit” the fields to test the entire flow.
 
 # Requests and Responses
 ## laravel's Request Lifecycle
-Every request coming into a Laravel application, whether generated by an HTTP request or a
-command-line interaction, is immediately converted into an Illuminate Request object, which
-then crosses many layers and ends up being parsed by the application itself. The application
-then generates an Illuminate Response object, which is sent back out across those layers and
+Every request coming into a Laravel application, whether generated by an HTTP request or a
+
+command-line interaction, is immediately converted into an Illuminate Request object, which
+
+then crosses many layers and ends up being parsed by the application itself. The application
+
+then generates an Illuminate Response object, which is sent back out across those layers and
+
 finally returned to the end user.
 
 
 1. web server receives the request.
-Every Laravel application has some form of configuration set up at the web server level, in an
-.htaccess file or an Nginx configuration setting or something similar, that captures every web
-request regardless of URL and routes it to public/index.php in the Laravel application
+Every Laravel application has some form of configuration set up at the web server level, in an
+
+.htaccess file or an Nginx configuration setting or something similar, that captures every web
+
+request regardless of URL and routes it to public/index.php in the Laravel application
+
 directory (app).
 
 2. Bootstrapping the Application
-index.php doesn’t actually have that much code in it. It has three primary functions.
-First, it loads Composer’s autoload file and Laravel’s compiled application cache, which lives
-at bootstrap/cache/compiled.php. This file is what’s generated when you run php artisan
+index.php doesn’t actually have that much code in it. It has three primary functions.
+
+First, it loads Composer’s autoload file and Laravel’s compiled application cache, which lives
+
+at bootstrap/cache/compiled.php. This file is what’s generated when you run php artisan
+
 optimize, and it preloads all of the most commonly used classes for faster loading.
 
 ##### php artisan optimize
 
 3. creating the container
 Next, it kicks off Laravel’s bootstrap, creating the application container and registering a few core services.
-Finally, it creates an instance of the kernel, creates a request representing the current user’s
-web request, and passes the request to the kernel to handle. The kernel responds with an
-Illuminate Response object, which index.php then returns to the end user, and terminates the
+Finally, it creates an instance of the kernel, creates a request representing the current user’s
+
+web request, and passes the request to the kernel to handle. The kernel responds with an
+
+Illuminate Response object, which index.php then returns to the end user, and terminates the
+
 page request.
 
 ### Laravel 's kernel
-The kernel is the core router of every Laravel application, responsible for taking in a user
-request, processing it through middleware and handling exceptions and passing it to the page
-router, and then returning the final response. There are actually two kernels, but only one is
-used for each page request. One of the routers handles web requests (the HTTP kernel) and the
-other handles console, cron, and Artisan requests (the console kernel). Each has a handle()
-method that’s responsible for taking in an Illuminate Request object and returning an
+The kernel is the core router of every Laravel application, responsible for taking in a user
+
+request, processing it through middleware and handling exceptions and passing it to the page
+
+router, and then returning the final response. There are actually two kernels, but only one is
+
+used for each page request. One of the routers handles web requests (the HTTP kernel) and the
+
+other handles console, cron, and Artisan requests (the console kernel). Each has a handle()
+
+method that’s responsible for taking in an Illuminate Request object and returning an
+
 Illuminate Response object.
 
-The kernel runs all of the bootstraps that need to run before every request, including
-determining which environment the current request is running in (staging, local, production,
-etc.) and running all of the service providers. The HTTP kernel additionally defines the list of
-middleware that will wrap each request, including the core middleware responsible for
+The kernel runs all of the bootstraps that need to run before every request, including
+
+determining which environment the current request is running in (staging, local, production,
+
+etc.) and running all of the service providers. The HTTP kernel additionally defines the list of
+
+middleware that will wrap each request, including the core middleware responsible for
+
 sessions and CSRF protection.
 
 ### service providers
-A service provider is a class that encapsulates logic that various parts of your application need to run in order to bootstrap their core functionality.
+A service provider is a class
+ that encapsulates logic that various parts of your application need to run in order to bootstrap
+ their core functionality.
 
-For example, there’s an AuthServiceProvider that bootstraps all of the registrations
-necessary for Laravel’s authentication system and a RouteServiceProvider that bootstraps the
+For example, there’s an AuthServiceProvider that bootstraps all of the registrations
+
+necessary for Laravel’s authentication system and a RouteServiceProvider that bootstraps the
+
 routing system.
 
-Service providers are a tool for grouping that bootstrap code into
-related classes. If you have any code that needs to run in preparation for your application
+Service providers are a tool for grouping that bootstrap code into
+
+related classes. If you have any code that needs to run in preparation for your application
+
 code to work, it’s a strong candidate for a service provider.
 
-Service providers have two important methods: boot() and register(). There’s also a
-$defer property that you might choose to use. Here’s how they work.
+Service providers have two important methods: boot() and register(). There’s also a
+
+$defer property that you might choose to use. Here’s how they work.
+
 1.  register()
-First, all of the service providers’ register() methods are called. This is where we want to
-bind classes and aliases to the container. You don’t want to do anything in register() that
-relies on the entire application being bootstrapped.
+First, all of the service providers’ register() methods are called. This is where we want to
+
+bind classes and aliases to the container. You don’t want to do anything in register() that
+
+relies on the entire application being bootstrapped.
+
 2. boot()
-Second, all of the service providers’ boot() methods are called. You can now do any other
-bootstrapping here, like binding event listeners or defining routes — anything that may rely
-on the entire Laravel application having been bootstrapped.
+Second, all of the service providers’ boot() methods are called. You can now do any other
+
+bootstrapping here, like binding event listeners or defining routes — anything that may rely
+
+on the entire Laravel application having been bootstrapped.
+
 
 3. defered loading by $defer
-If your service provider is only going to register bindings in the container (i.e., teach the
-container how to resolve a given class or interface), but not perform any other bootstrapping,
-you can “defer” its registrations, which means they won’t run unless one of their bindings is
-explicitly requested from the container. This can speed up your application’s average time to
-bootstrap.
-If you want to defer your service provider’s registrations, first give it a protected $defer
-property and set it to true, and then give it a provides() method that returns a list of bindings
+If your service provider is only going to register bindings in the container (i.e., teach the
+
+container how to resolve a given class or interface), but not perform any other bootstrapping,
+
+you can “defer” its registrations, which means they won’t run unless one of their bindings is
+
+explicitly requested from the container. This can speed up your application’s average time to
+
+bootstrap.
+
+If you want to defer your service provider’s registrations, first give it a protected $defer
+
+property and set it to true, and then give it a provides() method that returns a list of bindings
+
 the provider provides.
 
-Deferring the registration of a service provider
-...
-class GitHubServiceProvider extends ServiceProvider
-{
-protected $defer = true;
-public function provides()
-{
-return [
-GitHubClient::class
-];
+Deferring the registration of a service provider
+
+...
+
+class GitHubServiceProvider extends ServiceProvider
+
+{
+
+protected $defer = true;
+
+public function provides()
+
+{
+
+return [
+
+GitHubClient::class
+
+];
+
 }
 
 ## The Request Object
-Each Request object is intended to represent every relevant piece of information you could
+Each Request object is intended to represent every relevant piece of information you could
+
 care to know about a user’s HTTP request.
-In native PHP code, you might find yourself looking to $_SERVER, $_GET, $_POST, and other
-combinations of globals and processing logic to get information about the current user’s
+In native PHP code, you might find yourself looking to $_SERVER, $_GET, $_POST, and other
+
+combinations of globals and processing logic to get information about the current user’s
+
 request. 
 
-Symfony’s Request object instead collects all of the information necessary to represent a
-single HTTP request into a single object, and then tacks on convenience methods to make it
-easy to get useful information from it. The Illuminate Request object adds even more
+Symfony’s Request object instead collects all of the information necessary to represent a
+
+single HTTP request into a single object, and then tacks on convenience methods to make it
+
+easy to get useful information from it. The Illuminate Request object adds even more
+
 convenience methods to get information about the request it’s representing.
 
-##### CAPTURING A REQUEST  $request = Illuminate\Http\Request::capture();
-You’ll very likely never need to do this in a Laravel app, but if you ever need to capture your own Illuminate
-Request directly from PHP’s globals, you can use the capture() method:
+##### CAPTURING A REQUEST
+  $request = Illuminate\Http\Request::capture();
+You’ll very likely never need to do this in a Laravel app, but if you ever need to capture your own Illuminate
+
+Request directly from PHP’s globals, you can use the capture() method:
+
 $request = Illuminate\Http\Request::capture();
 
 ### Getting a Request Object in Laravel
-1.  Typehinting in a container-resolved method to receive a Request object
-...
-use Illuminate\Http\Request;
-class PeopleController extends Controller
-{
-public function index(Request $request)
-{
-$allInput = $request->all();
-}
+1.  Typehinting in a container-resolved method to receive a Request object
+
+...
+
+use Illuminate\Http\Request;
+
+class PeopleController extends Controller
+
+{
+
+public function index(Request $request)
+
+{
+
+$allInput = $request->all();
+
+}
+
 
 2. request() global helper
-You can also use the request() global helper, which allows you to call methods on it (e.g.,
-request()->input()) and also allows you to call it on its own to get an instance of $request:
-$request = request();
-$allInput = request()->all();
+You can also use the request() global helper, which allows you to call methods on it (e.g.,
+
+request()->input()) and also allows you to call it on its own to get an instance of $request:
+
+$request = request();
+
+$allInput = request()->all();
+
 
 3. app() global method
-And you can also use the app() global method to get an instance of Request. You can pass
-either the fully qualified class name or the shortcut, request:
-$request = app(Illuminate\Http\Request::class);
+And you can also use the app() global method to get an instance of Request. You can pass
+
+either the fully qualified class name or the shortcut, request:
+
+$request = app(Illuminate\Http\Request::class);
+
 $request = app('request');
 
+### Getting Basic Information About a Request
+#### basic user input
+The basic user input methods make it simple to get information that the users themselves
+explicitly provide — likely through submitting a form or an Ajax component. When I
+reference “user-provided input” here, I’m talking about input from query strings (GET), form
+submissions (POST), or JSON:
 
+1. all() returns an array of all user-provided input.
 
+2. input(fieldName) returns the value of a single user-provided input field.
 
+3. only(fieldName|[array,of,field,names]) returns an array of all user-provided input
+for the specified field name(s).
 
+4. except(fieldName|[array,of,field,names]) returns an array of all user-provided
+input except for the specified field name(s).
 
+5. exists(fieldName) returns a boolean of whether or not the field exists in the input.
 
+6. has(fieldName) returns a boolean of whether the field exists in the input and is not
+empty (has a value).
 
+7. json() returns a ParameterBag if the page had JSON sent to it.
 
+8. json(keyName) returns the value of the given key from JSON sent to the page.
+
+// form
+<form method="POST" action="/form">
+{{ csrf_field() }}
+<input name="name"> Name<br>
+<input type="submit">
+</form>
+// route receiving the form
+Route::post('form', function (Request $request) {
+echo 'name is ' . $request->input('name');
+echo 'all input is ' . print_r($request->all());
+echo 'user provided email address: ' . $request->has('email') ? 'true' : 'false';
+});
+
+#### User and request state
+The user and request state methods include input that wasn’t explicitly provided by the user
+through a form:
+
+1. method() returns the method (GET, POST, PATCH, etc.) used to access this route.
+
+2. path() returns the path (without the domain) used to access this page; e.g., for
+http://www.myapp.com/abc/def it would return abc/def.
+
+3. url() returns the URL (with the domain) used to access this page; e.g., for
+http://www.myapp.com/abc it would return http://www.myapp.com/abc.
+
+4. is() returns a boolean of whether or not the current page request fuzzy-matches a
+provided string (e.g., /a/b/c would be matched by $request->is('*b*'), where * stands
+for any characters). It uses a custom regex parser found in Str::is.
+
+5. ip() returns the user’s IP address.
+
+6. header() returns an array of headers (e.g., ['accept-language' => ['enUS,en;q=0.8']]), or, if passed a header name as a parameter, returns just that header.
+
+7. server() returns an array of the variables traditionally stored in $_SERVER (e.g.,
+REMOTE_ADDR), or, if passed a $_SERVER variable name, returns just that value.
+
+8. secure() returns a boolean of whether this page was loaded using HTTPS.
+
+9. pjax() returns a boolean of whether this page request was loaded using Pjax.
+wantsJson() returns a boolean of whether this request has any /json content types in its
+Accept headers.
+
+10. isJson() returns a boolean of whether this page request has any /json content types in
+its Content-Type header.
+
+11. accepts() returns a boolean of whether this page request accepts a given content type.
+
+#### Files
+So far, all of the input we’ve covered is either explicit (retrieved by methods like all(),
+input(), etc.) or defined by the browser or referring site (retrieved by methods like pjax()).
+File inputs are similar to explicit user input, but they’re handled much differently:
+
+1. file() returns an array of all uploaded files, or, if a key is passed (the file upload field name), returns just the one file.
+
+2. hasFile() returns a boolean of whether a file was uploaded at the specified key.
+
+Every file that’s uploaded will be an instance of
+Symfony\Component\HttpFoundation\File\UploadedFile, which provides a suite of tools for
+validating, processing, and storing uploaded files.
+
+#### Persistence
+The request can also provide functionality for interacting with the session. Most session
+functionality lives elsewhere, but there are a few methods that are particularly relevant to the current page request:
+
+1. flash() flashes the current request’s user input to the session to be retrieved later.
+
+2. flashOnly() flashes the current request’s user input for any keys in the provided array
+
+3. flashExcept() flashes the current requests’s user input, except for any keys in the
+provided array.
+
+4. old() returns an array of all previously flashed user input, or, if passed a key, returns the value for that key if it was previously flashed.
+
+5. flush() wipes all previously flashed user input
+
+6. cookie() retrieves all cookies from the request, or, if a key is provided, retrieves just
+that cookie.
+
+7. hasCookie() returns a boolean of whether the request has a cookie for the given key.
+
+The flash*() and old() methods are used for storing user input and retrieving it later, often
+after the input is validated and rejected.
 
 
 
