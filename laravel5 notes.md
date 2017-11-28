@@ -8304,6 +8304,30 @@ return response()->myJson(['name' => 'Sangeetha']);
 This will return a response with the body of that array encoded for JSON, with the JSON-
 appropriate Content-Type header.
 
+## Laravel and Middleware
+### An introduction to middleware
+The idea of middleware is that there is a series of layers wrapping around your application,
+like a multilayer cake or an onion. 
+every request passes through every middleware layer on its way into the application, and then the resulting response passes back through the middleware layers on its way out to the end user.
+Middleware is most often considered separate from your application logic, and usually is
+constructed in a way that should theoretically be applicable to any application, not just the one you’re working on at the moment.
+Middleware can inspect a request and decorate it, or reject it, based on what it finds. That
+means middleware is great for something like rate limiting: it can inspect the IP address,
+check how many times it’s accessed this resource in the last minute, and send back a 429 (Too
+Many Requests) status if a threshold is passed.
+Because middleware also gets access to the response on its way out of the application, it’s
+great for decorating responses. For example, Laravel uses a middleware to add all of the
+queued cookies from a given request/response cycle to the response right before it is sent to
+the end user.
+But some of the most powerful uses of middleware come from the fact that it can be nearly
+the first and the last thing to interact with the request/response cycle. That makes it perfect for something like enabling sessions — PHP needs you to open the session very early and close it very late, and middleware is great for this.
+
+
+
+
+
+
+
 
 
 
