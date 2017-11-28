@@ -8044,284 +8044,463 @@ $request = app('request');
 
 ### Getting Basic Information About a Request
 #### basic user input
-The basic user input methods make it simple to get information that the users themselves
-explicitly provide — likely through submitting a form or an Ajax component. When I
-reference “user-provided input” here, I’m talking about input from query strings (GET), form
+The basic user input methods make it simple to get information that the users themselves
+
+explicitly provide — likely through submitting a form or an Ajax component. When I
+
+reference “user-provided input” here, I’m talking about input from query strings (GET), form
+
 submissions (POST), or JSON:
 
-1. all() returns an array of all user-provided input.
+1. all() returns an array of all user-provided input.
 
-2. input(fieldName) returns the value of a single user-provided input field.
 
-3. only(fieldName|[array,of,field,names]) returns an array of all user-provided input
-for the specified field name(s).
+2. input(fieldName) returns the value of a single user-provided input field.
 
-4. except(fieldName|[array,of,field,names]) returns an array of all user-provided
-input except for the specified field name(s).
 
-5. exists(fieldName) returns a boolean of whether or not the field exists in the input.
+3. only(fieldName|[array,of,field,names]) returns an array of all user-provided input
 
-6. has(fieldName) returns a boolean of whether the field exists in the input and is not
-empty (has a value).
+for the specified field name(s).
 
-7. json() returns a ParameterBag if the page had JSON sent to it.
+
+4. except(fieldName|[array,of,field,names]) returns an array of all user-provided
+
+input except for the specified field name(s).
+
+
+5. exists(fieldName) returns a boolean of whether or not the field exists in the input.
+
+
+6. has(fieldName) returns a boolean of whether the field exists in the input and is not
+
+empty (has a value).
+
+
+7. json() returns a ParameterBag if the page had JSON sent to it.
+
 
 8. json(keyName) returns the value of the given key from JSON sent to the page.
 
-// form
-<form method="POST" action="/form">
-{{ csrf_field() }}
-<input name="name"> Name<br>
-<input type="submit">
-</form>
-// route receiving the form
-Route::post('form', function (Request $request) {
-echo 'name is ' . $request->input('name');
-echo 'all input is ' . print_r($request->all());
-echo 'user provided email address: ' . $request->has('email') ? 'true' : 'false';
+// form
+
+<form method="POST" action="/form">
+
+{{ csrf_field() }}
+
+<input name="name"> Name<br>
+
+<input type="submit">
+
+</form>
+
+// route receiving the form
+
+Route::post('form', function (Request $request) {
+
+echo 'name is ' . $request->input('name');
+
+echo 'all input is ' . print_r($request->all());
+
+echo 'user provided email address: ' . $request->has('email') ? 'true' : 'false';
+
 });
 
 #### User and request state
-The user and request state methods include input that wasn’t explicitly provided by the user
-through a form:
+The user and request state methods include input that wasn’t explicitly provided by the user
 
-1. method() returns the method (GET, POST, PATCH, etc.) used to access this route.
+through a form:
 
-2. path() returns the path (without the domain) used to access this page; e.g., for
-http://www.myapp.com/abc/def it would return abc/def.
 
-3. url() returns the URL (with the domain) used to access this page; e.g., for
-http://www.myapp.com/abc it would return http://www.myapp.com/abc.
+1. method() returns the method (GET, POST, PATCH, etc.) used to access this route.
 
-4. is() returns a boolean of whether or not the current page request fuzzy-matches a
-provided string (e.g., /a/b/c would be matched by $request->is('*b*'), where * stands
-for any characters). It uses a custom regex parser found in Str::is.
 
-5. ip() returns the user’s IP address.
+2. path() returns the path (without the domain) used to access this page; e.g., for
 
-6. header() returns an array of headers (e.g., ['accept-language' => ['enUS,en;q=0.8']]), or, if passed a header name as a parameter, returns just that header.
+http://www.myapp.com/abc/def it would return abc/def.
 
-7. server() returns an array of the variables traditionally stored in $_SERVER (e.g.,
-REMOTE_ADDR), or, if passed a $_SERVER variable name, returns just that value.
 
-8. secure() returns a boolean of whether this page was loaded using HTTPS.
+3. url() returns the URL (with the domain) used to access this page; e.g., for
 
-9. pjax() returns a boolean of whether this page request was loaded using Pjax.
-wantsJson() returns a boolean of whether this request has any /json content types in its
-Accept headers.
+http://www.myapp.com/abc it would return http://www.myapp.com/abc.
 
-10. isJson() returns a boolean of whether this page request has any /json content types in
-its Content-Type header.
+
+4. is() returns a boolean of whether or not the current page request fuzzy-matches a
+
+provided string (e.g., /a/b/c would be matched by $request->is('*b*'), where * stands
+
+for any characters). It uses a custom regex parser found in Str::is.
+
+
+5. ip() returns the user’s IP address.
+
+
+6. header() returns an array of headers (e.g., ['accept-language' => ['enUS,en;q=0.8']]), or, if passed a header name as a parameter, returns just that header.
+
+
+7. server() returns an array of the variables traditionally stored in $_SERVER (e.g.,
+
+REMOTE_ADDR), or, if passed a $_SERVER variable name, returns just that value.
+
+
+8. secure() returns a boolean of whether this page was loaded using HTTPS.
+
+
+9. pjax() returns a boolean of whether this page request was loaded using Pjax.
+
+wantsJson() returns a boolean of whether this request has any /json content types in its
+
+Accept headers.
+
+
+10. isJson() returns a boolean of whether this page request has any /json content types in
+
+its Content-Type header.
+
 
 11. accepts() returns a boolean of whether this page request accepts a given content type.
 
 #### Files
-So far, all of the input we’ve covered is either explicit (retrieved by methods like all(),
-input(), etc.) or defined by the browser or referring site (retrieved by methods like pjax()).
-File inputs are similar to explicit user input, but they’re handled much differently:
+So far, all of the input we’ve covered is either explicit (retrieved by methods like all(),
 
-1. file() returns an array of all uploaded files, or, if a key is passed (the file upload field name), returns just the one file.
+input(), etc.) or defined by the browser or referring site (retrieved by methods like pjax()).
+
+File inputs are similar to explicit user input, but they’re handled much differently:
+
+
+1. file() returns an array of all uploaded files, or, if a key is passed (the file upload field name), returns just the one file.
+
 
 2. hasFile() returns a boolean of whether a file was uploaded at the specified key.
 
-Every file that’s uploaded will be an instance of
-Symfony\Component\HttpFoundation\File\UploadedFile, which provides a suite of tools for
+Every file that’s uploaded will be an instance of
+
+Symfony\Component\HttpFoundation\File\UploadedFile, which provides a suite of tools for
+
 validating, processing, and storing uploaded files.
 
 #### Persistence
-The request can also provide functionality for interacting with the session. Most session
-functionality lives elsewhere, but there are a few methods that are particularly relevant to the current page request:
+The request can also provide functionality for interacting with the session. Most session
+
+functionality lives elsewhere, but there are a few methods that are particularly relevant to the
+ current page request:
 
 1. flash() flashes the current request’s user input to the session to be retrieved later.
 
 2. flashOnly() flashes the current request’s user input for any keys in the provided array
 
-3. flashExcept() flashes the current requests’s user input, except for any keys in the
+3. flashExcept() flashes the current requests’s user input, except for any keys in the
+
 provided array.
 
-4. old() returns an array of all previously flashed user input, or, if passed a key, returns the value for that key if it was previously flashed.
+4. old() returns an array of all previously flashed user input, or, if passed a key, returns the
+ value for that key if it was previously flashed.
 
 5. flush() wipes all previously flashed user input
 
-6. cookie() retrieves all cookies from the request, or, if a key is provided, retrieves just
+6. cookie() retrieves all cookies from the request, or, if a key is provided, retrieves just
+
 that cookie.
 
 7. hasCookie() returns a boolean of whether the request has a cookie for the given key.
 
-The flash*() and old() methods are used for storing user input and retrieving it later, often
+The flash*() and old() methods are used for storing user input and retrieving it later, often
+
 after the input is validated and rejected.
 
 ### the Response Object
-Similar to the Request object, there’s an Illuminate Response object that represents the
-response your application is sending to the end user, complete with headers, cookies, content,
+Similar to the Request object, there’s an Illuminate Response object that represents the
+
+response your application is sending to the end user, complete with headers, cookies, content,
+
 and anything else used for sending the end user’s browser instructions on rendering a page.
-Just like Request, the Illuminate\Http\Response object extends a Symfony class:
+Just like Request, the Illuminate\Http\Response object extends a Symfony class:
+
 Symfony\Component\HttpFoundation\Response. 
 
-#### Using and Creating Response Objects in Controllers
-In the end, any response object returned from a route definition will be converted into an
-HTTP response. It may define specific headers or specific content, set cookies, or whatever
+#### Using and Creating Response Objects in Controllers
+
+In the end, any response object returned from a route definition will be converted into an
+
+HTTP response. It may define specific headers or specific content, set cookies, or whatever
+
 else, but eventually it will be converted into a response your users’ browsers can parse.
 
-Simplest possible HTTP response
-Route::get('route', function () {
-return new Illuminate\Http\Response('Hello!');
-});
-// Same, using global function:
-Route::get('route', function () {
-return response('Hello!');
+Simplest possible HTTP response
+
+Route::get('route', function () {
+
+return new Illuminate\Http\Response('Hello!');
+
 });
 
-Simple HTTP response with customized status and headers
-Route::get('route', function () {
-return response('Error!', 400)
-->header('X-Header-Name', 'header-value')
-->cookie('cookie-name', 'cookie-value');
+// Same, using global function:
+
+Route::get('route', function () {
+
+return response('Hello!');
+
+});
+
+Simple HTTP response with customized status and headers
+
+Route::get('route', function () {
+
+return response('Error!', 400)
+
+->header('X-Header-Name', 'header-value')
+
+->cookie('cookie-name', 'cookie-value');
+
 });
 
 ##### setting headers  header()
-Setting headers
-We define a header on a response by using the header() fluent method, like in Example 10-5.
+Setting headers
+
+We define a header on a response by using the header() fluent method, like in Example 10-5.
+
 The first parameter is the header name and the second is the header value.
 
 ##### Adding cookies  cookie()
-Attaching a cookie to a response
-return response($content)
+Attaching a cookie to a response
+
+return response($content)
+
 ->cookie('signup_dismissed', true);
 
 #### Specialized Response Types
 ##### View responses
-Using the view() response type
-Route::get('/', function (XmlGetterService $xml) {
-$data = $xml->get();
-return response()
-->view('xml-structure', $data)
-->header('Content-Type', 'text/xml');
+Using the view() response type
+
+Route::get('/', function (XmlGetterService $xml) {
+
+$data = $xml->get();
+
+return response()
+
+->view('xml-structure', $data)
+
+->header('Content-Type', 'text/xml');
+
 });
 
 ##### Download responses
-Using the download() response type
-public function export()
-{
-return response()
-->download('file.csv', 'export.csv', ['header' => 'value']);
-} p
-ublic function otherExport()
-{
-return response()->download('file.pdf');
+Using the download() response type
+
+public function export()
+
+{
+
+return response()
+
+->download('file.csv', 'export.csv', ['header' => 'value']);
+
+} p
+
+ublic function otherExport()
+
+{
+
+return response()->download('file.pdf');
+
 }
 
 ##### File responses : file()
-The file response is similar to the download response, except it allows the browser to display
+The file response is similar to the download response, except it allows the browser to display
+
 the file instead of forcing a download. This is most common with images and PDFs.
-Using the file() response type
-public function invoice($id)
-{
-return response()->file("./invoices/{$id}.pdf", ['header' => 'value']);
+Using the file() response type
+
+public function invoice($id)
+
+{
+
+return response()->file("./invoices/{$id}.pdf", ['header' => 'value']);
+
 }
 
 ##### JSON responses  json()
-JSON responses convert the passed data to JSON (with json_encode()) and set the ContentType to application/json. You can also optionally use the setCallback() method to create a
+JSON responses convert the passed data to JSON (with json_encode()) and set the ContentType to application/json. You can also optionally use the setCallback() method to create a
+
 JSONP response instead of JSON.
-Using the json() response type
-public function contacts()
-{
-return response()->json(Contact::all());
+Using the json() response type
+
+public function contacts()
+
+{
+
+return response()->json(Contact::all());
+
 } 
 
-public function jsonpContacts(Request $request)
-{
-return response()
-->json(Contact::all())
-->setCallback($request->input('callback'));
+p
+ublic function jsonpContacts(Request $request)
+
+{
+
+return response()
+
+->json(Contact::all())
+
+->setCallback($request->input('callback'));
+
 } 
 
-public function nonEloquentContacts()
-{
-return response()->json(['Tom', 'Jerry']);
+p
+ublic function nonEloquentContacts()
+
+{
+
+return response()->json(['Tom', 'Jerry']);
+
 }
 
-##### Redirect responses  redirect()
-Redirects aren’t commonly called on the response() helper, they’re still just a different sort of response. Redirects, returned from a Laravel route, send the user a redirect (often a 301) to another page or back to the previous page.
+##### R
+edirect responses  redirect()
+Redirects aren’t commonly called on the response() helper, they’re still just a different sort of
+ response. Redirects, returned from a Laravel route, send the user a redirect (often a 301) to
+ another page or back to the previous page.
 You technically can call a redirect from response(), as in 
-return response()->redirectTo('/'). 
+return response()-
+>redirectTo('/'). 
 But more commonly you’ll use the redirect-specific global helpers.
 
-There is a global redirect() function that can be used to create redirect responses, and a
+There is a global redirect() function that can be used to create redirect responses, and a
+
 global back() function that is a shortcut to redirect()->back().
 
-Examples of using the redirect() global helper
-return redirect('account/payment');
-return redirect()->to('account/payment');
-return redirect()->route('account.payment');
-return redirect()->action('AccountController@showPayment');
-// If named route or controller needs parameters:
-return redirect()->route('contacts.edit', ['id' => 15]);
+Examples of using the redirect() global helper
+
+return redirect('account/payment');
+
+return redirect()->to('account/payment');
+
+return redirect()->route('account.payment');
+
+return redirect()->action('AccountController@showPayment');
+
+// If named route or controller needs parameters:
+
+return redirect()->route('contacts.edit', ['id' => 15]);
+
 return redirect()->action('ContactsController@edit', ['id' => 15]);
 
-You can also redirect “back” to the previous page, which is especially useful when handling
-and validating user input. a global back() function that is a shortcut to redirect()->back().
-Redirect back with input.
-public function store()
-{
-// If validation fails...
-return back()->withInput();
+You can also redirect “back” to the previous page, which is especially useful when handling
+
+and validating user input. a
+ global back() function that is a shortcut to redirect()->back().
+Redirect back with input
+.
+public function store()
+
+{
+
+// If validation fails...
+
+return back()->withInput();
+
 }
 
-Finally, you can redirect and flash data to the session at the same time. This is common with
+F
+inally, you can redirect and flash data to the session at the same time. This is common with
+
 error and success messages.
-Redirect with flashed data
-Route::post('contacts', function () {
-// store the contact...
-return redirect('dashboard')->with('message', 'Contact created!');
-});
-Route::get('dashboard', function () {
-// Get the flashed data from session--usually handled in Blade template
-echo session('message');
+Redirect with flashed data
+
+Route::post('contacts', function () {
+
+// store the contact...
+
+return redirect('dashboard')->with('message', 'Contact created!');
+
+});
+
+Route::get('dashboard', function () {
+
+// Get the flashed data from session--usually handled in Blade template
+
+echo session('message');
+
 });
 
 #### custom response macros
-You can also create your own custom response types using “macros”. This allows you to
+You can also create your own custom response types using “macros”. This allows you to
+
 define a series of modifications to make to the response and its provided content.
 
-Let’s re-create the json() custom response type, just to see how it works. As always, you
-should probably create a custom service provider for these sorts of bindings, but for now
+Let’s re-create the json() custom response type, just to see how it works. As always, you
+
+should probably create a custom service provider for these sorts of bindings, but for now
+
 we’ll just put it in AppServiceProvider.
 
-Creating a custom response macro
-...
-class AppServiceProvider
-{
-public function boot()
-{
-Response::macro('myJson', function ($content) {
-return response(json_encode($content))
-->headers(['Content-Type' => 'application/json']);
-});
-}
-Then, we can use it just like we would use the predefined json macro:
-return response()->myJson(['name' => 'Sangeetha']);
-This will return a response with the body of that array encoded for JSON, with the JSON-
+Creating a custom response macro
+
+...
+
+class AppServiceProvider
+
+{
+
+public function boot()
+
+{
+
+Response::macro('myJson', function ($content) {
+
+return response(json_encode($content))
+
+->headers(['Content-Type' => 'application/json']);
+
+});
+
+}
+
+Then, we can use it just like we would use the predefined json macro:
+
+return response()->myJson(['name' => 'Sangeetha']);
+
+This will return a response with the body of that array encoded for JSON, with the JSON-
+
 appropriate Content-Type header.
 
 ## Laravel and Middleware
 ### An introduction to middleware
-The idea of middleware is that there is a series of layers wrapping around your application,
-like a multilayer cake or an onion. 
-every request passes through every middleware layer on its way into the application, and then the resulting response passes back through the middleware layers on its way out to the end user.
-Middleware is most often considered separate from your application logic, and usually is
-constructed in a way that should theoretically be applicable to any application, not just the one you’re working on at the moment.
-Middleware can inspect a request and decorate it, or reject it, based on what it finds. That
-means middleware is great for something like rate limiting: it can inspect the IP address,
-check how many times it’s accessed this resource in the last minute, and send back a 429 (Too
-Many Requests) status if a threshold is passed.
-Because middleware also gets access to the response on its way out of the application, it’s
-great for decorating responses. For example, Laravel uses a middleware to add all of the
-queued cookies from a given request/response cycle to the response right before it is sent to
-the end user.
-But some of the most powerful uses of middleware come from the fact that it can be nearly
-the first and the last thing to interact with the request/response cycle. That makes it perfect for something like enabling sessions — PHP needs you to open the session very early and close it very late, and middleware is great for this.
+The idea of middleware is that there is a series of layers wrapping around your application,
 
+like a multilayer cake or an onion. 
+every request passes
+ through every middleware layer on its way into the application, and then the resulting
+ response passes back through the middleware layers on its way out to the end user.
+Middleware is most often considered separate from your application logic, and usually is
+
+constructed in a way that should theoretically be applicable to any application, not just the one
+ you’re working on at the moment.
+Middleware can inspect a request and decorate it, or reject it, based on what it finds. That
+
+means middleware is great for something like rate limiting: it can inspect the IP address,
+
+check how many times it’s accessed this resource in the last minute, and send back a 429 (Too
+
+Many Requests) status if a threshold is passed.
+
+Because middleware also gets access to the response on its way out of the application, it’s
+
+great for decorating responses. For example, Laravel uses a middleware to add all of the
+
+queued cookies from a given request/response cycle to the response right before it is sent to
+
+the end user.
+
+But some of the most powerful uses of middleware come from the fact that it can be nearly
+
+the first and the last thing to interact with the request/response cycle. That makes it perfect for
+ something like enabling sessions — PHP needs you to open the session very early and close it very late, and middleware is great for this.
+
+### creating custom middleware
+Let’s imagine we want to have a middleware that rejects every request that uses the DELETE
+HTTP method, and also sends a cookie back for every request.
+There’s an Artisan command to create custom middleware. Let’s try it out:
+#### php artisan make:middleware BanDeleteMethod
 
 
 
