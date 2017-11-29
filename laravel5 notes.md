@@ -8501,6 +8501,115 @@ Let’s imagine we want to have a middleware that rejects every request that use
 HTTP method, and also sends a cookie back for every request.
 There’s an Artisan command to create custom middleware. Let’s try it out:
 #### php artisan make:middleware BanDeleteMethod
+This command creates a file at app/Http/Middleware/BanDeleteMethod.php. 
+namespace App\Http\Middleware;
+
+use Closure;
+
+class BanDeleteMethod
+{
+    /***
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        return $next($request);
+    }
+}
+
+this handle() method represents the processing of both the incoming request and the
+outgoing response.
+
+#### understanding middleware's handle() method
+First, remember that middleware are layered one on top of another, and then finally on top of
+the app. The first middleware that’s registered gets first access to a request when it comes in, then that request is passed to every other middleware in turn, then to the app; then the resulting response is passed outward through the middleware, and finally this first middleware gets last access to the response when it goes out.
+
+Passing that request to $next() means handing it off to the rest of the middleware. The
+$next() closure just takes that $request and passes it to the handle() method of the next
+middleware in the stack. It then gets passed on down the line until there are no more
+middleware to hand it to, and it finally ends up at the application.
+
+Next, how does the response come out? This is where it might be hard to follow. The
+application returns a response, which is passed back up the chain of middleware — because
+each middleware returns its response. So, within that same handle() method, the middleware
+can decorate a $request and pass it to the $next() closure, and can then choose to do
+something with the output it receives before finally returning that output to the end user. 
+
+Pseudocode explaining the middleware call process
+...
+class BanDeleteMethod
+{
+public function handle($request, Closure $next)
+{
+// At this point, $request is the raw request from the user.
+// Let's do something with it, just for fun.
+if ($request->ip() === '192.168.1.1') {
+return response('BANNED IP ADDRESS!', 403);
+} //
+Now we've decided to accept it. Let's pass it on to the next
+// middleware in the stack. We pass it to $next(), and what is
+// returned is the response after the $request has been passed
+// down the stack of middleware to the application and the
+// application's response has been passed back up the stack.
+$response = $next($request);
+// At this point, we can once again interact with the response
+// just before it is returned to the user
+$response->cookie('visited-our-site', true);
+// Finally, we can release this response to the end user
+return $response;
+}
+}
+Finally, let’s make the middleware do what we actually promised.
+Sample middleware banning the delete method
+...
+class BanDeleteMethod
+{
+public function handle($request, Closure $next)
+{
+// Test for the DELETE method
+if ($request->method() === 'DELETE') {
+return response(
+"Get out of here with that delete method",
+405
+);
+} $
+response = $next($request);
+// Assign cookie
+$response->cookie('visited-our-site', true);
+// Return response
+return $response;
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
