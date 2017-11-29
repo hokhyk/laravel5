@@ -8622,7 +8622,58 @@ Route::group(['prefix' => 'api', 'middleware' => 'nodelete', function () {
 // All routes related to an API
 }]);
 
+### using middleware group (default web middleware group and api middleware group in Kernel.php $middlewareGroups)
+Laravel 5.2 introduced the concept of middleware groups. They’re essentially pre-packaged
+bundles of middleware that make sense to be together in specific contexts.
+In 5.3, you get a routes/web.php file for web routes and a routes/api.php file for API routes. 
 
+Out of the box there are two groups: web and api. web has all the middleware that will be
+useful on almost every Laravel page request, including middleware for cookies, sessions,
+CSRF protection, and more. api has none of those — it has a throttle middleware and a route
+model binding middleware, and that’s it. These are all defined in app/Http/Kernel.php.
+the routes/web.php file is wrapped with the web middleware group, and
+the routes/api.php file is wrapped with the api middleware group.
+
+You can apply middleware groups to routes just like you apply route middleware to routes,
+with the middleware() fluent method:
+Route::get('/', 'HomeController@index')->middleware('web');
+
+You can also create your own middleware groups and add and remove route middleware to
+and from preexisting middleware groups. It works just like adding route middleware
+normally, but you’re instead adding them to keyed groups in the $middlewareGroups array.
+
+The routes/* files are loaded in the RouteServiceProvider. Take a look at the map() method
+there and you’ll find a mapWebRoutes() and a mapApiRoutes() method, each
+of which loads its respective files already wrapped in the appropriate middleware group.
+Default route service provider in Laravel 5.3
+// App\Providers\RouteServiceProvider
+public function map()
+{
+$this->mapApiRoutes();
+$this->mapWebRoutes();
+} p
+rotected function mapApiRoutes()
+{
+Route::group([
+'middleware' => 'api',
+'namespace' => $this->namespace,
+'prefix' => 'api',
+], function ($router) {
+require base_path('routes/api.php');
+});
+} p
+rotected function mapWebRoutes()
+{
+Route::group([
+'middleware' => 'web',
+'namespace' => $this->namespace,
+], function ($router) {
+require base_path('routes/web.php');
+});
+}
+we’re using the router to load a route group under the
+default namespace (App\Http\Controllers) and with the web middleware group, and another
+under the api middleware group.
 
 
 
