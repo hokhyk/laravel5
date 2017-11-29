@@ -8675,6 +8675,28 @@ we’re using the router to load a route group under the
 default namespace (App\Http\Controllers) and with the web middleware group, and another
 under the api middleware group.
 
+### passing parameters to middleware
+It’s not common, but there are times when you need to pass parameters to a route middleware.
+For example, you might have an authentication middleware that will act differently depending
+on whether you’re guarding for the member user type or the owner user type:
+Route::get('company', function () {
+return view('company.admin');
+})->middleware('auth:owner');
+To make this work, you’ll need to add one or more parameters to the middleware’s handle()
+method, and update that method’s logic accordingly:
+public function handle($request, $next, $role)
+{
+if (auth()->check() && auth()->user()->hasRole($role)) {
+return $next($request);
+} 
+return redirect('login');
+}
+Note that you can also add more than one parameter to the handle() method, and pass
+multiple parameters to the route definition by separating them with commas:
+Route::get('company', function () {
+return view('company.admin');
+})->middleware('auth:owner,view');
+
 
 
 
