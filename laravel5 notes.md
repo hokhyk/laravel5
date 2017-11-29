@@ -8585,6 +8585,42 @@ return $response;
 }
 }
 
+### binding middleware :register this middleware in one of two ways: globally or for specific routes.
+Global middleware are applied to every route; route middleware are applied on a route-byroute basis.
+#### binding global middleware  :in app/Http/Kernel.php  $middleware
+Both bindings happen in app/Http/Kernel.php. To add a middleware as global, add its class
+name to the $middleware property.
+Binding global middleware
+// app/Http/Kernel.php
+protected $middleware = [
+\Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
+\App\Http\Middleware\BanDeleteMethod::class,
+];
+
+#### Binding route middleware :in app/Http/Kernel.php $routeMiddleware
+Middleware intended for specific routes can be added as a route middleware or as part of a
+middleware group. 
+Route middleware are added to the $routeMiddleware array in app/Http/Kernel.php. It’s
+similar to adding them to $middleware, except we have to give one a key that will be used
+when applying this middleware to a particular route.
+Binding route middleware
+// app/Http/Kernel.php
+protected $routeMiddleware = [
+'auth' => \App\Http\Middleware\Authenticate::class,
+...
+'nodelete' => \App\Http\Middleware\BanDeleteMethod::class,
+];
+
+Applying route middleware in route definitions
+// Doesn't make much sense for our current example...
+Route::get('contacts', [
+'middleware' => 'nodelete',
+'uses' => 'ContactsController@index'
+]);
+// Makes more sense for our current example...
+Route::group(['prefix' => 'api', 'middleware' => 'nodelete', function () {
+// All routes related to an API
+}]);
 
 
 
