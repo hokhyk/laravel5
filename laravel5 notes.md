@@ -8697,10 +8697,42 @@ Route::get('company', function () {
 return view('company.admin');
 })->middleware('auth:owner,view');
 
+# The Container
+Laravel’s service container, or dependency injection container, sits at the core of almost every other feature. The container is a simple tool you can use to bind and resolve concrete
+instances of classes and interfaces, and at the same time it’s a powerful and nuanced manager
+of a network of interrelated dependencies. 
 
+## A Quick Introduction to Dependency Injection
+Dependency injection means that, rather than being instantiated (“newed up”) within a class,
+each class’s dependencies will be injected in from the outside. 
 
+1. constructor injection
+This most commonly occurs with constructor injection, which means an object’s dependencies are injected when it’s created.
 
+Basic dependency injection
+<?php
+class UserMailer
+{
+protected $mailer;
+public function __construct(Mailer $mailer)
+{
+$this->mailer = $mailer;
+} p
+ublic function welcome($user)
+{
+return $this->mailer->mail($user->email, 'Welcome!');
+}
+} 
+As you can see, this UserMailer class expects an object of type Mailer to be injected when it’s instantiated, and its methods then refer to that instance.
+Then you can define your Mailer class or interface to be one of these through configuration or a factory:
+Mailgun or Mandrill or Sendgrid.
+2. setter injection
+But there’s also setter injection, where the class exposes a method specifically for injecting a given dependency, 
 
+3. method injection
+and method injection, where one or more methods expect their dependencies to be injected when they’re called.
+
+## Dependency injection and Laravel
 
 
 
