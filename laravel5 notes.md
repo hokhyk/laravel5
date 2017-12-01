@@ -8775,6 +8775,12 @@ That leaves us only needing to bind classes that have unresolvable constructor p
 for example, our $logger class in Example 11-3, which has parameters related to our log path
 and log level.
 
+## Binding class to the container
+Binding a class to Laravel’s container is essentially telling the container, “If a developer asks for an instance of Logger, here’s the code to run in order to instantiate one with the correct parameters and dependencies and then return it correctly.”
+We’re teaching the container that, when someone asks for this particular string (which is
+usually the FQCN of a class), it should resolve it this way.
+
+### Binding to a Closure
 
 
 
