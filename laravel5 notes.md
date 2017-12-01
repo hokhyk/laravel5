@@ -8745,10 +8745,35 @@ The most common way is to run the make() method. $app->make('FQCN') works well. 
 
 1. app(FQCN)  2. $app->make("FQCN')  3. $app['FQCN']
 
+## Laraval's container autowiring
+Laravel autowiring
+class Bar
+{
+public function __construct() {}
+} 
+class Baz
+{
+public function __construct() {}
+} 
+class Foo
+{
+public function __construct(Bar $bar, Baz $baz) {}
+} 
+$foo = app(Foo::class);
+The container reads the typehints in the constructor, resolves an instance
+of each, and then injects them into the new Foo instance when it’s creating it. This is called
+autowiring: resolving instances based on type-hints without the developer needing to
+explicitly bind those classes in the container.
 
+TYPEHINTS IN PHP
+“Typehinting” in PHP means putting the name of a class or interface in front of a variable in a method signature:
+public function __construct(Logger $logger) {}
+This typehint is telling PHP that whatever is passed into the method must be of type Logger, which could be either an interface or a class.
 
-
-
+Autowiring means that, if a class has not been explicitly bound to the container (like Foo, Bar, or Baz in this context) but the container can figure out how to resolve it anyway, the container will resolve it. This means any class with no constructor dependencies (like Bar and Baz) and any class with constructor dependencies that the container can resolve (like Foo) can be resolved out of the container.
+That leaves us only needing to bind classes that have unresolvable constructor parameters —
+for example, our $logger class in Example 11-3, which has parameters related to our log path
+and log level.
 
 
 
