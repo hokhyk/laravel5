@@ -8732,10 +8732,18 @@ But there’s also setter injection, where the class exposes a method specifical
 3. method injection
 and method injection, where one or more methods expect their dependencies to be injected when they’re called.
 
-## Dependency injection and Laravel
+## the app() global helper : the easiest way to get an object out of the container
+Pass any string to that helper, whether it’s a fully qualified class name (FQCN) or a Laravel
+shortcut, and it’ll return an instance of that class:
+$logger = app(Logger::class);
+It creates an instance of this class and returns it for you. 
 
+The simplest way to “make” a concrete instance is to use the global helper and pass the class or interface name directly to the helper, using app('FQCN').
+However, if you have an instance of the container — whether it was injected somewhere, or if you’re in a service provider and using $this->app, or (a lesser-known trick) if you get one by just running $container = app() — there are a few ways to make an instance from there.
+The most common way is to run the make() method. $app->make('FQCN') works well. However, you may also see other developers and the documentation use this syntax sometimes: $app['FQCN']. Don’t worry. That’s doing the same thing; it’s just a different way of writing it.
+1. app() 2. $this->app 3.$container = app()
 
-
+1. app(FQCN)  2. $app->make("FQCN')  3. $app['FQCN']
 
 
 
