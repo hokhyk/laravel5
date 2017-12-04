@@ -8497,8 +8497,10 @@ the first and the last thing to interact with the request/response cycle. That m
  something like enabling sessions — PHP needs you to open the session very early and close it very late, and middleware is great for this.
 
 ### creating custom middleware
-Let’s imagine we want to have a middleware that rejects every request that uses the DELETE
-HTTP method, and also sends a cookie back for every request.
+Let’s imagine we want to have a middleware that rejects every request that uses the DELETE
+
+HTTP method, and also sends a cookie back for every request.
+
 There’s an Artisan command to create custom middleware. Let’s try it out:
 #### php artisan make:middleware BanDeleteMethod
 This command creates a file at app/Http/Middleware/BanDeleteMethod.php. 
@@ -8521,268 +8523,488 @@ class BanDeleteMethod
     }
 }
 
-this handle() method represents the processing of both the incoming request and the
+this handle() method represents the processing of both the incoming request and the
+
 outgoing response.
 
 #### understanding middleware's handle() method
-First, remember that middleware are layered one on top of another, and then finally on top of
-the app. The first middleware that’s registered gets first access to a request when it comes in, then that request is passed to every other middleware in turn, then to the app; then the resulting response is passed outward through the middleware, and finally this first middleware gets last access to the response when it goes out.
+First, remember that middleware are layered one on top of another, and then finally on top of
 
-Passing that request to $next() means handing it off to the rest of the middleware. The
-$next() closure just takes that $request and passes it to the handle() method of the next
-middleware in the stack. It then gets passed on down the line until there are no more
+the app. The first middleware that’s registered gets first access to a request when it comes in,
+ then that request is passed to every other middleware in turn, then to the app; then the resulting response is passed outward through the middleware, and finally this first middleware gets last
+ access to the response when it goes out.
+
+Passing that request to $next() means handing it off to the rest of the middleware. The
+
+$next() closure just takes that $request and passes it to the handle() method of the next
+
+middleware in the stack. It then gets passed on down the line until there are no more
+
 middleware to hand it to, and it finally ends up at the application.
 
-Next, how does the response come out? This is where it might be hard to follow. The
-application returns a response, which is passed back up the chain of middleware — because
-each middleware returns its response. So, within that same handle() method, the middleware
-can decorate a $request and pass it to the $next() closure, and can then choose to do
+Next, how does the response come out? This is where it might be hard to follow. The
+
+application returns a response, which is passed back up the chain of middleware — because
+
+each middleware returns its response. So, within that same handle() method, the middleware
+
+can decorate a $request and pass it to the $next() closure, and can then choose to do
+
 something with the output it receives before finally returning that output to the end user. 
 
-Pseudocode explaining the middleware call process
-...
-class BanDeleteMethod
-{
-public function handle($request, Closure $next)
-{
-// At this point, $request is the raw request from the user.
-// Let's do something with it, just for fun.
-if ($request->ip() === '192.168.1.1') {
-return response('BANNED IP ADDRESS!', 403);
-} //
-Now we've decided to accept it. Let's pass it on to the next
-// middleware in the stack. We pass it to $next(), and what is
-// returned is the response after the $request has been passed
-// down the stack of middleware to the application and the
-// application's response has been passed back up the stack.
-$response = $next($request);
-// At this point, we can once again interact with the response
-// just before it is returned to the user
-$response->cookie('visited-our-site', true);
-// Finally, we can release this response to the end user
-return $response;
-}
-}
-Finally, let’s make the middleware do what we actually promised.
-Sample middleware banning the delete method
-...
-class BanDeleteMethod
-{
-public function handle($request, Closure $next)
-{
-// Test for the DELETE method
-if ($request->method() === 'DELETE') {
-return response(
-"Get out of here with that delete method",
-405
-);
-} $
-response = $next($request);
-// Assign cookie
-$response->cookie('visited-our-site', true);
-// Return response
-return $response;
-}
+Pseudocode explaining the middleware call process
+
+...
+
+class BanDeleteMethod
+
+{
+
+public function handle($request, Closure $next)
+
+{
+
+// At this point, $request is the raw request from the user.
+
+// Let's do something with it, just for fun.
+
+if ($request->ip() === '192.168.1.1') {
+
+return response('BANNED IP ADDRESS!', 403);
+
+} //
+
+Now we've decided to accept it. Let's pass it on to the next
+
+// middleware in the stack. We pass it to $next(), and what is
+
+// returned is the response after the $request has been passed
+
+// down the stack of middleware to the application and the
+
+// application's response has been passed back up the stack.
+
+$response = $next($request);
+
+// At this point, we can once again interact with the response
+
+// just before it is returned to the user
+
+$response->cookie('visited-our-site', true);
+
+// Finally, we can release this response to the end user
+
+return $response;
+
 }
 
-### binding middleware :register this middleware in one of two ways: globally or for specific routes.
+}
+F
+inally, let’s make the middleware do what we actually promised.
+Sample middleware banning the delete method
+
+...
+
+class BanDeleteMethod
+
+{
+
+public function handle($request, Closure $next)
+
+{
+
+// Test for the DELETE method
+
+if ($request->method() === 'DELETE') {
+
+return response(
+
+"Get out of here with that delete method",
+
+405
+
+);
+
+} $
+
+response = $next($request);
+
+// Assign cookie
+
+$response->cookie('visited-our-site', true);
+
+// Return response
+
+return $response;
+
+}
+
+}
+
+### binding middleware :register this middleware in one of two ways: globally or
+ for specific routes.
 Global middleware are applied to every route; route middleware are applied on a route-byroute basis.
 #### binding global middleware  :in app/Http/Kernel.php  $middleware
-Both bindings happen in app/Http/Kernel.php. To add a middleware as global, add its class
+Both bindings happen in app/Http/Kernel.php. To add a middleware as global, add its class
+
 name to the $middleware property.
-Binding global middleware
-// app/Http/Kernel.php
-protected $middleware = [
-\Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
-\App\Http\Middleware\BanDeleteMethod::class,
+Binding global middleware
+
+// app/Http/Kernel.php
+
+protected $middleware = [
+
+\Illuminate\Foundation\Http\Middleware\CheckForMaintenanceMode::class,
+
+\App\Http\Middleware\BanDeleteMethod::class,
+
 ];
 
 #### Binding route middleware :in app/Http/Kernel.php $routeMiddleware
-Middleware intended for specific routes can be added as a route middleware or as part of a
+Middleware intended for specific routes can be added as a route middleware or as part of a
+
 middleware group. 
-Route middleware are added to the $routeMiddleware array in app/Http/Kernel.php. It’s
-similar to adding them to $middleware, except we have to give one a key that will be used
+Route middleware are added to the $routeMiddleware array in app/Http/Kernel.php. It’s
+
+similar to adding them to $middleware, except we have to give one a key that will be used
+
 when applying this middleware to a particular route.
-Binding route middleware
-// app/Http/Kernel.php
-protected $routeMiddleware = [
-'auth' => \App\Http\Middleware\Authenticate::class,
-...
-'nodelete' => \App\Http\Middleware\BanDeleteMethod::class,
+Binding route middleware
+
+// app/Http/Kernel.php
+
+protected $routeMiddleware = [
+
+'auth' => \App\Http\Middleware\Authenticate::class,
+
+...
+
+'nodelete' => \App\Http\Middleware\BanDeleteMethod::class,
+
 ];
 
-Applying route middleware in route definitions
-// Doesn't make much sense for our current example...
-Route::get('contacts', [
-'middleware' => 'nodelete',
-'uses' => 'ContactsController@index'
-]);
-// Makes more sense for our current example...
-Route::group(['prefix' => 'api', 'middleware' => 'nodelete', function () {
-// All routes related to an API
+Applying route middleware in route definitions
+
+// Doesn't make much sense for our current example...
+
+Route::get('contacts', [
+
+'middleware' => 'nodelete',
+
+'uses' => 'ContactsController@index'
+
+]);
+
+// Makes more sense for our current example...
+
+Route::group(['prefix' => 'api', 'middleware' => 'nodelete', function () {
+
+// All routes related to an API
+
 }]);
 
 ### using middleware group (default web middleware group and api middleware group in Kernel.php $middlewareGroups)
-Laravel 5.2 introduced the concept of middleware groups. They’re essentially pre-packaged
-bundles of middleware that make sense to be together in specific contexts.
-In 5.3, you get a routes/web.php file for web routes and a routes/api.php file for API routes. 
+Laravel 5.2 introduced the concept of middleware groups. They’re essentially pre-packaged
 
-Out of the box there are two groups: web and api. web has all the middleware that will be
-useful on almost every Laravel page request, including middleware for cookies, sessions,
-CSRF protection, and more. api has none of those — it has a throttle middleware and a route
+bundles of middleware that make sense to be together in specific contexts.
+In 5.3,
+ you get a routes/web.php file for web routes and a routes/api.php file for API routes. 
+
+Out of the box there are two groups: web and api. web has all the middleware that will be
+
+useful on almost every Laravel page request, including middleware for cookies, sessions,
+
+CSRF protection, and more. api has none of those — it has a throttle middleware and a route
+
 model binding middleware, and that’s it. These are all defined in app/Http/Kernel.php.
-the routes/web.php file is wrapped with the web middleware group, and
+the routes/web.php file is wrapped with the web middleware group, and
+
 the routes/api.php file is wrapped with the api middleware group.
 
-You can apply middleware groups to routes just like you apply route middleware to routes,
-with the middleware() fluent method:
+You can apply middleware groups to routes just like you apply route middleware to routes,
+
+with the middleware() fluent method:
+
 Route::get('/', 'HomeController@index')->middleware('web');
 
-You can also create your own middleware groups and add and remove route middleware to
-and from preexisting middleware groups. It works just like adding route middleware
+You can also create your own middleware groups and add and remove route middleware to
+
+and from preexisting middleware groups. It works just like adding route middleware
+
 normally, but you’re instead adding them to keyed groups in the $middlewareGroups array.
 
-The routes/* files are loaded in the RouteServiceProvider. Take a look at the map() method
-there and you’ll find a mapWebRoutes() and a mapApiRoutes() method, each
+The routes/* files are loaded in the RouteServiceProvider. Take a look at the map() method
+
+there and you’ll find a mapWebRoutes() and a mapApiRoutes() method, each
+
 of which loads its respective files already wrapped in the appropriate middleware group.
-Default route service provider in Laravel 5.3
-// App\Providers\RouteServiceProvider
-public function map()
-{
-$this->mapApiRoutes();
-$this->mapWebRoutes();
-} p
-rotected function mapApiRoutes()
-{
-Route::group([
-'middleware' => 'api',
-'namespace' => $this->namespace,
-'prefix' => 'api',
-], function ($router) {
-require base_path('routes/api.php');
-});
-} p
-rotected function mapWebRoutes()
-{
-Route::group([
-'middleware' => 'web',
-'namespace' => $this->namespace,
-], function ($router) {
-require base_path('routes/web.php');
-});
+Default route service provider in Laravel 5.3
+
+// App\Providers\RouteServiceProvider
+
+public function map()
+
+{
+
+$this->mapApiRoutes();
+
+$this->mapWebRoutes();
+
+} p
+
+rotected function mapApiRoutes()
+
+{
+
+Route::group([
+
+'middleware' => 'api',
+
+'namespace' => $this->namespace,
+
+'prefix' => 'api',
+
+], function ($router) {
+
+require base_path('routes/api.php');
+
+});
+
+} p
+
+rotected function mapWebRoutes()
+
+{
+
+Route::group([
+
+'middleware' => 'web',
+
+'namespace' => $this->namespace,
+
+], function ($router) {
+
+require base_path('routes/web.php');
+
+});
+
 }
-we’re using the router to load a route group under the
-default namespace (App\Http\Controllers) and with the web middleware group, and another
+we’re using the router to load a route group under the
+
+default namespace (App\Http\Controllers) and with the web middleware group, and another
+
 under the api middleware group.
 
 ### passing parameters to middleware
-It’s not common, but there are times when you need to pass parameters to a route middleware.
-For example, you might have an authentication middleware that will act differently depending
-on whether you’re guarding for the member user type or the owner user type:
-Route::get('company', function () {
-return view('company.admin');
-})->middleware('auth:owner');
-To make this work, you’ll need to add one or more parameters to the middleware’s handle()
-method, and update that method’s logic accordingly:
-public function handle($request, $next, $role)
-{
-if (auth()->check() && auth()->user()->hasRole($role)) {
-return $next($request);
+It’s not common, but there are times when you need to pass parameters to a route middleware.
+
+For example, you might have an authentication middleware that will act differently depending
+
+on whether you’re guarding for the member user type or the owner user type:
+
+Route::get('company', function () {
+
+return view('company.admin');
+
+})->middleware('auth:owner');
+
+To make this work, you’ll need to add one or more parameters to the middleware’s handle()
+
+method, and update that method’s logic accordingly:
+
+public function handle($request, $next, $role)
+
+{
+
+if (auth()->check() && auth()->user()->hasRole($role)) {
+
+return $next($request);
+
 } 
-return redirect('login');
-}
-Note that you can also add more than one parameter to the handle() method, and pass
-multiple parameters to the route definition by separating them with commas:
-Route::get('company', function () {
-return view('company.admin');
+r
+eturn redirect('login');
+
+}
+
+Note that you can also add more than one parameter to the handle() method, and pass
+
+multiple parameters to the route definition by separating them with commas:
+
+Route::get('company', function () {
+
+return view('company.admin');
+
 })->middleware('auth:owner,view');
 
 # The Container
-Laravel’s service container, or dependency injection container, sits at the core of almost every other feature. The container is a simple tool you can use to bind and resolve concrete
-instances of classes and interfaces, and at the same time it’s a powerful and nuanced manager
+Laravel’s service container, or dependency injection container, sits at the core of almost every
+ other feature. The container is a simple tool you can use to bind and resolve concrete
+
+instances of classes and interfaces, and at the same time it’s a powerful and nuanced manager
+
 of a network of interrelated dependencies. 
 
 ## A Quick Introduction to Dependency Injection
-Dependency injection means that, rather than being instantiated (“newed up”) within a class,
+Dependency injection means that, rather than being instantiated (“newed up”) within a class,
+
 each class’s dependencies will be injected in from the outside. 
 
 1. constructor injection
-This most commonly occurs with constructor injection, which means an object’s dependencies are injected when it’s created.
+This most commonly occurs
+ with constructor injection, which means an object’s dependencies are injected when it’s
+ created.
 
-Basic dependency injection
-<?php
-class UserMailer
-{
-protected $mailer;
-public function __construct(Mailer $mailer)
-{
-$this->mailer = $mailer;
-} p
-ublic function welcome($user)
-{
-return $this->mailer->mail($user->email, 'Welcome!');
-}
+Basic dependency injection
+
+<?php
+
+class UserMailer
+
+{
+
+protected $mailer;
+
+public function __construct(Mailer $mailer)
+
+{
+
+$this->mailer = $mailer;
+
+} p
+
+ublic function welcome($user)
+
+{
+
+return $this->mailer->mail($user->email, 'Welcome!');
+
+}
+
 } 
-As you can see, this UserMailer class expects an object of type Mailer to be injected when it’s instantiated, and its methods then refer to that instance.
+A
+s you can see, this UserMailer class expects an object of type Mailer to be injected when it’s instantiated, and its methods then refer to that instance.
 Then you can define your Mailer class or interface to be one of these through configuration or a factory:
 Mailgun or Mandrill or Sendgrid.
 2. setter injection
-But there’s also setter injection, where the class exposes a method specifically for injecting a given dependency, 
+But there’s also setter injection, where the class exposes a method specifically for
+ injecting a given dependency, 
 
 3. method injection
-and method injection, where one or more methods expect their dependencies to be injected when they’re called.
+and method injection, where one or more methods expect their
+ dependencies to be injected when they’re called.
 
 ## the app() global helper : the easiest way to get an object out of the container
-Pass any string to that helper, whether it’s a fully qualified class name (FQCN) or a Laravel
-shortcut, and it’ll return an instance of that class:
-$logger = app(Logger::class);
-It creates an instance of this class and returns it for you. 
+Pass any string to that helper, whether it’s a fully qualified class name (FQCN) or a Laravel
 
-The simplest way to “make” a concrete instance is to use the global helper and pass the class or interface name directly to the helper, using app('FQCN').
-However, if you have an instance of the container — whether it was injected somewhere, or if you’re in a service provider and using $this->app, or (a lesser-known trick) if you get one by just running $container = app() — there are a few ways to make an instance from there.
-The most common way is to run the make() method. $app->make('FQCN') works well. However, you may also see other developers and the documentation use this syntax sometimes: $app['FQCN']. Don’t worry. That’s doing the same thing; it’s just a different way of writing it.
+shortcut, and it’ll return an instance of that class:
+
+$logger = app(Logger::class);
+It creates an instance of this
+ class and returns it for you. 
+
+The simplest way to “make” a concrete instance is to use the global helper and pass the class or interface name directly
+ to the helper, using app('FQCN').
+However, if you have an instance of the container — whether it was injected somewhere, or if you’re in a service provider
+ and using $this->app, or (a lesser-known trick) if you get one by just running $container = app() — there are a few
+ ways to make an instance from there.
+
+The most common way is to run the make() method. $app->make('FQCN') works well. However, you may also see other
+ developers and the documentation use this syntax sometimes: $app['FQCN']. Don’t worry. That’s doing the same thing; it’s
+ just a different way of writing it.
 1. app() 2. $this->app 3.$container = app()
 
 1. app(FQCN)  2. $app->make("FQCN')  3. $app['FQCN']
 
 ## Laraval's container autowiring
-Laravel autowiring
-class Bar
-{
-public function __construct() {}
+Laravel autowiring
+
+class Bar
+
+{
+
+public function __construct() {}
+
 } 
-class Baz
-{
-public function __construct() {}
+c
+lass Baz
+
+{
+
+public function __construct() {}
+
 } 
-class Foo
-{
-public function __construct(Bar $bar, Baz $baz) {}
+c
+lass Foo
+
+{
+
+public function __construct(Bar $bar, Baz $baz) {}
+
 } 
-$foo = app(Foo::class);
-The container reads the typehints in the constructor, resolves an instance
-of each, and then injects them into the new Foo instance when it’s creating it. This is called
-autowiring: resolving instances based on type-hints without the developer needing to
+$
+foo = app(Foo::class);
+The container reads the typehints in the constructor, resolves an instance
+
+of each, and then injects them into the new Foo instance when it’s creating it. This is called
+
+autowiring: resolving instances based on type-hints without the developer needing to
+
 explicitly bind those classes in the container.
 
-TYPEHINTS IN PHP
-“Typehinting” in PHP means putting the name of a class or interface in front of a variable in a method signature:
-public function __construct(Logger $logger) {}
-This typehint is telling PHP that whatever is passed into the method must be of type Logger, which could be either an interface or a class.
+TYPEHINTS IN PHP
 
-Autowiring means that, if a class has not been explicitly bound to the container (like Foo, Bar, or Baz in this context) but the container can figure out how to resolve it anyway, the container will resolve it. This means any class with no constructor dependencies (like Bar and Baz) and any class with constructor dependencies that the container can resolve (like Foo) can be resolved out of the container.
-That leaves us only needing to bind classes that have unresolvable constructor parameters —
-for example, our $logger class in Example 11-3, which has parameters related to our log path
+“Typehinting” in PHP means putting the name of a class or interface in front of a variable in a method signature:
+
+public function __construct(Logger $logger) {}
+
+This typehint is telling PHP that whatever is passed into the method must be of type Logger, which could be either
+ an interface or a class.
+
+Autowiring means that, if a class has not been explicitly bound to the container (like Foo, Bar,
+ or Baz in this context) but the container can figure out how to resolve it anyway, the container will resolve it. This means any class with no constructor dependencies (like Bar and Baz) and
+ any class with constructor dependencies that the container can resolve (like Foo) can be
+ resolved out of the container.
+
+That leaves us only needing to bind classes that have unresolvable constructor parameters —
+
+for example, our $logger class in Example 11-3, which has parameters related to our log path
+
 and log level.
 
 ## Binding class to the container
-Binding a class to Laravel’s container is essentially telling the container, “If a developer asks for an instance of Logger, here’s the code to run in order to instantiate one with the correct parameters and dependencies and then return it correctly.”
-We’re teaching the container that, when someone asks for this particular string (which is
+Binding a class to Laravel’s container is essentially telling the container, “If a developer asks
+ for an instance of Logger, here’s the code to run in order to instantiate one with the correct parameters and dependencies and then return it correctly.”
+We’re teaching the container that, when someone asks for this particular string (which is
+
 usually the FQCN of a class), it should resolve it this way.
 
 ### Binding to a Closure
+the appropriate place to bind to the container is in a service provider’s register() method。
+Basic container binding
+// In service provider
+public function register()
+{
+$this->app->bind(Logger::class, function ($app) {
+return new Logger('\log\path\here', 'error');
+});
+}
 
+There are a few important things to note in this example. First, we’re running $this->app->bind(). $this->app is an instance of the container that’s always available on every service provider. The container’s bind() method is what we use to bind to the container.
+The first parameter of bind() is the “key” we’re binding to. Here we’ve used the FQCN of the
+class. The second parameter differs depending on what you’re doing, but essentially it should
+be something that shows the container what to do to resolve an instance of that bound key.
 
+And now, any time someone runs
+app(Logger::class), they’ll get the result of this closure. The closure is passed an instance of
+the container itself ($app), so if the class you’re resolving has a dependency you want
+resolved out of the container, you can use it in your definition:
+$this->app->bind(UserMailer::class, function ($app) {
+return new UserMailer(
+$app->make(Mailer::class),
+$app->make(Logger::class),
+$app->make(Slack::class)
+);
+});
 
 
 
