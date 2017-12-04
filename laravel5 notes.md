@@ -9006,12 +9006,62 @@ $app->make(Slack::class)
 );
 });
 
+### binding to singletons, aliases and instances
+1. $this->app->singleton()
+If you want the output of the binding closure to be cached so that this closure isn’t re-run
+every time you ask for an instance, that’s the Singleton pattern, and you can run $this->app-
+>singleton() to do that:
+public function register()
+{
+$this->app->singleton(Logger::class, function () {
+return new Logger('\log\path\here', 'error');
+});
+}
 
+2. binding to instance
+You can also get similar behavior if you already have an instance of the object you want the
+singleton to return:
+public function register()
+{
+$logger = new Logger('\log\path\here', 'error');
+$this->app->instance(Logger::class, $logger);
+}
 
+3. binding to aliases
+if you want to alias one class to another, bind a class to a shortcut, or bind a shortcut
+to a class, you can just pass two strings:
+$this->bind(Logger::class, FirstLogger::class);
+// or
+$this->bind('log', FirstLogger::class);
+// or
+$this->bind(FirstLogger::class, 'log');
+Note that these shortcuts are common in Laravel’s core; it provides a system of shortcuts to
+classes that provide core functionality, using easy-to-remember keys like log.
 
+### binding a concrete instance to an interface
+Just like we can bind a class to another class, or a class to a shortcut, we can also bind to an interface. This is extremely powerful, because we can now typehint interfaces instead of class names.
+Typehinting and binding to an interface
+...
+use Interfaces\Mailer;
+class UserMailer
+{
+protected $mailer;
+public function __construct(Mailer $mailer)
+{
+$this->mailer = $mailer;
+}
+}//
+service provider
+public function register()
+{
+$this->app->bind(\Interfaces\Mailer::class, function () {
+return new MailgunMailer(...);
+});
+}
 
-
-
+You can now typehint Mailer or Logger interfaces all across your code, and then choose once
+in a service provider which specific mailer or logger you want to use everywhere. That’s
+inversion of control.
 
 
 
