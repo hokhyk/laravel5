@@ -9103,7 +9103,32 @@ your application’s lifecycle — so any of those classes can typehint dependen
 constructors and expect them to be automatically injected.
 
 ## Method Injection
+The most common place to use method injection is in controller methods. If you have a
+dependency you only want to use for a single controller method, you can inject it into just that method.
+Injecting dependencies into a controller method
+...
+class MyController extends Controller
+{
+// Method dependencies can come after or before route parameters
+public function show(Logger $logger, $id)
+{
+// Do something
+$logger->error('Something happened');
+}
+} 
 
+This is also available on the boot() method of service providers, and you can also arbitrarily
+call a method on any class using the container, which will allow for method injection there.
+Manually calling a class method using the container’s call() method
+class Foo
+{
+public function bar($parameter1) {}
+} $
+foo = new Foo;
+// Calls the 'bar' method on $foo with a first parameter of "value"
+app()->call($foo, 'bar', ['parameter1' => 'value']);
+
+## Facade and the container
 
 
 
