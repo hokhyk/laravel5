@@ -9063,7 +9063,22 @@ You can now typehint Mailer or Logger interfaces all across your code, and then
 in a service provider which specific mailer or logger you want to use everywhere. That’s
 inversion of control.
 
+### contextual binding
+Sometimes you need to change how to resolve an interface depending on the context. You
+might want to log events from one place to a local syslog and from others out to an external
+service. So, let’s tell the container to differentiate:
+Contextual binding
+// In a service provider
+public function register()
+{
+$this->app->when(FileWrangler::class)
+->needs(Interfaces\Logger::class)
+->give(Loggers\Syslog::class);
 
+$this->app->when(Jobs\SendWelcomeEmail::class)
+->needs(Interfaces\Logger::class)
+->give(Loggers\PaperTrail::class);
+}
 
 
 
