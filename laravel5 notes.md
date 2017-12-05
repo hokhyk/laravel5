@@ -9192,9 +9192,12 @@ returns a string. Make that string something that can be used to resolve your ba
 of the container — maybe just the FQCN of the class. Finally, you have to register the facade
 by adding it to the aliases array in config/app.php. Done! You just made your own facade.
 
+## Service Providers
+What’s most important with regard to the container is that you remember to
+register your bindings in the register() method of some service provider somewhere.
 
-
-
+You can just dump loose bindings into App\Providers\AppServiceProvider, which is a bit of
+a catchall, but it’s generally better practice to create a unique service provider for each group of functionality you’re developing, and bind its classes in its unique register() method.
 
 
 
