@@ -9199,7 +9199,12 @@ register your bindings in the register() method of some service provider somewhe
 You can just dump loose bindings into App\Providers\AppServiceProvider, which is a bit of
 a catchall, but it’s generally better practice to create a unique service provider for each group of functionality you’re developing, and bind its classes in its unique register() method.
 
-
+# Testing:PHPUnit, Behat, Mockery, Faker
+Out of the box, Laravel comes with baked-in integrations to PHPUnit (unit testing), Behat
+(behavior-driven development), Mockery (mocking), and Faker (creating fake data for
+seeding and testing). It also comes with its own simple and powerful suite of application
+testing tools, which allow you to “crawl” your site’s URIs, click buttons, submit forms, check
+HTTP status codes, and validate and assert against JSON.
 
 
 
