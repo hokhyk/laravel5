@@ -9129,6 +9129,77 @@ foo = new Foo;
 app()->call($foo, 'bar', ['parameter1' => 'value']);
 
 ## Facade and the container
+Laravel’s facades are classes that provide simple access to core pieces of Laravel’s
+functionality. There are two trademark features of facades: first, they’re all available in the
+global namespace (\Log is an alias to \Illuminate\Support\Facades\Log), and second, they
+use static methods to access nonstatic resources.
+In your controller or views you could use this call:
+Log::alert('Something has gone wrong!');
+Here’s what it would look like to make that same call without the facade:
+$logger = app('log');
+$logger->alert('Something has gone wrong!');
+As you can see, facades translate static calls (any method call that you make on a class itself,
+using ::, instead of on an instance) to normal method calls on instances.
+### importing facade namespaces
+If you’re in a namespaced class, you’ll want to be sure to import the facade at the top:
+...
+use Illuminate\Support\Facades\Log;
+class Controller extends Controller
+{
+public function index()
+{
+// ...
+Log::error('Something went wrong!');
+}
+
+### how facades work: https://laravel.com/docs/5.5/facades#facade-class-reference 
+The Log facade class
+<?php
+namespace Illuminate\Support\Facades;
+class Log extends facade
+{
+protected static function getFacadeAccessor()
+{
+return 'log';
+}
+}
+
+Every facade has a single method: getFacadeAccessor(). This defines the key that Laravel
+should use to look up this facade’s backing instance from the container.
+ In this instance, we can see that every call to the Log facade is proxied to be a call to an
+instance of the log shortcut from the container. Of course, that’s not a real class or interface name, so we know it’s one of those shortcuts I mentioned earlier.
+So, here’s what’s really happening:
+Log::error('Help!');
+// is the same as...
+app('log')->error('Help!');So, here’s what’s really happening:
+Log::error('Help!');
+
+There are a few ways to look up exactly what class each facade accessor points to, but
+checking the documentation is the easiest. There’s a table on the facades documentation page
+that shows you, for each facade, which container binding (shortcut, like log) it’s connected to,
+and which class that returns. It looks like this:
+Facade Class Service Container Binding
+App Illuminate\Foundation\Application app
+… … …
+Log Illuminate\Log\Writer log
+Now that you have this reference, you can do three things.
+1. First, you can always figure out what methods are available on a facade. Just find its backing class and look at the definition of that class, and you’ll know that any of its public methods are callable on the facade.
+
+2. Second, you can figure out how to inject a facade’s backing class using dependency injection. If you ever want the functionality of a facade but prefer to use dependency injection, just typehint the facade’s backing class or get an instance of it with app() and call the same methods you would’ve called on the facade.
+
+3. Third, you can see how to create your own facades. Create a class for the facade that extends Illuminate\Support\Facades\Facade, and give it a getFacadeAccessor() method, which
+returns a string. Make that string something that can be used to resolve your backing class out
+of the container — maybe just the FQCN of the class. Finally, you have to register the facade
+by adding it to the aliases array in config/app.php. Done! You just made your own facade.
+
+
+
+
+
+
+
+
+
 
 
 
