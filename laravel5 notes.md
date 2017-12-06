@@ -9206,6 +9206,43 @@ seeding and testing). It also comes with its own simple and powerful suite of ap
 testing tools, which allow you to “crawl” your site’s URIs, click buttons, submit forms, check
 HTTP status codes, and validate and assert against JSON.
 
+## Testing Basics
+Tests in Laravel live in the tests folder, and you can see there are two files in there by default:
+TestCase.php, which is a base class intended to be extended by any application tests, and
+ExampleTest.php, which is a ready-to-run application test that will return green on any new
+app.
+
+tests/ExampleTest.php
+<?php
+use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+class ExampleTest extends TestCase
+{
+/**
+* A basic functional test example.
+**
+@return void
+*/
+public function testBasicExample()
+{
+$this->visit('/')
+->see('Laravel');
+}
+}
+
+To run this test, go to the command line and run ./vendor/bin/phpunit from the root folder
+of your application. 
+
+vagrant@homestead:~/Code/HokBlog$ phpunit
+
+PHPUnit 6.4.3 by Sebastian Bergmann and contributors.
+
+..                                                                  2 / 2 (100%)
+
+Time: 375 ms, Memory: 10.00MB
+
+OK (2 tests, 2 assertions)
 
 
 
