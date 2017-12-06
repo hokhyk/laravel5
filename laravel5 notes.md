@@ -9244,6 +9244,37 @@ Time: 375 ms, Memory: 10.00MB
 
 OK (2 tests, 2 assertions)
 
+## Naming Tests
+By default, Laravel’s testing system will run any files in the tests directory whose names end
+with the word Test. That’s why tests/ExampleTest.php was run by default.
+If you’re not familiar with PHPUnit, you might not know that only the methods in your tests
+with names that start with the word test will be run — or methods with a @test docblock. 
+Naming PHPUnit methods
+class Naming
+{
+public function test_it_names_things_well()
+{
+// Runs as "test it names things well"
+} 
+
+public function testItNamesThingsWell()
+{
+// Runs as "It names things well"
+} /
+
+** @test */
+public function it_names_things_well()
+{
+// Runs as "it names things well"
+}
+
+public function it_names_things_well()
+{
+// Doesn't run
+}
+}
+
+
 
 
 
