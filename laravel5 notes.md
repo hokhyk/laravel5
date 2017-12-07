@@ -9322,6 +9322,8 @@ migrate:rollback in the tearDown() method after each test finishes.
 DatabaseTransactions, on the other hand, expects your database to be properly migrated
 before your tests start. Then, it wraps every test in a database transaction, which it rolls back at the end of each test. This means that, at the end of each test, your database will be returned to the exact same state it was in prior to the test.
 
+## Application testing
+### TestCase
 
 
 
@@ -9346,6 +9348,7 @@ before your tests start. Then, it wraps every test in a database transaction, wh
 
 
 
+# Writing APIs
 
 
 
