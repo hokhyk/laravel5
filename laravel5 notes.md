@@ -9304,6 +9304,24 @@ if (file_exists(dirname(__DIR__) . '/.env.test')) {
 That’s it! You’re now loading .env.test to provide environment variables to every test.
 
 ## the Testing Traits :the three testing traits you can pull into any test class.
+1. WithoutMiddleware
+If you import Illuminate\Foundation\Testing\WithoutMiddleware into your test class, it
+will disable all middleware for any test in that class. This means you won’t have to worry
+about the authentication middleware, or CSRF protection, or anything else that might be
+useful in the real application but distracting in a test.
+
+2. DatabaseMigrations
+Laravel provides two tools out of the box to keep your database in the right state between
+tests: the DatabaseMigrations trait and the DatabaseTransactions trait.
+If you import the DatabaseMigrations trait, it will run your entire set of database migrations
+up before each test and down after each test. Laravel makes this happen by running php
+artisan migrate in the setUp() method before every test runs and php artisan
+migrate:rollback in the tearDown() method after each test finishes.
+
+3. DatabaseTransactions
+DatabaseTransactions, on the other hand, expects your database to be properly migrated
+before your tests start. Then, it wraps every test in a database transaction, which it rolls back at the end of each test. This means that, at the end of each test, your database will be returned to the exact same state it was in prior to the test.
+
 
 
 
