@@ -9260,9 +9260,9 @@ public function test_it_names_things_well()
 public function testItNamesThingsWell()
 {
 // Runs as "It names things well"
-} /
+} 
 
-** @test */
+/** @test */
 public function it_names_things_well()
 {
 // Runs as "it names things well"
@@ -9273,6 +9273,67 @@ public function it_names_things_well()
 // Doesn't run
 }
 }
+
+## the testing environment :app()->environment(testing)   local, staging, production,testing
+Any time a Laravel application is running, it has a current “environment” name that represents
+the environment it’s running in. This name may be set to local, staging, production, or
+anything else you want. You can retrieve this by running app()->environment(), or you can
+run something like if (app()->environment('local')) to test whether the current
+environment matches the passed name.
+you can test for if (app()->environment('testing')) to enable or disable certain behaviors in
+the testing environment.
+
+Additionally, Laravel doesn’t load the normal environment variables from .env for testing. If
+you want to set any environment variables for your tests, edit phpunit.xml and, in the <php>
+section, add a new <env> for each environment variable you want to pass in — for example,
+<env name="DB_CONNECTION" value="sqlite"/>.
+
+### USING .ENV.TEST TO EXCLUDE TESTING ENVIRONMENT VARIABLES FROM VERSION CONTROL
+If you want to set environment variables for your test, you can do so in phpunit.xml as just described. But what if you
+have environment variables for your tests that you want to be different for each testing environment? Or what if you want
+them to be excluded from source control?
+Thankfully, handling these conditions is pretty easy. First, create an .env.test.example file — just like Laravel’s
+.env.example file — and add .env.test to your .gitignore file just below .env. Next, add the variables you’d like to be
+environment-specific to .env.test.example, just like they’re set in .env.example. Then, make a copy of .env.test.example
+and name it .env.test.
+Finally, let’s load that file into our tests. In tests/TestCase.php, in the createApplication() method, paste this code just
+below the $app = require(...) line:
+if (file_exists(dirname(__DIR__) . '/.env.test')) {
+(new \Dotenv\Dotenv(dirname(__DIR__), '.env.test'))->load();
+}
+That’s it! You’re now loading .env.test to provide environment variables to every test.
+
+## the Testing Traits :the three testing traits you can pull into any test class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
