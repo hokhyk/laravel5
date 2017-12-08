@@ -1,94 +1,88 @@
-#安装homestead
+# installing virtualbox
+
+# installing vagrant
+
+# installing composer
+curl -s https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+composer -V
+
+# 安装homestead
 vagrant box add laravel/homestead (或者vagrant box add laravel/homestead /path/to/virtualbox.box)
 cd ~
+## 克隆homestead配置文件。
 git clone https://github.com/laravel/homestead.git Homestead
-#安装php7.1 lnmp
-sudo apt-get update 
-sudo apt-get install -y language-pack-en-base
-locale-gen en_US.UTF-8
 
+## 生成Homestead.yaml文件。
+切换至Homestead目录cd Homestead，运行命令bash init.sh生成Homestead.yaml文件
 
-sudo apt-get install software-properties-common 
-sudo LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php
-sudo apt-get update 
+## 修改Homestead.yaml配置文件
+vi ~/.homestead/Homestead.yaml
+ 
+## ssh-keygen -t rsa
+ cp /home/vagrant/.ssh/id_rsa   /home/vagrant/share/todo/vagrant/laravel/Homestead/.vagrant/machines/homestead-7/virtualbox/private_key
+ 
+## 修改homestead.rb文件。
+ 如果这时候你直接在Homestead目录下启动homestead虚拟机，肯定会得到反复叫你下载virtualbox的提示，猜测这是由于手动添加的virtualbox没有保存版本信息的缘故(可以使用命令vagrant box list来查看)。所以可以通过修改Homestead/scripts/homestead.rb来解决这一个问题，找到config.vm.box_version = settings["version"] ||= ">= 0.4.4"这一行，将其修改为config.vm.box_version = settings["version"] ||= ">= 0"即可
 
+## 修改host文件。
+laravel homestead box：
+##homestead mapping
+192.168.0.198 homestead.app
+192.168.0.198 laravel_cms.app
+192.168.0.198 lara.app
 
-sudo apt-get -y install php7.1
-sudo apt-get -y install php7.1-mysql
-sudo apt-get install php7.1-fpm
+## 新建站点：
+ 1、vagrant ssh 192.168.0.198
+ 2、sudo /vagrant/scripts/serve-laravel.sh site-domain(lara.app) site-root-folder(/home/vagrant/Code/lara/public)
+ 3、 sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/lara.app.crt
+ 4、 sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/lara.app.key
+ 5、修改本机hosts文件。 （winidows   ipconfig  /flushdns） 
+ 
+## 启动虚拟机。
+进入Homestead目录，使用命令vagrant up命令启动虚拟机，可使用vagrant ssh登陆虚拟机。顺便一提，虚拟机数据库的root用户密码为secret
 
-apt-get install php7.1-curl php7.1-xml php7.1-mcrypt php7.1-json php7.1-gd php7.1-mbstring
+## 在homestead虚拟机上安装composer
+$vagrant ssh
+cd ~/Code
 
-
-sudo apt-get -y install nginx
-
-sudo apt-get -y install mysql-server-5.6
-第三节视频：
-
-sudo vim /etc/php/7.1/fpm/php.ini  // 将cgi.fix_pathinfo=1这一行去掉注释，将1改为0
-
-sudo vim /etc/php/7.1/fpm/pool.d/www.conf 
-
-// 配置这个 listen = /var/run/php7.1-fpm.sock
-
-sudo service php7.1-fpm restart
-
-
-sudo vim /etc/nginx/sites-available/default
-Nginx 基础配置如下：
-
-        listen 80 default_server;
-        listen [::]:80 default_server ipv6only=on;
-
-        root /var/www/laravel-ubuntu/public;
-        index index.php index.html index.htm;
-
-        # Make site accessible from http://localhost/
-        server_name localhost;
-
-        location / {
-                # First attempt to serve request as file, then
-                # as directory, then fall back to displaying a 404.
-                try_files $uri $uri/ /index.php?$query_string;
-                # Uncomment to enable naxsi on this location
-                # include /etc/nginx/naxsi.rules
-        }
-        location ~ \.php$ {
-                try_files $uri /index.php =404;
-                fastcgi_split_path_info ^(.+\.php)(/.+)$;
-                fastcgi_pass unix:/var/run/php7.1-fpm.sock;
-                fastcgi_index index.php;
-                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-                include fastcgi_params;
-        }
-还有就是，注意 laravel-ubuntu 这个目录的所有者为: www-data:www-data
-
-最后给，storage 文件夹权限，重启 Nginx
-
-
-
-#安装composer
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
 php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
 
+## 安装laravel框架：
+### 1、全局安装
+vagrant ssh
 
-#安装laravel框架：
- ## 1、全局安装
-composer global require "laravel/installer=~1.1"
-export PATH="~/.config/composer/vendor/bin:$PATH" 确保 ~/.composer/vendor/bin 在系统路径中
-laravel new blog
-每次重新进入homestead，都要重新执行命令export PATH="~/.config/composer/vendor/bin:$PATH"
+export PATH="~/.config/composer/vendor/bin:$PATH" 确保 ~/.composer/vendor/bin 在系统路径中.
+每次重新进入homestead，都要重新执行命令export PATH="~/.config/composer/vendor/bin:$PATH".
 
-Once installed, the laravel new command will create a fresh Laravel installation in the directory you specify. For instance, laravel new blog will create a directory named blog containing a fresh Laravel installation with all of Laravel's dependencies already installed:
+composer global require "laravel/installer"
 
-laravel new blog
+### 2、按照项目安装：
+composer create-project --prefer-dist laravel/laravel laraxxxxx
 
- ##2、按照项目安装：
-composer create-project --prefer-dist laravel/laravel blog
 
- ##3、配置
+### 3、新建项目，配置web服务器等
+#### 新建项目
+laravel new laraxxxxx 或者 composer create-project --prefer-dist laravel/laravel laraxxxxx
+
+#### 新建站点：
+ 1、vagrant ssh 192.168.0.198
+ 2、sudo /vagrant/scripts/serve-laravel.sh site-domain(laraxxxxx.app) site-root-folder(/home/vagrant/Code/laraxxxxx/public)
+ 3、 sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/laraxxxxx.app.crt
+ 4、 sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/laraxxxxx.app.key
+ 5、修改本机hosts文件。 （winidows   ipconfig  /flushdns） 
+
+#### 修改hosts文件
+on laravel homestead box：
+##homestead mapping
+192.168.0.198 homestead.app
+192.168.0.198 laravel_cms.app
+192.168.0.198 laraxxxxx.app
+
+### 4、配置laravel项目参数
  Configuration
  Public Directory
  
@@ -141,7 +135,8 @@ composer create-project --prefer-dist laravel/laravel blog
      try_files $uri $uri/ /index.php?$query_string;
  }
  
-##4. 添加ide-helper
+ 
+#### 5. 添加ide-helper
 on homestead box, 
 Install
 
@@ -255,21 +250,61 @@ Pre-generated example: https://gist.github.com/barryvdh/bb6ffc5d11e0a75dba67
 
 Note: You might need to restart PhpStorm and make sure .phpstorm.meta.php is indexed. Note: When you receive a FatalException about a class that is not found, check your config (for example, remove S3 as cloud driver when you don't have S3 configured. Remove Redis ServiceProvider when you don't use it).
 
+### 6、数据库phpmyadmin支持
 
- 
- 
-#laravel homestead box：
-##homestead mapping
-192.168.0.198 homestead.app
-192.168.0.198 laravel_cms.app
-192.168.0.198 lara.app  
-##新建站点：
- 1、vagrant ssh 192.168.0.198
- 2、sudo /vagrant/scripts/serve-laravel.sh site-domain(lara.app) site-root-folder(/home/vagrant/Code/lara/public)
- 3、 sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/lara.app.crt
- 4、 sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/lara.app.key
- 5、修改本机hosts文件。 （winidows   ipconfig  /flushdns） 
+#### adding phpmyadmin support for homestead box
+##### method 1 
+This will install PhpMyAdmin (not the latest version) from Ubuntu's repositories. Assuming that your projects live in /home/vagrant/Code :
 
+    sudo apt-get install phpmyadmin Do not select apache2 nor lighttpd when prompted. Just hit tab and enter.
+
+    sudo ln -s /usr/share/phpmyadmin/ /home/vagrant/Code/phpmyadmin
+
+    cd ~/Code && serve phpmyadmin.app /home/vagrant/Code/phpmyadmin
+
+Note: If you encounter issues creating the symbolic link on step 2, try the first option or see Lyndon Watkins' answer below.
+Final steps:
+
+    Open the /etc/hosts file on your main machine and add:
+
+    127.0.0.1  phpmyadmin.app
+
+    Go to http://phpmyadmin.app:8000
+
+##### method 2
+Step 1:
+
+Go to the phpMyAdmin website, download the latest version and unzip it into your code directory
+Step 2:
+
+Open up homestead.yaml file and add these lines
+
+folders:
+    - map: /Users/{yourName}/Code/phpMyAdmin
+      to: /home/vagrant/Code/phpMyAdmin
+sites:
+    - map: phpmyadmin.app
+      to: /home/vagrant/Code/phpMyAdmin
+
+Step 3:
+
+Open your hosts file and add this line:
+
+127.0.0.1 phpmyadmin.app
+
+Step 4:
+
+You may need to run vagrant provision to load the new configuration if vagrant is already running.
+
+
+### 7、homestead mysql database connection
+#### preferablly using HediSQL + Wine under linux environment.
+• Connection Type: Standard (non-SSH)
+• Host: 127.0.0.1
+• Username: homestead
+• Password: secret
+• Port: 33060
+For my case, the host is 192.168.0.198
   
 ## x-debug phpstorm中的配置
 1、编译安装xdebug-2.5.4.tgz。
@@ -300,59 +335,41 @@ xdebug.idekey = "PHPSTORM"
 5、phpstorm配置：
 settings：interpretor， remote， vagrant
 path mapping
-run->edit configuration  
-
-# adding phpmyadmin support for homestead box
-## method 1 
-This will install PhpMyAdmin (not the latest version) from Ubuntu's repositories. Assuming that your projects live in /home/vagrant/Code :
-
-    sudo apt-get install phpmyadmin Do not select apache2 nor lighttpd when prompted. Just hit tab and enter.
-
-    sudo ln -s /usr/share/phpmyadmin/ /home/vagrant/Code/phpmyadmin
-
-    cd ~/Code && serve phpmyadmin.app /home/vagrant/Code/phpmyadmin
-
-Note: If you encounter issues creating the symbolic link on step 2, try the first option or see Lyndon Watkins' answer below.
-Final steps:
-
-    Open the /etc/hosts file on your main machine and add:
-
-    127.0.0.1  phpmyadmin.app
-
-    Go to http://phpmyadmin.app:8000
-
-## method 2
-Step 1:
-
-Go to the phpMyAdmin website, download the latest version and unzip it into your code directory
-Step 2:
-
-Open up homestead.yaml file and add these lines
-
-folders:
-    - map: /Users/{yourName}/Code/phpMyAdmin
-      to: /home/vagrant/Code/phpMyAdmin
-sites:
-    - map: phpmyadmin.app
-      to: /home/vagrant/Code/phpMyAdmin
-
-Step 3:
-
-Open your hosts file and add this line:
-
-127.0.0.1 phpmyadmin.app
-
-Step 4:
-
-You may need to run vagrant provision to load the new configuration if vagrant is already running.
+run->edit configuration
 
 
-# homestead mysql database connection
-## preferablly using HediSQL + Wine under linux environment.
-• Connection Type: Standard (non-SSH)
-• Host: 127.0.0.1
-• Username: homestead
-• Password: secret
-• Port: 33060
-For my case, the host is 192.168.0.198
+#Laravel artisan command:
+under the laravel project root dictory:
+$php artisan list make
+Laravel Framework 5.4.28
 
+Usage:
+  command [options] [arguments]
+
+Options:
+  -h, --help            Display this help message
+  -q, --quiet           Do not output any message
+  -V, --version         Display this application version
+      --ansi            Force ANSI output
+      --no-ansi         Disable ANSI output
+  -n, --no-interaction  Do not ask any interactive question
+      --env[=ENV]       The environment the command should run under
+  -v|vv|vvv, --verbose  Increase the verbosity of messages: 1 for normal output, 2 for more verbose output and 3 for debug
+
+Available commands for the "make" namespace:
+  make:auth          Scaffold basic login and registration views and routes
+  make:command       Create a new Artisan command
+  make:controller    Create a new controller class
+  make:event         Create a new event class
+  make:job           Create a new job class
+  make:listener      Create a new event listener class
+  make:mail          Create a new email class
+  make:middleware    Create a new middleware class
+  make:migration     Create a new migration file
+  make:model         Create a new Eloquent model class
+  make:notification  Create a new notification class
+  make:policy        Create a new policy class
+  make:provider      Create a new service provider class
+  make:request       Create a new form request class
+  make:seeder        Create a new seeder class
+  make:test          Create a new test class
