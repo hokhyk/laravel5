@@ -24,20 +24,6 @@ vi ~/.homestead/Homestead.yaml
  
 ## 修改homestead.rb文件。
  如果这时候你直接在Homestead目录下启动homestead虚拟机，肯定会得到反复叫你下载virtualbox的提示，猜测这是由于手动添加的virtualbox没有保存版本信息的缘故(可以使用命令vagrant box list来查看)。所以可以通过修改Homestead/scripts/homestead.rb来解决这一个问题，找到config.vm.box_version = settings["version"] ||= ">= 0.4.4"这一行，将其修改为config.vm.box_version = settings["version"] ||= ">= 0"即可
-
-## 修改host文件。
-laravel homestead box：
-##homestead mapping
-192.168.0.198 homestead.app
-192.168.0.198 laravel_cms.app
-192.168.0.198 lara.app
-
-## 新建站点：
- 1、vagrant ssh 192.168.0.198
- 2、sudo /vagrant/scripts/serve-laravel.sh site-domain(lara.app) site-root-folder(/home/vagrant/Code/lara/public)
- 3、 sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/lara.app.crt
- 4、 sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/lara.app.key
- 5、修改本机hosts文件。 （winidows   ipconfig  /flushdns） 
  
 ## 启动虚拟机。
 进入Homestead目录，使用命令vagrant up命令启动虚拟机，可使用vagrant ssh登陆虚拟机。顺便一提，虚拟机数据库的root用户密码为secret
@@ -53,7 +39,8 @@ php -r "unlink('composer-setup.php');"
 
 ## 安装laravel框架：
 ### 1、全局安装
-vagrant ssh
+~vagrant@Homestead$vagrant ssh
+cd ~/Code
 
 export PATH="~/.config/composer/vendor/bin:$PATH" 确保 ~/.composer/vendor/bin 在系统路径中.
 每次重新进入homestead，都要重新执行命令export PATH="~/.config/composer/vendor/bin:$PATH".
@@ -77,6 +64,9 @@ laravel new laraxxxxx 或者 composer create-project --prefer-dist laravel/larav
 
 #### 修改hosts文件
 on laravel homestead box：
+
+sudo vi /etc/hosts
+
 ##homestead mapping
 192.168.0.198 homestead.app
 192.168.0.198 laravel_cms.app
