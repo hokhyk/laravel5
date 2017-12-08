@@ -58,10 +58,12 @@ laravel new laraxxxxx 或者 composer create-project --prefer-dist laravel/larav
 #### 新建站点：
  1、vagrant ssh 192.168.0.198
  2、sudo /vagrant/scripts/serve-laravel.sh site-domain(laraxxxxx.app) site-root-folder(/home/vagrant/Code/laraxxxxx/public)
+ 在/etc/nginx/sites-available下激活该站点。
  3、 sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/laraxxxxx.app.crt
  4、 sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/laraxxxxx.app.key
  5、修改本机hosts文件。 （winidows   ipconfig  /flushdns） 
-
+ 6、sudo nginx -t
+ 7、sudo nginx -s reload
 #### 修改hosts文件
 on laravel homestead box：
 
