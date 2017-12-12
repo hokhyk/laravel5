@@ -242,6 +242,53 @@ Pre-generated example: https://gist.github.com/barryvdh/bb6ffc5d11e0a75dba67
 
 Note: You might need to restart PhpStorm and make sure .phpstorm.meta.php is indexed. Note: When you receive a FatalException about a class that is not found, check your config (for example, remove S3 as cloud driver when you don't have S3 configured. Remove Redis ServiceProvider when you don't use it).
 
+##### ide-helper support for laravel5.5 of Fluent class.
+Updated version for Laravel 5.5
+
+Create a file in your rood directory with name like _ide_helper_custom.php and copy next code into it:
+
+<?php
+
+namespace  {
+    exit("This file should not be included, only analyzed by your IDE");
+}
+
+namespace Illuminate\Support {
+
+    /**
+     * @method Fluent first()
+     * @method Fluent after($column)
+     * @method Fluent change()
+     * @method Fluent nullable()
+     * @method Fluent unsigned()
+     * @method Fluent unique()
+     * @method Fluent index()
+     * @method Fluent primary()
+     * @method Fluent spatialIndex()
+     * @method Fluent default($value)
+     * @method Fluent onUpdate($value)
+     * @method Fluent onDelete($value)
+     * @method Fluent references($value)
+     * @method Fluent on($value)
+     * @method Fluent charset($value)
+     * @method Fluent collation($value)
+     * @method Fluent comment($value)
+     * @method Fluent autoIncrement()
+     * @method Fluent storedAs($value)
+     * @method Fluent useCurrent()
+     * @method Fluent virtualAs($value)
+     */
+    class Fluent {
+
+    }
+
+}
+
+This will force PHP Storm to index the file and correctly suggest methods for chaining. Tested in PHP Storm 2017.3 but should work in all previous and hopefully future versions of IDE.
+
+
+
+
 ### 6、数据库phpmyadmin支持
 
 #### adding phpmyadmin support for homestead box
