@@ -4689,8 +4689,7 @@ Let’s filter it a bit:
 
 $vipContacts = Contact::where('vip', true)->get();
 
-#### everything you
- can do with the query builder on the DB facade you can do on your Eloquent objects.
+#### everything you can do with the query builder on the DB facade you can do on your Eloquent objects.
 
 #### Get one record :first(), firstOrFail(), find(), or findOrFail()
 Using an Eloquent OrFail() method in a controller method
@@ -4705,9 +4704,8 @@ return view('contacts.show')
 
 ->with('contact', Contact::findOrFail($contactId));
 
-} A
-
-ny single return (first(), firstOrFail(), find(), or findOrFail()) will return an
+} 
+Any single return (first(), firstOrFail(), find(), or findOrFail()) will return an
 
 instance of the Eloquent class. 
 
@@ -8961,259 +8959,453 @@ We’re teaching the container that, when someone asks for this particular strin
 usually the FQCN of a class), it should resolve it this way.
 
 ### Binding to a Closure
-the appropriate place to bind to the container is in a service provider’s register() method。
-Basic container binding
-// In service provider
-public function register()
-{
-$this->app->bind(Logger::class, function ($app) {
-return new Logger('\log\path\here', 'error');
-});
+the appropriate place to bind to the
+ container is in a service provider’s register() method。
+Basic container binding
+
+// In service provider
+
+public function register()
+
+{
+
+$this->app->bind(Logger::class, function ($app) {
+
+return new Logger('\log\path\here', 'error');
+
+});
+
 }
 
-There are a few important things to note in this example. First, we’re running $this->app->bind(). $this->app is an instance of the container that’s always available on every service provider. The container’s bind() method is what we use to bind to the container.
-The first parameter of bind() is the “key” we’re binding to. Here we’ve used the FQCN of the
-class. The second parameter differs depending on what you’re doing, but essentially it should
+T
+here are a few important things to note in this example. First, we’re running $this->app->bind(). $this->app is an instance of the container that’s always available on every service
+ provider. The container’s bind() method is what we use to bind to the container.
+The first parameter of bind() is the “key” we’re binding to. Here we’ve used the FQCN of the
+
+class. The second parameter differs depending on what you’re doing, but essentially it should
+
 be something that shows the container what to do to resolve an instance of that bound key.
 
-And now, any time someone runs
-app(Logger::class), they’ll get the result of this closure. The closure is passed an instance of
-the container itself ($app), so if the class you’re resolving has a dependency you want
-resolved out of the container, you can use it in your definition:
-$this->app->bind(UserMailer::class, function ($app) {
-return new UserMailer(
-$app->make(Mailer::class),
-$app->make(Logger::class),
-$app->make(Slack::class)
-);
+And now, any time someone runs
+
+app(Logger::class), they’ll get the result of this closure. The closure is passed an instance of
+
+the container itself ($app), so if the class you’re resolving has a dependency you want
+
+resolved out of the container, you can use it in your definition:
+
+$this->app->bind(UserMailer::class, function ($app) {
+
+return new UserMailer(
+
+$app->make(Mailer::class),
+
+$app->make(Logger::class),
+
+$app->make(Slack::class)
+
+);
+
 });
 
 ### binding to singletons, aliases and instances
 1. $this->app->singleton()
-If you want the output of the binding closure to be cached so that this closure isn’t re-run
-every time you ask for an instance, that’s the Singleton pattern, and you can run $this->app-
+If you want the output of the binding closure to be cached so that this closure isn’t re-run
+
+every time you ask for an instance, that’s the Singleton pattern, and you can run $this->app-
+
 >singleton() to do that:
-public function register()
-{
-$this->app->singleton(Logger::class, function () {
-return new Logger('\log\path\here', 'error');
-});
+public function register()
+
+{
+
+$this->app->singleton(Logger::class, function () {
+
+return new Logger('\log\path\here', 'error');
+
+});
+
 }
 
 2. binding to instance
-You can also get similar behavior if you already have an instance of the object you want the
-singleton to return:
-public function register()
-{
-$logger = new Logger('\log\path\here', 'error');
-$this->app->instance(Logger::class, $logger);
+You can also get similar behavior if you already have an instance of the object you want the
+
+singleton to return:
+
+public function register()
+
+{
+
+$logger = new Logger('\log\path\here', 'error');
+
+$this->app->instance(Logger::class, $logger);
+
 }
 
 3. binding to aliases
-if you want to alias one class to another, bind a class to a shortcut, or bind a shortcut
-to a class, you can just pass two strings:
-$this->bind(Logger::class, FirstLogger::class);
-// or
-$this->bind('log', FirstLogger::class);
-// or
-$this->bind(FirstLogger::class, 'log');
-Note that these shortcuts are common in Laravel’s core; it provides a system of shortcuts to
+if you want to alias one class to another, bind a class to a shortcut, or bind a shortcut
+
+to a class, you can just pass two strings:
+
+$this->bind(Logger::class, FirstLogger::class);
+
+// or
+
+$this->bind('log', FirstLogger::class);
+
+// or
+
+$this->bind(FirstLogger::class, 'log');
+
+Note that these shortcuts are common in Laravel’s core; it provides a system of shortcuts to
+
 classes that provide core functionality, using easy-to-remember keys like log.
 
 ### binding a concrete instance to an interface
-Just like we can bind a class to another class, or a class to a shortcut, we can also bind to an interface. This is extremely powerful, because we can now typehint interfaces instead of class names.
-Typehinting and binding to an interface
-...
-use Interfaces\Mailer;
-class UserMailer
-{
-protected $mailer;
-public function __construct(Mailer $mailer)
-{
-$this->mailer = $mailer;
-}
-}//
-service provider
-public function register()
-{
-$this->app->bind(\Interfaces\Mailer::class, function () {
-return new MailgunMailer(...);
-});
+Just like we can bind a class to another class, or a class to a shortcut, we can also bind to an
+ interface. This is extremely powerful, because we can now typehint interfaces instead of class names.
+Typehinting and binding to an interface
+
+...
+
+use Interfaces\Mailer;
+
+class UserMailer
+
+{
+
+protected $mailer;
+
+public function __construct(Mailer $mailer)
+
+{
+
+$this->mailer = $mailer;
+
 }
 
-You can now typehint Mailer or Logger interfaces all across your code, and then choose once
-in a service provider which specific mailer or logger you want to use everywhere. That’s
+}//
+
+service provider
+
+public function register()
+
+{
+
+$this->app->bind(\Interfaces\Mailer::class, function () {
+
+return new MailgunMailer(...);
+
+});
+
+}
+
+Yo
+u can now typehint Mailer or Logger interfaces all across your code, and then choose once
+
+in a service provider which specific mailer or logger you want to use everywhere. That’s
+
 inversion of control.
 
 ### contextual binding
-Sometimes you need to change how to resolve an interface depending on the context. You
-might want to log events from one place to a local syslog and from others out to an external
-service. So, let’s tell the container to differentiate:
-Contextual binding
-// In a service provider
-public function register()
-{
-$this->app->when(FileWrangler::class)
-->needs(Interfaces\Logger::class)
-->give(Loggers\Syslog::class);
+Sometimes you need to change how to resolve an interface depending on the context. You
 
-$this->app->when(Jobs\SendWelcomeEmail::class)
-->needs(Interfaces\Logger::class)
-->give(Loggers\PaperTrail::class);
+might want to log events from one place to a local syslog and from others out to an external
+
+service. So, let’s tell the container to differentiate:
+Contextual binding
+
+// In a service provider
+
+public function register()
+
+{
+
+$this->app->when(FileWrangler::class)
+
+->needs(Interfaces\Logger::class)
+
+->give(Loggers\Syslog::class);
+
+
+$this->app->when(Jobs\SendWelcomeEmail::class)
+
+->needs(Interfaces\Logger::class)
+
+->give(Loggers\PaperTrail::class);
+
 }
 
 ## constructor injection
-Injecting dependencies into a controller
-...
-class MyController extends Controller
-{
-protected $logger;
-public function __construct(Logger $logger)
-{
-$this->logger = $logger;
-} p
-ublic function index()
-{
-// Do something
-$this->logger->error('Something happened');
-}
+Injecting dependencies into a controller
+
+...
+
+class MyController extends Controller
+
+{
+
+protected $logger;
+
+public function __construct(Logger $logger)
+
+{
+
+$this->logger = $logger;
+
+} p
+
+ublic function index()
+
+{
+
+// Do something
+
+$this->logger->error('Something happened');
+
 }
 
-The container is responsible for resolving controllers, middleware, queue jobs, event
-listeners, and any other classes that are automatically generated by Laravel in the process of
-your application’s lifecycle — so any of those classes can typehint dependencies in their
+}
+
+T
+he container is responsible for resolving controllers, middleware, queue jobs, event
+
+listeners, and any other classes that are automatically generated by Laravel in the process of
+
+your application’s lifecycle — so any of those classes can typehint dependencies in their
+
 constructors and expect them to be automatically injected.
 
 ## Method Injection
-The most common place to use method injection is in controller methods. If you have a
-dependency you only want to use for a single controller method, you can inject it into just that method.
-Injecting dependencies into a controller method
-...
-class MyController extends Controller
-{
-// Method dependencies can come after or before route parameters
-public function show(Logger $logger, $id)
-{
-// Do something
-$logger->error('Something happened');
-}
+The most common place to use method injection is in controller methods. If you have a
+
+dependency you only want to use for a single controller method, you can inject it into just that
+ method.
+Injecting dependencies into a controller method
+
+...
+
+class MyController extends Controller
+
+{
+
+// Method dependencies can come after or before route parameters
+
+public function show(Logger $logger, $id)
+
+{
+
+// Do something
+
+$logger->error('Something happened');
+
+}
+
 } 
 
-This is also available on the boot() method of service providers, and you can also arbitrarily
+This is also available on the boot() method of service providers, and you can also arbitrarily
+
 call a method on any class using the container, which will allow for method injection there.
-Manually calling a class method using the container’s call() method
-class Foo
-{
-public function bar($parameter1) {}
-} $
-foo = new Foo;
-// Calls the 'bar' method on $foo with a first parameter of "value"
+Manually calling a class method using the container’s call() method
+
+class Foo
+
+{
+
+public function bar($parameter1) {}
+
+} $
+
+foo = new Foo;
+
+// Calls the 'bar' method on $foo with a first parameter of "value"
+
 app()->call($foo, 'bar', ['parameter1' => 'value']);
 
 ## Facade and the container
-Laravel’s facades are classes that provide simple access to core pieces of Laravel’s
-functionality. There are two trademark features of facades: first, they’re all available in the
-global namespace (\Log is an alias to \Illuminate\Support\Facades\Log), and second, they
+Laravel’s facades are classes that provide simple access to core pieces of Laravel’s
+
+functionality. There are two trademark features of facades: first, they’re all available in the
+
+global namespace (\Log is an alias to \Illuminate\Support\Facades\Log), and second, they
+
 use static methods to access nonstatic resources.
-In your controller or views you could use this call:
-Log::alert('Something has gone wrong!');
-Here’s what it would look like to make that same call without the facade:
-$logger = app('log');
-$logger->alert('Something has gone wrong!');
-As you can see, facades translate static calls (any method call that you make on a class itself,
+In your controller or views you could use this call:
+
+Log::alert('Something has gone wrong!');
+
+Here’s what it would look like to make that same call without the facade:
+
+$logger = app('log');
+
+$logger->alert('Something has gone wrong!');
+
+As you can see, facades translate static calls (any method call that you make on a class itself,
+
 using ::, instead of on an instance) to normal method calls on instances.
 ### importing facade namespaces
-If you’re in a namespaced class, you’ll want to be sure to import the facade at the top:
-...
-use Illuminate\Support\Facades\Log;
-class Controller extends Controller
-{
-public function index()
-{
-// ...
-Log::error('Something went wrong!');
+If you’re in a namespaced class, you’ll want to be sure to import the facade at the top:
+
+...
+
+use Illuminate\Support\Facades\Log;
+
+class Controller extends Controller
+
+{
+
+public function index()
+
+{
+
+// ...
+
+Log::error('Something went wrong!');
+
 }
 
 ### how facades work: https://laravel.com/docs/5.5/facades#facade-class-reference 
-The Log facade class
-<?php
-namespace Illuminate\Support\Facades;
-class Log extends facade
-{
-protected static function getFacadeAccessor()
-{
-return 'log';
-}
+The Log facade class
+
+<?php
+
+namespace Illuminate\Support\Facades;
+
+class Log extends facade
+
+{
+
+protected static function getFacadeAccessor()
+
+{
+
+return 'log';
+
 }
 
-Every facade has a single method: getFacadeAccessor(). This defines the key that Laravel
+}
+
+E
+very facade has a single method: getFacadeAccessor(). This defines the key that Laravel
+
 should use to look up this facade’s backing instance from the container.
- In this instance, we can see that every call to the Log facade is proxied to be a call to an
-instance of the log shortcut from the container. Of course, that’s not a real class or interface name, so we know it’s one of those shortcuts I mentioned earlier.
-So, here’s what’s really happening:
-Log::error('Help!');
-// is the same as...
-app('log')->error('Help!');So, here’s what’s really happening:
-Log::error('Help!');
+ In this instance, we can see that every call to the Log facade is proxied to be a call to an
 
-There are a few ways to look up exactly what class each facade accessor points to, but
-checking the documentation is the easiest. There’s a table on the facades documentation page
-that shows you, for each facade, which container binding (shortcut, like log) it’s connected to,
-and which class that returns. It looks like this:
-Facade Class Service Container Binding
-App Illuminate\Foundation\Application app
-… … …
-Log Illuminate\Log\Writer log
+instance of the log shortcut from the container. Of course, that’s not a real class or interface
+ name, so we know it’s one of those shortcuts I mentioned earlier.
+So, here’s what’s really happening:
+
+Log::error('Help!');
+
+// is the same as...
+
+app('log')->error('Help!');So, here’s what’s really happening:
+
+Log::error('Help!');
+
+
+There are a few ways to look up exactly what class each facade accessor points to, but
+
+checking the documentation is the easiest. There’s a table on the facades documentation page
+
+that shows you, for each facade, which container binding (shortcut, like log) it’s connected to,
+
+and which class that returns. It looks like this:
+
+Facade Class Service Container Binding
+
+App Illuminate\Foundation\Application app
+
+… … …
+
+Log Illuminate\Log\Writer log
+
 Now that you have this reference, you can do three things.
-1. First, you can always figure out what methods are available on a facade. Just find its backing class and look at the definition of that class, and you’ll know that any of its public methods are callable on the facade.
+1. First, you can always figure out what methods are available on a facade. Just find its backing class and look at the definition of that class, and you’ll know that any of its public methods are
+ callable on the facade.
 
-2. Second, you can figure out how to inject a facade’s backing class using dependency injection. If you ever want the functionality of a facade but prefer to use dependency injection, just typehint the facade’s backing class or get an instance of it with app() and call the same methods you would’ve called on the facade.
 
-3. Third, you can see how to create your own facades. Create a class for the facade that extends Illuminate\Support\Facades\Facade, and give it a getFacadeAccessor() method, which
-returns a string. Make that string something that can be used to resolve your backing class out
-of the container — maybe just the FQCN of the class. Finally, you have to register the facade
+2. Second, you can figure out how to inject a facade’s backing class using dependency injection. If you ever want the functionality of a facade but prefer to use dependency injection, just typehint the facade’s backing class or get an instance of it with app() and call the same
+ methods you would’ve called on the facade.
+
+3. Third, you can see how to create your own facades. Create a class for the facade that extends
+ Illuminate\Support\Facades\Facade, and give it a getFacadeAccessor() method, which
+
+returns a string. Make that string something that can be used to resolve your backing class out
+
+of the container — maybe just the FQCN of the class. Finally, you have to register the facade
+
 by adding it to the aliases array in config/app.php. Done! You just made your own facade.
 
 ## Service Providers
-What’s most important with regard to the container is that you remember to
+What’s most important with regard to the container is that you remember to
+
 register your bindings in the register() method of some service provider somewhere.
 
-You can just dump loose bindings into App\Providers\AppServiceProvider, which is a bit of
-a catchall, but it’s generally better practice to create a unique service provider for each group of functionality you’re developing, and bind its classes in its unique register() method.
+You can just dump loose bindings into App\Providers\AppServiceProvider, which is a bit of
+
+a catchall, but it’s generally better practice to create a unique service provider for each group
+ of functionality you’re developing, and bind its classes in its unique register() method.
 
 # Testing:PHPUnit, Behat, Mockery, Faker
-Out of the box, Laravel comes with baked-in integrations to PHPUnit (unit testing), Behat
-(behavior-driven development), Mockery (mocking), and Faker (creating fake data for
-seeding and testing). It also comes with its own simple and powerful suite of application
-testing tools, which allow you to “crawl” your site’s URIs, click buttons, submit forms, check
+Out of the box, Laravel comes with baked-in integrations to PHPUnit (unit testing), Behat
+
+(behavior-driven development), Mockery (mocking), and Faker (creating fake data for
+
+seeding and testing). It also comes with its own simple and powerful suite of application
+
+testing tools, which allow you to “crawl” your site’s URIs, click buttons, submit forms, check
+
 HTTP status codes, and validate and assert against JSON.
 
 ## Testing Basics
-Tests in Laravel live in the tests folder, and you can see there are two files in there by default:
-TestCase.php, which is a base class intended to be extended by any application tests, and
-ExampleTest.php, which is a ready-to-run application test that will return green on any new
+Tests in Laravel live in the tests folder, and you can see there are two files in there by default:
+
+TestCase.php, which is a base class intended to be extended by any application tests, and
+
+ExampleTest.php, which is a ready-to-run application test that will return green on any new
+
 app.
 
-tests/ExampleTest.php
-<?php
-use Illuminate\Foundation\Testing\WithoutMiddleware;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
-class ExampleTest extends TestCase
-{
-/**
-* A basic functional test example.
-**
-@return void
-*/
-public function testBasicExample()
-{
-$this->visit('/')
-->see('Laravel');
-}
+tests/ExampleTest.php
+
+<?php
+
+use Illuminate\Foundation\Testing\WithoutMiddleware;
+
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+
+class ExampleTest extends TestCase
+
+{
+
+/**
+
+* A basic functional test example.
+
+**
+
+@return void
+
+*/
+
+public function testBasicExample()
+
+{
+
+$this->visit('/')
+
+->see('Laravel');
+
 }
 
-To run this test, go to the command line and run ./vendor/bin/phpunit from the root folder
+}
+
+T
+o run this test, go to the command line and run ./vendor/bin/phpunit from the root folder
+
 of your application. 
 
 vagrant@homestead:~/Code/HokBlog$ phpunit
@@ -9227,82 +9419,140 @@ Time: 375 ms, Memory: 10.00MB
 OK (2 tests, 2 assertions)
 
 ## Naming Tests
-By default, Laravel’s testing system will run any files in the tests directory whose names end
+By default, Laravel’s testing system will run any files in the tests directory whose names end
+
 with the word Test. That’s why tests/ExampleTest.php was run by default.
-If you’re not familiar with PHPUnit, you might not know that only the methods in your tests
+If you’re not familiar with PHPUnit, you might not know that only the methods in your tests
+
 with names that start with the word test will be run — or methods with a @test docblock. 
-Naming PHPUnit methods
-class Naming
-{
-public function test_it_names_things_well()
-{
-// Runs as "test it names things well"
+Naming PHPUnit methods
+
+class Naming
+
+{
+
+public function test_it_names_things_well()
+
+{
+
+// Runs as "test it names things well"
+
 } 
 
-public function testItNamesThingsWell()
-{
-// Runs as "It names things well"
+p
+ublic function testItNamesThingsWell()
+
+{
+
+// Runs as "It names things well"
+
 } 
 
-/** @test */
-public function it_names_things_well()
-{
-// Runs as "it names things well"
+/
+** @test */
+
+public function it_names_things_well()
+
+{
+
+// Runs as "it names things well"
+
 }
 
-public function it_names_things_well()
-{
-// Doesn't run
-}
+p
+ublic function it_names_things_well()
+
+{
+
+// Doesn't run
+
+}
+
 }
 
 ## the testing environment :app()->environment(testing)   local, staging, production,testing
-Any time a Laravel application is running, it has a current “environment” name that represents
-the environment it’s running in. This name may be set to local, staging, production, or
-anything else you want. You can retrieve this by running app()->environment(), or you can
-run something like if (app()->environment('local')) to test whether the current
+Any time a Laravel application is running, it has a current “environment” name that represents
+
+the environment it’s running in. This name may be set to local, staging, production, or
+
+anything else you want. You can retrieve this by running app()->environment(), or you can
+
+run something like if (app()->environment('local')) to test whether the current
+
 environment matches the passed name.
-you can test for if (app()->environment('testing')) to enable or disable certain behaviors in
+you
+ can test for if (app()->environment('testing')) to enable or disable certain behaviors in
+
 the testing environment.
 
-Additionally, Laravel doesn’t load the normal environment variables from .env for testing. If
-you want to set any environment variables for your tests, edit phpunit.xml and, in the <php>
-section, add a new <env> for each environment variable you want to pass in — for example,
+Additionally, Laravel doesn’t load the normal environment variables from .env for testing. If
+
+you want to set any environment variables for your tests, edit phpunit.xml and, in the <php>
+
+section, add a new <env> for each environment variable you want to pass in — for example,
+
 <env name="DB_CONNECTION" value="sqlite"/>.
 
-### USING .ENV.TEST TO EXCLUDE TESTING ENVIRONMENT VARIABLES FROM VERSION CONTROL
-If you want to set environment variables for your test, you can do so in phpunit.xml as just described. But what if you
-have environment variables for your tests that you want to be different for each testing environment? Or what if you want
-them to be excluded from source control?
-Thankfully, handling these conditions is pretty easy. First, create an .env.test.example file — just like Laravel’s
-.env.example file — and add .env.test to your .gitignore file just below .env. Next, add the variables you’d like to be
-environment-specific to .env.test.example, just like they’re set in .env.example. Then, make a copy of .env.test.example
-and name it .env.test.
-Finally, let’s load that file into our tests. In tests/TestCase.php, in the createApplication() method, paste this code just
-below the $app = require(...) line:
-if (file_exists(dirname(__DIR__) . '/.env.test')) {
-(new \Dotenv\Dotenv(dirname(__DIR__), '.env.test'))->load();
-}
+### USING .ENV.TEST TO EXCLUDE TESTING ENVIRONMENT 
+VARIABLES FROM VERSION CONTROL
+
+If you want to set environment variables for your test, you can do so in phpunit.xml as just described. But what if you
+
+have environment variables for your tests that you want to be different for each testing environment? Or what if you want
+
+them to be excluded from source control?
+
+Thankfully, handling these conditions is pretty easy. First, create an .env.test.example file — just like Laravel’s
+
+.env.example file — and add .env.test to your .gitignore file just below .env. Next, add the variables you’d like to be
+
+environment-specific to .env.test.example, just like they’re set in .env.example. Then, make a copy of .env.test.example
+
+and name it .env.test.
+
+Finally, let’s load that file into our tests. In tests/TestCase.php, in the createApplication() method, paste this code just
+
+below the $app = require(...) line:
+
+if (file_exists(dirname(__DIR__) . '/.env.test')) {
+
+(new \Dotenv\Dotenv(dirname(__DIR__), '.env.test'))->load();
+
+}
+
 That’s it! You’re now loading .env.test to provide environment variables to every test.
 
-## the Testing Traits :the three testing traits you can pull into any test class.
+## the Testing Traits :the three
+ testing traits you can pull into any test class.
 1. WithoutMiddleware
-If you import Illuminate\Foundation\Testing\WithoutMiddleware into your test class, it
-will disable all middleware for any test in that class. This means you won’t have to worry
-about the authentication middleware, or CSRF protection, or anything else that might be
+If you import Illuminate\Foundation\Testing\WithoutMiddleware into your test class, it
+
+will disable all middleware for any test in that class. This means you won’t have to worry
+
+about the authentication middleware, or CSRF protection, or anything else that might be
+
 useful in the real application but distracting in a test.
 
-2. DatabaseMigrations
-Laravel provides two tools out of the box to keep your database in the right state between
-tests: the DatabaseMigrations trait and the DatabaseTransactions trait.
-If you import the DatabaseMigrations trait, it will run your entire set of database migrations
-up before each test and down after each test. Laravel makes this happen by running php
-artisan migrate in the setUp() method before every test runs and php artisan
+2. DatabaseMigrations
+
+Laravel provides two tools out of the box to keep your database in the right state between
+
+tests: the DatabaseMigrations trait and the DatabaseTransactions trait.
+
+If you import the DatabaseMigrations trait, it will run your entire set of database migrations
+
+up before each test and down after each test. Laravel makes this happen by running php
+
+artisan migrate in the setUp() method before every test runs and php artisan
+
 migrate:rollback in the tearDown() method after each test finishes.
 
-3. DatabaseTransactions
-DatabaseTransactions, on the other hand, expects your database to be properly migrated
-before your tests start. Then, it wraps every test in a database transaction, which it rolls back at the end of each test. This means that, at the end of each test, your database will be returned to the exact same state it was in prior to the test.
+3. DatabaseTransactions
+
+DatabaseTransactions, on the other hand, expects your database to be properly migrated
+
+before your tests start. Then, it wraps every test in a database transaction, which it rolls back at
+ the end of each test. This means that, at the end of each test, your database will be returned to the exact same state it was in prior to the test.
 
 ## Application testing
 ### TestCase
@@ -9334,12 +9584,128 @@ before your tests start. Then, it wraps every test in a database transaction, wh
 
 
 
+# mail and notifications
+## mail
+Laravel’s mail functionality is a convenience layer on top of SwiftMailer, and out of the box
+Laravel comes with drivers for Mailgun, Mandrill, Sparkpost, SES, SMTP, PHP Mail, and Sendmail.
+For all of the cloud services, you’ll set your authentication information in
+config/services.php. However, if you take a look you’ll see there are already keys there — and
+in config/mail.php — that allow you to customize your application’s mail functionality in .env
+using variables like MAIL_DRIVER and MAILGUN_SECRET.
 
+### CLOUD-BASED API DRIVER DEPENDENCIES
+If you’re using any of the cloud-based API drivers, you’ll need to bring Guzzle in with Composer. You can run
+the following command to add it:
+composer require guzzlehttp/guzzle:"~5.3|~6.0"
+If you use the SES driver, you’ll need to run the following command:
+composer require aws/aws-sdk-php:~3.0
 
+There are two different syntaxes in Laravel for sending mail: classic and mailable. The
+mailable syntax is the preferred syntax from 5.3 onward.
 
+#### Basic “classic” mail syntax
+Mail::send(
+'emails.assignment',
+['trainer' => $trainer, 'trainee' => $trainee],
+function ($m) use ($trainer, $trainee) {
+$m->from($trainer->email, $trainer->name);
+$m->to($trainee->email, $trainee->name)->subject('A New Assignment!');
+}
+);
+The first parameter of Mail::send() is the name of the view. Remember, emails.assignment
+means resources/views/emails/assignment.blade.php or
+resources/views/emails/assignment.php.
+The second parameter is an array of data that you want to pass to the view.
+The third parameter is a closure, in which you define how and where to send the email: from,
+to, CC, BCC, subject, and any other metadata. Make sure to use any variables you want access
+to within the closure. And note that the closure is passed one parameter, which we’ve named
+$m; this is the message object.
 
+##### To send emails on a local development server (Homestead), simply edit the .env file.
+MAIL_DRIVER=mail
+MAIL_HOST=mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
 
+##### cloud based mail service
+As usual, you may learn how to use Mailgun, Mandrill and SES drivers at the official docs:
+http://laravel.com/docs/master/mail
 
+Sending emails using Sendgrid
+Go to SendGrid, register a new account:
+https://sendgrid.com
+When your account is activated, edit the .env file:
+MAIL_DRIVER=smtp
+MAIL_HOST=smtp.sendgrid.net
+MAIL_PORT=587
+MAIL_USERNAME=yourSendgridUsername
+MAIL_PASSWORD=yourPassword
+Good job! You’re now ready to send emails using Sendgrid!
+
+#### Basic “Mailable” Mail Usage
+Laravel 5.3 introduced a new mail syntax called the “mailable.” It works the same as the
+classic mail syntax, but instead of defining your mail messages in a closure, you instead
+create a specific PHP class to represent each mail.
+To make a mailable, use the make:mail Artisan command:
+php artisan make:mail Assignment
+
+##### A sample mailable
+<?php
+namespace App\Mail;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
+class Assignment extends Mailable
+{
+use Queueable, SerializesModels;
+public $trainer;
+public $trainee;
+public function __construct($trainer, $trainee)
+{
+$this->trainer = $trainer;
+$this->trainee = $trainee;
+} p
+ublic function build()
+{
+return $this->subject('New assignment from ' . $this->trainer->name)
+->view('emails.assignment');
+}
+}
+
+##### A few ways to send mailables
+// Simple send
+Mail::to($user)->send(new Assignment($trainer, $trainee));
+// With CC/BCC/etc.
+Mail::to($user1))
+->cc($user2)
+->bcc($user3)
+->send(new Assignment($trainer, $trainee));
+// With collections
+Mail::to('me@app.com')
+->bcc(User::all())
+->send(new Assignment($trainer, $trainee))
+
+### mail templates
+Mail templates are just like any other template. They can extend other templates, use sections, parse variables, contain conditional or looping directives, and do anything else you can do in a normal Blade view.
+
+#### Sample assignment email template
+ <!-- resources/views/emails/assignment.blade.php -->
+<p>Hey {{ $trainee->name }}!</p>
+<p>You have received a new training assignment from <b>{{ $trainer->name }}</b>.
+Check out your <a href="{{ route('training-dashboard') }}">training
+dashboard</a> now!</p>
+
+#### HTML VERSUS PLAIN-TEXT EMAILS
+So far we’ve used the view() method in our build() call stacks. This expects the template we’re referencing to
+pass back HTML. If you’d like to pass a plain-text version, the text() method defines your plain-text view:
+public function build()
+{
+return $this->view('emails.reminder')
+->text('emails.reminder_plain');
+}
 
 
 
