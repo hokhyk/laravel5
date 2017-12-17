@@ -5648,12 +5648,7 @@ Then we access it the same way:
 $contact = $phoneNumber->contact;
 
 ##### INSERTING RELATED ITEMS
-Each relationship type has its own quirks for how to relate models, but here’s the core of how it works: pass an
-
-instance to save(), or an array of instances to saveMany(). You can also pass properties to create() and it’ll
-
-make a new instance for you:
-
+Each relationship type has its own quirks for how to relate models, but here’s the core of how it works: pass an instance to save(), or an array of instances to saveMany(). You can also pass properties to create() and it’ll make a new instance for you:
 
 $contact = Contact::first();
 
@@ -5661,7 +5656,7 @@ $phoneNumber = new PhoneNumber;
 
 $phoneNumber->number = 8008675309;
 
-$contact->phoneNumbers()->save($phoneNumber);
+$contact->phoneNumber()->save($phoneNumber);
 
 
 // or
@@ -5712,13 +5707,7 @@ $user = User::first();
 
 $usersContacts = $user->contacts;
 
-Just like with one to one, we use the name of the relationship method and call it as if it were a
-
-property instead of a method. However, this method returns a collection instead of a model
-
-instance. And this is a normal Eloquent collection, so you can have all sorts of fun with it:
-
-
+Just like with one to one, we use the name of the relationship method and call it as if it were a property instead of a method. However, this method returns a collection instead of a model instance. And this is a normal Eloquent collection, so you can have all sorts of fun with it:
 $donors = $user->contacts->filter(function ($contact) {
 
 return $contact->status == 'donor';
@@ -5750,8 +5739,7 @@ And just like one to one, we can access the User from the Contact:
 
 $userName = $contact->user->name;
 
-##### ATTACHING AND DETACHING RELATED ITEMS FROM THE
- ATTACHED ITEM (this illustrates how reverse save is used on belongsTo )
+##### ATTACHING AND DETACHING RELATED ITEMS FROM THE ATTACHED ITEM (this illustrates how reverse save is used on belongsTo )
 Most of the time we attach related items by running save() on the parent and passing in the related item, 
 as in
  
