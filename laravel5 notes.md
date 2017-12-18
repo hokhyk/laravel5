@@ -6661,8 +6661,7 @@ return User::create([
 
 }
 
-#### R
-egistersUsers trait
+#### RegistersUsers trait
 The RegistersUsers trait, which the RegisterController imports, handles a few primary
 
 functions for the registration process. First, it shows users the registration form view, with the
