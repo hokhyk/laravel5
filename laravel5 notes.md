@@ -9694,5 +9694,156 @@ return $this->view('emails.reminder')
 ->text('emails.reminder_plain');
 }
 
+## events
+### firing an event : 3 ways :php artisan make:event UserSubscribed
+1. using Event Facade
+2. injecting the Dispatcher
+3. use event() global helper
+
+Event::fire(new UserSubscribed($user, $plan));
+// or
+$dispatcher = app(Illuminate\Contracts\Events\Dispatcher);
+$dispatcher->fire(new UserSubscribed($user, $plan));
+// or
+event(new UserSubscribed($user, $plan));
+
+php artisan make:event UserSubscribed
+
+### Injecting data into an event : describing an event.
+<?php
+namespace App\Events;
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+
+class UserSubscribed
+{
+use InteractsWithSockets, SerializesModels;
+public $user;
+public $plan;
+public function __construct($user, $plan)
+{
+$this->user = $user;
+$this->plan = $plan;
+}
+}
+
+public function broadcastOn()
+{
+return new PrivateChannel('channel-name');
+}
+
+
+Now we have an object that appropriately represents the event that happened: $event->user
+subscribed to the $event->plan plan.
+
+### listening for an event using an event listener: 
+#### creating an evnet listener: php artisan make:listener EmailOwnerAboutSubscription --event=UserSubscribed
+The default template for a Laravel event listener
+<?php
+namespace App\Listeners;
+use App\Events\UserSubscribed;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+class EmailOwnerAboutSubscription
+{
+/**
+* Create the event listener.
+**
+@return void
+*/
+public function __construct()
+{
+//
+} /
+**
+* Handle the event.
+**
+@param UserSubscribed $event
+* @return void
+*/
+public function handle(UserSubscribed $event)
+{
+//
+}
+}
+
+##### A sample event listener
+...
+use Illuminate\Contracts\Mail\Mailer;
+class EmailOwnerAboutSubscription
+{
+protected $mailer;
+public function __construct(Mailer $mailer)
+{
+$this->mailer = $mailer;
+} p
+ublic function handle(UserSubscribed $event)
+{
+$this->mailer->send(
+new OwnerSubscriptionEmail($event->user, $event->plan)
+);
+}
+}
+
+#### binding listeners to events in EventServiceProvider  :registering an event listener.
+class EventServiceProvider extends ServiceProvider
+{
+protected $listen = [
+\App\Events\UserSubscribed::class => [
+\App\Listeners\EmailOwnerAboutSubscription::class,
+],
+];
+As you can see, the key of each array entry is the class name of the event, and the value is an array of listener class names. We can add as many class names as we want under the UserSubscribed key and they will all listen and respond to each UserSubscribed event.
+
+#### another structure to define the relationship between events and listeners.
+Laravel has a concept called an event subscriber, which is a class that contains
+a collection of methods that act as separate listeners to unique events, and also contains the
+mapping of which method should handle which event. 
+
+##### A sample event subscriber
+<?php
+namespace App\Listeners;
+class UserEventSubscriber
+{
+public function onUserSubscription($event)
+{
+// Handles the UserSubscribed event
+} p
+ublic function onUserCancellation($event)
+{
+// Handles the UserCancelled event
+} p
+ublic function subscribe($events)
+{
+$events->listen(
+\App\Events\UserSubscribed::class,
+'App\Listeners\UserEventSubscriber@onUserSubscription'
+);
+$events->listen(
+\App\Events\UserCancelled::class,
+'App\Listeners\UserEventSubscriber@onUserCancellation'
+);
+}
+}
+
+##### registering an event subscriber: binding the EventSubscriber class in App\Providers\EventServiceProvider  $subscribe property.
+There’s one last thing we need to do: in App\Providers\EventServiceProvider, we need to
+add our subscriber’s class name to the $subscribe property.
+Registering an event subscriber
+...
+class EventServiceProvider extends ServiceProvider
+{
+...
+protected $subscribe = [
+\App\Listeners\UserEventSubscriber::class
+];
+}
+
+
+
 
 
