@@ -361,6 +361,26 @@ For my case, the host is 192.168.0.198
         CREATE DATABASE IF NOT EXISTS `coffeehouse` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
         GRANT ALL PRIVILEGES ON `coffeehouse`.* TO 'coffeehouse'@'localhost';
    
+   10、安装代码
+    安装依赖
+    ```
+    composer install
+    ```
+    更新数据库
+    ```
+    php artisan migrate
+    ```
+    数据填充
+    ```
+    php artisan db:seed
+    ```
+    后台账号密码
+    ```
+    账号：admin@qq.com
+    密码：123456
+    ```
+    php artisan key:generate
+   
 ## x-debug phpstorm中的配置
 1、编译安装xdebug-2.5.4.tgz。
   tar -zxvf xdebug-2.5.4.tgz
