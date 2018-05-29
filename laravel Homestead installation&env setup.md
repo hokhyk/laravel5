@@ -345,6 +345,22 @@ You may need to run vagrant provision to load the new configuration if vagrant i
 • Port: 33060
 For my case, the host is 192.168.0.198
   
+   8、配置.env文件中的database connection数据
+        DB_CONNECTION=mysql
+        DB_HOST=127.0.0.1
+        DB_PORT=3306
+        DB_DATABASE=kaoshi
+        DB_USERNAME=kaoshi
+        DB_PASSWORD=kaoshi
+
+   9、创建数据库：
+      如果要让mysql能够远程访问，则將localhost改为%即可。 或者： mysql>use mysql;    mysql>update user set host = '%' where user = 'root';     mysql>select host, user from user;
+  
+        CREATE USER 'djangouser'@'localhost' IDENTIFIED BY 'djangouser';
+        GRANT ALL PRIVILEGES ON *.* TO 'djangouser'@'localhost' IDENTIFIED BY 'djangouser' REQUIRE NONE WITH GRANT OPTION MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+        CREATE DATABASE IF NOT EXISTS `coffeehouse` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+        GRANT ALL PRIVILEGES ON `coffeehouse`.* TO 'coffeehouse'@'localhost';
+   
 ## x-debug phpstorm中的配置
 1、编译安装xdebug-2.5.4.tgz。
   tar -zxvf xdebug-2.5.4.tgz
