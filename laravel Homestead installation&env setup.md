@@ -448,3 +448,37 @@ Available commands for the "make" namespace:
   make:request       Create a new form request class
   make:seeder        Create a new seeder class
   make:test          Create a new test class
+
+  
+# laravel5.* 集成admin-lte  https://segmentfault.com/a/1190000003917210
+  1. install bower on homestead.   which bower    npm install -g bower   bower install admin-lte
+  2. 将 AdminLTE 的starter.html 转化为 Blade 模板
+ 
+# laravel-admin项目  http://laravel-admin.org/docs/#/zh/installation
+ composer global require "laravel/installer"
+ laravel new lara_framework
+ cd lara_framework
+ mysql -uroot
+ CREATE USER 'framework'@'%' IDENTIFIED BY 'framework';
+ CREATE DATABASE IF NOT EXISTS `lara_framework` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `lara_framework`.* TO 'framework'@'%';
+ exit
+ cp .env.example .env
+ 修改数据库链接参数后，执行 php artisan migrate
+ 
+ composer require encore/laravel-admin "1.5.*"
+ php artisan vendor:publish --provider="Encore\Admin\AdminServiceProvider"
+ php artisan admin:install
+ 安装laravel-admin项目完成，下一步配置Homestead的vhost进行测试：
+ sudo /vagrant/scripts/serve-laravel.sh laraframework.app /home/vagrant/Code/laravel-admin/lara_framework/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/laraframework.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/laraframework.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+sudo vi /etc/hosts
+192.168.0.198 laraframework.app
+ 访问： laraframework.app/admin   输入admin/admin
+ 
+ 
+
