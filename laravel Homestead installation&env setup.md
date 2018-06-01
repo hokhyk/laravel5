@@ -164,6 +164,7 @@ You can configure your composer.json to do this after each commit:
 "scripts":{
     "post-update-cmd": [
         "Illuminate\\Foundation\\ComposerScripts::postUpdate",
+        "php artisan clear-compiled",
         "php artisan ide-helper:generate",
         "php artisan ide-helper:meta",
         "php artisan optimize"
@@ -480,5 +481,7 @@ sudo vi /etc/hosts
 192.168.0.198 laraframework.app
  访问： laraframework.app/admin   输入admin/admin
  
+# laravel5.5+ 第三方vendor package自发现：  php artisan package:discover   
+# laravel5.5+自动列出service provider并选择发布： php artisan vendor:publish 
  
 
