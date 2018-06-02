@@ -483,5 +483,6 @@ sudo vi /etc/hosts
  
 # laravel5.5+ 第三方vendor package自发现：  php artisan package:discover   
 # laravel5.5+自动列出service provider并选择发布： php artisan vendor:publish 
- 
+# php artisan storage:link
+
 
