@@ -510,6 +510,8 @@ update: dependency-install app-update dump-autoload cache-config
  修改hosts文件：laravel homestead box：
  sudo vi /etc/hosts
  192.168.0.198 piplin.app
+
+## make install 
  
 ## 配置supervisord
 1). 拷贝 examples/supervisor.conf
@@ -520,4 +522,58 @@ $ vi /etc/supervisor/conf.d/piplin.conf
 $ /etc/init.d/supervisord restart 或 service supervisord restart
 3). 检查supervisord服务是否正常
 $ supervisorctl
+
+## 配置nginx
+   增加example里面的差异的文件到nginx的vhost中。
+   upstream websocket {
+    server 127.0.0.1:7001;
+  }
+
+      location /socket.io {
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+        proxy_pass http://websocket;
+    }
+
+    
+## deployer项目
+
+### yarn installation
+curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+sudo apt-get update && sudo apt-get install yarn
+yarn --version
+
+Starting a new project
+yarn init
+
+Adding a dependency
+yarn add [package]
+yarn add [package]@[version]
+yarn add [package]@[tag]
+
+Adding a dependency to different categories of dependencies
+
+Add to devDependencies, peerDependencies, and optionalDependencies respectively:
+yarn add [package] --dev
+yarn add [package] --peer
+yarn add [package] --optional
+
+Upgrading a dependency
+yarn upgrade [package]
+yarn upgrade [package]@[version]
+yarn upgrade [package]@[tag]
+
+Removing a dependency
+yarn remove [package]
+
+Installing all the dependencies of project
+yarn
+or
+yarn install
+
+
 
