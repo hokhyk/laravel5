@@ -485,4 +485,39 @@ sudo vi /etc/hosts
 # laravel5.5+自动列出service provider并选择发布： php artisan vendor:publish 
 # php artisan storage:link
 
+# piplin项目  
+## Code目录下，
+$ git clone https://github.com/Piplin/Piplin.git piplin
+$ cd piplin
+$ make
+查看Makefile，等待安装依赖包:
+dependency: dependency-install file-permission npm-install
+install: app-install cache-config
+update: dependency-install app-update dump-autoload cache-config
+
+## 设置数据库：
+ mysql -uroot
+ CREATE USER 'piplin'@'%' IDENTIFIED BY 'piplin';
+ CREATE DATABASE IF NOT EXISTS `piplin` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `piplin`.* TO 'piplin'@'%';
+
+## 配置web服务器等
+ sudo /vagrant/scripts/serve-laravel.sh piplin.app /home/vagrant/Code/Piplin-1.0/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/piplin.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/piplin.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+ sudo vi /etc/hosts
+ 192.168.0.198 piplin.app
+ 
+## 配置supervisord
+1). 拷贝 examples/supervisor.conf
+$ cp examples/supervisor.conf /etc/supervisor/conf.d/piplin.conf
+$ vi /etc/supervisor/conf.d/piplin.conf
+    请根据实际情况修改相关参数设置，尤其注意路径相关的参数。
+2). 重启supervisord
+$ /etc/init.d/supervisord restart 或 service supervisord restart
+3). 检查supervisord服务是否正常
+$ supervisorctl
 
