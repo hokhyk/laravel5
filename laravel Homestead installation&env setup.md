@@ -582,4 +582,30 @@ composer update vendor/package - 从 composer.json 或者对应包的配置，�
 composer require new/package - 添加安装 new/package, 可以指定版本，如： composer require new/package ~2.5
 
 # gitscrum项目
+## 设置数据库：
+ mysql -uroot
+ CREATE USER 'gitscrum'@'%' IDENTIFIED BY 'gitscrum';
+ CREATE DATABASE IF NOT EXISTS `gitscrum` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `gitscrum`.* TO 'gitscrum'@'%';
 
+## 配置web服务器等
+ sudo /vagrant/scripts/serve-laravel.sh gitscrum.app /home/vagrant/Code/gitscrum/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/gitscrum.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/gitscrum.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+ sudo vi /etc/hosts
+ 192.168.0.198 gitscrum.app
+
+## git clone https://github.com/hokhyk/laravel-gitscrum.git gitscrum --depth=1
+   cd gitscrum
+   composer install
+   npm install
+   composer run-script -l
+   composer run-script xxxxxx
+
+## modify .env file according to previous settings.
+
+## php artisan migrate
+php artisan db:seed --class=SettingSeeder
