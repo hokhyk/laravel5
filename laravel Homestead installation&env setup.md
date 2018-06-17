@@ -502,13 +502,20 @@ update: dependency-install app-update dump-autoload cache-config
  GRANT ALL PRIVILEGES ON `piplin`.* TO 'piplin'@'%';
 
 ## 配置web服务器等
- sudo /vagrant/scripts/serve-laravel.sh piplin.app /home/vagrant/Code/Piplin-1.0/public/
- sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/piplin.app.crt
- sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/piplin.app.key
- sudo nginx -t
- sudo nginx -s reload
- 修改hosts文件：laravel homestead box：
- sudo vi /etc/hosts
+ sudo /vagrant/scripts/serve-laravel.sh piplin.app /home/vagrant/Code/Piplin-1.0/public/
+
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/piplin.app.crt
+
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/piplin.app.key
+
+ sudo nginx -t
+
+ sudo nginx -s reload
+
+ 修改hosts文件：laravel homestead box：
+
+ sudo vi /etc/hosts
+
  192.168.0.198 piplin.app
 
 ## make install 
@@ -589,13 +596,20 @@ composer require new/package - 添加安装 new/package, 可以指定版本，�
  GRANT ALL PRIVILEGES ON `gitscrum`.* TO 'gitscrum'@'%';
 
 ## 配置web服务器等
- sudo /vagrant/scripts/serve-laravel.sh gitscrum.app /home/vagrant/Code/gitscrum/public/
- sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/gitscrum.app.crt
- sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/gitscrum.app.key
- sudo nginx -t
- sudo nginx -s reload
- 修改hosts文件：laravel homestead box：
- sudo vi /etc/hosts
+ sudo /vagrant/scripts/serve-laravel.sh gitscrum.app /home/vagrant/Code/gitscrum/public/
+
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/gitscrum.app.crt
+
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/gitscrum.app.key
+
+ sudo nginx -t
+
+ sudo nginx -s reload
+
+ 修改hosts文件：laravel homestead box：
+
+ sudo vi /etc/hosts
+
  192.168.0.198 gitscrum.app
 
 ## git clone https://github.com/hokhyk/laravel-gitscrum.git gitscrum --depth=1
@@ -609,3 +623,26 @@ composer require new/package - 添加安装 new/package, 可以指定版本，�
 
 ## php artisan migrate
 php artisan db:seed --class=SettingSeeder
+
+## 配置github的app，获取app id和app secret，并配置在.env中
+GITHUB_CLIENT_ID=1278b7d21232cb8cac31
+GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
+
+## install gitea
+ 1. download gitea binary package.  
+       wget -O gitea https://dl.gitea.io/gitea/1.4.2/gitea-1.4.2-linux-amd64
+ 2. chmod +x gitea.binary
+ 3. ./gitea web      ! /data/todo/vagrant/golang/gitea/gitea web -c /data/todo/vagrant/golang/gitea/custom/conf/app.ini &
+ 4. create mysql database:
+  mysql -uroot
+ CREATE USER 'gitea'@'%' IDENTIFIED BY 'gitea';
+ CREATE USER 'gitea'@'localhost' IDENTIFIED BY 'gitea';
+ CREATE DATABASE IF NOT EXISTS `gitea` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `gitea`.* TO 'gitea'@'%';
+
+ 5. visit: http://localhost:3000
+ 
+ default admin: hok/hok hok@gitea.me
+ 
+
+ 
