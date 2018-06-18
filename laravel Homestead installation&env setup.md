@@ -597,19 +597,12 @@ composer require new/package - 添加安装 new/package, 可以指定版本，�
 
 ## 配置web服务器等
  sudo /vagrant/scripts/serve-laravel.sh gitscrum.app /home/vagrant/Code/gitscrum/public/
-
  sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/gitscrum.app.crt
-
  sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/gitscrum.app.key
-
  sudo nginx -t
-
  sudo nginx -s reload
-
  修改hosts文件：laravel homestead box：
-
  sudo vi /etc/hosts
-
  192.168.0.198 gitscrum.app
 
 ## git clone https://github.com/hokhyk/laravel-gitscrum.git gitscrum --depth=1
@@ -643,6 +636,29 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
  5. visit: http://localhost:3000
  
  default admin: hok/hok hok@gitea.me
- 
+ 6. create a app token for gitscrum.
+ 7. configure the url in giscrum project's env file.
+   GITEA_INSTANCE_URI=http://gitea.me/
 
+# voyager: a laravel-admin package https://voyager-cheatsheet.ulties.com/#    Voyager Cheat Sheet v1.0.0
+ 1. 安装laravel开发框架
+ laravel new voyager
+
+ 2. 设置数据库：
+ mysql -uroot
+ CREATE USER 'voyager'@'%' IDENTIFIED BY 'voyager';
+ CREATE DATABASE IF NOT EXISTS `voyager` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `voyager`.* TO 'voyager'@'%';
+
+ 3. 配置web服务器等
+ sudo /vagrant/scripts/serve-laravel.sh voyager.app /home/vagrant/Code/voyager/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/voyager.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/voyager.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+ sudo vi /etc/hosts
+ 192.168.0.198 voyager.app
+ 
+ 4. 
  

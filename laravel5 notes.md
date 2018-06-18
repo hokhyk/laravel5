@@ -9573,125 +9573,218 @@ before your tests start. Then, it wraps every test in a database transaction, wh
 
 # mail and notifications
 ## mail
-Laravel’s mail functionality is a convenience layer on top of SwiftMailer, and out of the box
-Laravel comes with drivers for Mailgun, Mandrill, Sparkpost, SES, SMTP, PHP Mail, and Sendmail.
-For all of the cloud services, you’ll set your authentication information in
-config/services.php. However, if you take a look you’ll see there are already keys there — and
-in config/mail.php — that allow you to customize your application’s mail functionality in .env
+Laravel’s mail functionality is a convenience layer on top of SwiftMailer, and out of the box
+
+Laravel comes with drivers for Mailgun, Mandrill, Sparkpost, SES, SMTP, PHP Mail, and
+ Sendmail.
+For all of the cloud services, you’ll set your authentication information in
+
+config/services.php. However, if you take a look you’ll see there are already keys there — and
+
+in config/mail.php — that allow you to customize your application’s mail functionality in .env
+
 using variables like MAIL_DRIVER and MAILGUN_SECRET.
 
 ### CLOUD-BASED API DRIVER DEPENDENCIES
-If you’re using any of the cloud-based API drivers, you’ll need to bring Guzzle in with Composer. You can run
-the following command to add it:
-composer require guzzlehttp/guzzle:"~5.3|~6.0"
-If you use the SES driver, you’ll need to run the following command:
+If you’re using any of the cloud-based API drivers, you’ll need to bring Guzzle in with Composer. You can run
+
+the following command to add it:
+
+composer require guzzlehttp/guzzle:"~5.3|~6.0"
+
+If you use the SES driver, you’ll need to run the following command:
+
 composer require aws/aws-sdk-php:~3.0
 
-There are two different syntaxes in Laravel for sending mail: classic and mailable. The
+There are two different syntaxes in Laravel for sending mail: classic and mailable. The
+
 mailable syntax is the preferred syntax from 5.3 onward.
 
-#### Basic “classic” mail syntax
-Mail::send(
-'emails.assignment',
-['trainer' => $trainer, 'trainee' => $trainee],
-function ($m) use ($trainer, $trainee) {
-$m->from($trainer->email, $trainer->name);
-$m->to($trainee->email, $trainee->name)->subject('A New Assignment!');
-}
-);
-The first parameter of Mail::send() is the name of the view. Remember, emails.assignment
-means resources/views/emails/assignment.blade.php or
-resources/views/emails/assignment.php.
-The second parameter is an array of data that you want to pass to the view.
-The third parameter is a closure, in which you define how and where to send the email: from,
-to, CC, BCC, subject, and any other metadata. Make sure to use any variables you want access
-to within the closure. And note that the closure is passed one parameter, which we’ve named
+#### Basic “classic” mail syntax
+
+Mail::send(
+
+'emails.assignment',
+
+['trainer' => $trainer, 'trainee' => $trainee],
+
+function ($m) use ($trainer, $trainee) {
+
+$m->from($trainer->email, $trainer->name);
+
+$m->to($trainee->email, $trainee->name)->subject('A New Assignment!');
+
+}
+
+);
+
+The first parameter of Mail::send() is the name of the view. Remember, emails.assignment
+
+means resources/views/emails/assignment.blade.php or
+
+resources/views/emails/assignment.php.
+
+The second parameter is an array of data that you want to pass to the view.
+
+The third parameter is a closure, in which you define how and where to send the email: from,
+
+to, CC, BCC, subject, and any other metadata. Make sure to use any variables you want access
+
+to within the closure. And note that the closure is passed one parameter, which we’ve named
+
 $m; this is the message object.
 
-##### To send emails on a local development server (Homestead), simply edit the .env file.
-MAIL_DRIVER=mail
-MAIL_HOST=mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=null
-MAIL_PASSWORD=null
+##### To send emails on a local development server (Homestead), simply edit the .env file.
+
+MAIL_DRIVER=mail
+
+MAIL_HOST=mailtrap.io
+
+MAIL_PORT=2525
+
+MAIL_USERNAME=null
+
+MAIL_PASSWORD=null
+
 MAIL_ENCRYPTION=null
 
 ##### cloud based mail service
-As usual, you may learn how to use Mailgun, Mandrill and SES drivers at the official docs:
+As usual, you may learn how to use Mailgun, Mandrill and SES drivers at the official docs:
+
 http://laravel.com/docs/master/mail
 
-Sending emails using Sendgrid
-Go to SendGrid, register a new account:
-https://sendgrid.com
-When your account is activated, edit the .env file:
-MAIL_DRIVER=smtp
-MAIL_HOST=smtp.sendgrid.net
-MAIL_PORT=587
-MAIL_USERNAME=yourSendgridUsername
-MAIL_PASSWORD=yourPassword
+Sending emails using Sendgrid
+
+Go to SendGrid, register a new account:
+
+https://sendgrid.com
+
+When your account is activated, edit the .env file:
+
+MAIL_DRIVER=smtp
+
+MAIL_HOST=smtp.sendgrid.net
+
+MAIL_PORT=587
+
+MAIL_USERNAME=yourSendgridUsername
+
+MAIL_PASSWORD=yourPassword
+
 Good job! You’re now ready to send emails using Sendgrid!
 
-#### Basic “Mailable” Mail Usage
-Laravel 5.3 introduced a new mail syntax called the “mailable.” It works the same as the
-classic mail syntax, but instead of defining your mail messages in a closure, you instead
-create a specific PHP class to represent each mail.
-To make a mailable, use the make:mail Artisan command:
+#### Basic “Mailable” Mail Usage
+
+Laravel 5.3 introduced a new mail syntax called the “mailable.” It works the same as the
+
+classic mail syntax, but instead of defining your mail messages in a closure, you instead
+
+create a specific PHP class to represent each mail.
+
+To make a mailable, use the make:mail Artisan command:
+
 php artisan make:mail Assignment
 
-##### A sample mailable
-<?php
-namespace App\Mail;
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
-class Assignment extends Mailable
-{
-use Queueable, SerializesModels;
-public $trainer;
-public $trainee;
-public function __construct($trainer, $trainee)
-{
-$this->trainer = $trainer;
-$this->trainee = $trainee;
-} p
-ublic function build()
-{
-return $this->subject('New assignment from ' . $this->trainer->name)
-->view('emails.assignment');
-}
+##### A sample mailable
+
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+
+use Illuminate\Mail\Mailable;
+
+use Illuminate\Queue\SerializesModels;
+
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class Assignment extends Mailable
+
+{
+
+use Queueable, SerializesModels;
+
+public $trainer;
+
+public $trainee;
+
+public function __construct($trainer, $trainee)
+
+{
+
+$this->trainer = $trainer;
+
+$this->trainee = $trainee;
+
+} p
+
+ublic function build()
+
+{
+
+return $this->subject('New assignment from ' . $this->trainer->name)
+
+->view('emails.assignment');
+
 }
 
-##### A few ways to send mailables
-// Simple send
-Mail::to($user)->send(new Assignment($trainer, $trainee));
-// With CC/BCC/etc.
-Mail::to($user1))
-->cc($user2)
-->bcc($user3)
-->send(new Assignment($trainer, $trainee));
-// With collections
-Mail::to('me@app.com')
-->bcc(User::all())
+}
+
+##### A few ways to send mailables
+
+// Simple send
+
+Mail::to($user)->send(new Assignment($trainer, $trainee));
+
+// With CC/BCC/etc.
+
+Mail::to($user1))
+
+->cc($user2)
+
+->bcc($user3)
+
+->send(new Assignment($trainer, $trainee));
+
+// With collections
+
+Mail::to('me@app.com')
+
+->bcc(User::all())
+
 ->send(new Assignment($trainer, $trainee))
 
 ### mail templates
-Mail templates are just like any other template. They can extend other templates, use sections, parse variables, contain conditional or looping directives, and do anything else you can do in a normal Blade view.
+Mail templates are just like any other template. They can extend other templates, use sections, parse variables, contain conditional or looping directives, and do anything else you can do in
+ a normal Blade view.
 
-#### Sample assignment email template
- <!-- resources/views/emails/assignment.blade.php -->
-<p>Hey {{ $trainee->name }}!</p>
-<p>You have received a new training assignment from <b>{{ $trainer->name }}</b>.
-Check out your <a href="{{ route('training-dashboard') }}">training
+#### Sample assignment email template
+
+ <!-- resources/views/emails/assignment.blade.php -->
+
+<p>Hey {{ $trainee->name }}!</p>
+
+<p>You have received a new training assignment from <b>{{ $trainer->name }}</b>.
+
+Check out your <a href="{{ route('training-dashboard') }}">training
+
 dashboard</a> now!</p>
 
-#### HTML VERSUS PLAIN-TEXT EMAILS
-So far we’ve used the view() method in our build() call stacks. This expects the template we’re referencing to
-pass back HTML. If you’d like to pass a plain-text version, the text() method defines your plain-text view:
-public function build()
-{
-return $this->view('emails.reminder')
-->text('emails.reminder_plain');
+#### HTML VERSUS PLAIN-TEXT EMAILS
+
+So far we’ve used the view() method in our build() call stacks. This expects the template we’re referencing to
+
+pass back HTML. If you’d like to pass a plain-text version, the text() method defines your plain-text view:
+
+public function build()
+
+{
+
+return $this->view('emails.reminder')
+
+->text('emails.reminder_plain');
+
 }
 
 ## events
@@ -9700,147 +9793,192 @@ return $this->view('emails.reminder')
 2. injecting the Dispatcher
 3. use event() global helper
 
-Event::fire(new UserSubscribed($user, $plan));
-// or
-$dispatcher = app(Illuminate\Contracts\Events\Dispatcher);
-$dispatcher->fire(new UserSubscribed($user, $plan));
-// or
+Event::fire(new UserSubscribed($user, $plan));
+
+// or
+
+$dispatcher = app(Illuminate\Contracts\Events\Dispatcher);
+
+$dispatcher->fire(new UserSubscribed($user, $plan));
+
+// or
+
 event(new UserSubscribed($user, $plan));
 
 php artisan make:event UserSubscribed
 
-### Injecting data into an event : describing an event.
-<?php
-namespace App\Events;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\InteractsWithSockets;
+### Injecting data into an event : describing an event.
+
+<?php
+
+namespace App\Events;
+
+use Illuminate\Broadcasting\Channel;
+
+use Illuminate\Queue\SerializesModels;
+
+use Illuminate\Broadcasting\PrivateChannel;
+
+use Illuminate\Broadcasting\PresenceChannel;
+
+use Illuminate\Broadcasting\InteractsWithSockets;
+
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class UserSubscribed
-{
-use InteractsWithSockets, SerializesModels;
-public $user;
-public $plan;
-public function __construct($user, $plan)
-{
-$this->user = $user;
-$this->plan = $plan;
-}
+class UserSubscribed
+
+{
+
+use InteractsWithSockets, SerializesModels;
+
+public $user;
+
+public $plan;
+
+public function __construct($user, $plan)
+
+{
+
+$this->user = $user;
+
+$this->plan = $plan;
+
 }
 
-public function broadcastOn()
-{
-return new PrivateChannel('channel-name');
+}
+
+public function broadcastOn()
+
+{
+
+return new PrivateChannel('channel-name');
+
 }
 
 
-Now we have an object that appropriately represents the event that happened: $event->user
+Now we have an object that appropriately represents the event that happened: $event->user
+
 subscribed to the $event->plan plan.
 
 ### listening for an event using an event listener: 
 #### creating an evnet listener: php artisan make:listener EmailOwnerAboutSubscription --event=UserSubscribed
-The default template for a Laravel event listener
-<?php
-namespace App\Listeners;
-use App\Events\UserSubscribed;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
-class EmailOwnerAboutSubscription
-{
-/**
-* Create the event listener.
-**
-@return void
-*/
-public function __construct()
-{
-//
-} /
-**
-* Handle the event.
-**
-@param UserSubscribed $event
-* @return void
-*/
-public function handle(UserSubscribed $event)
-{
-//
-}
+The default template for a Laravel event listener
+
+<?php
+namespace App\Listeners;
+use App\Events\UserSubscribed;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+
+class EmailOwnerAboutSubscription
+{
+    /**
+    * Create the event listener.
+    **
+    @return void
+    */
+public function __construct()
+    {
+        //
+    } 
+
+/**
+* Handle the event.
+**
+@param UserSubscribed $event
+* @return void
+*/
+public function handle(UserSubscribed $event)
+    {
+    //
+    }
 }
 
-##### A sample event listener
-...
-use Illuminate\Contracts\Mail\Mailer;
-class EmailOwnerAboutSubscription
-{
-protected $mailer;
-public function __construct(Mailer $mailer)
-{
-$this->mailer = $mailer;
-} p
-ublic function handle(UserSubscribed $event)
-{
-$this->mailer->send(
-new OwnerSubscriptionEmail($event->user, $event->plan)
-);
-}
+##### A sample event listener
+...
+use Illuminate\Contracts\Mail\Mailer;
+class EmailOwnerAboutSubscription
+{
+    protected $mailer;
+
+    public function __construct(Mailer $mailer)
+    {
+    $this->mailer = $mailer;
+    } 
+
+    public function handle(UserSubscribed $event)
+    {
+        $this->mailer->send(
+            new OwnerSubscriptionEmail($event->user, $event->plan)
+        );
+    }
 }
 
 #### binding listeners to events in EventServiceProvider  :registering an event listener.
-class EventServiceProvider extends ServiceProvider
-{
-protected $listen = [
-\App\Events\UserSubscribed::class => [
-\App\Listeners\EmailOwnerAboutSubscription::class,
-],
+class EventServiceProvider extends ServiceProvider
+{
+    protected $listen = [
+        \App\Events\UserSubscribed::class => [
+        \App\Listeners\EmailOwnerAboutSubscription::class,
+    ],
 ];
-As you can see, the key of each array entry is the class name of the event, and the value is an array of listener class names. We can add as many class names as we want under the UserSubscribed key and they will all listen and respond to each UserSubscribed event.
+As you can see, the key of each array entry is the class name of the event, and the value is an
+ array of listener class names. We can add as many class names as we want under the
+ UserSubscribed key and they will all listen and respond to each UserSubscribed event.
 
 #### another structure to define the relationship between events and listeners.
-Laravel has a concept called an event subscriber, which is a class that contains
-a collection of methods that act as separate listeners to unique events, and also contains the
-mapping of which method should handle which event. 
+Laravel has a concept called an event subscriber, which is a class that contains a collection of methods that act as separate listeners to unique events, and also contains the mapping of which method should handle which event. 
+##### A sample event subscriber
+<?php
+namespace App\Listeners;
 
-##### A sample event subscriber
-<?php
-namespace App\Listeners;
-class UserEventSubscriber
-{
-public function onUserSubscription($event)
-{
-// Handles the UserSubscribed event
-} p
-ublic function onUserCancellation($event)
-{
-// Handles the UserCancelled event
-} p
-ublic function subscribe($events)
-{
-$events->listen(
-\App\Events\UserSubscribed::class,
-'App\Listeners\UserEventSubscriber@onUserSubscription'
-);
-$events->listen(
-\App\Events\UserCancelled::class,
-'App\Listeners\UserEventSubscriber@onUserCancellation'
-);
-}
+class UserEventSubscriber
+{
+    public function onUserSubscription($event)
+    {
+    // Handles the UserSubscribed event
+    }
+
+    public function onUserCancellation($event)
+    {
+    // Handles the UserCancelled event
+    } 
+
+    public function subscribe($events)
+    {
+        $events->listen(
+        \App\Events\UserSubscribed::class,
+        'App\Listeners\UserEventSubscriber@onUserSubscription'
+        );
+        
+        $events->listen(
+        \App\Events\UserCancelled::class,
+        'App\Listeners\UserEventSubscriber@onUserCancellation'
+        );
+    }
+
 }
 
 ##### registering an event subscriber: binding the EventSubscriber class in App\Providers\EventServiceProvider  $subscribe property.
-There’s one last thing we need to do: in App\Providers\EventServiceProvider, we need to
+There’s one last thing we need to do: in App\Providers\EventServiceProvider, we need to
+
 add our subscriber’s class name to the $subscribe property.
-Registering an event subscriber
-...
-class EventServiceProvider extends ServiceProvider
-{
-...
-protected $subscribe = [
-\App\Listeners\UserEventSubscriber::class
-];
+Registering an event subscriber
+
+...
+
+class EventServiceProvider extends ServiceProvider
+
+{
+
+...
+
+protected $subscribe = [
+
+\App\Listeners\UserEventSubscriber::class
+
+];
+
 }
 
 
