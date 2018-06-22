@@ -660,5 +660,17 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
  sudo vi /etc/hosts
  192.168.0.198 voyager.app
  
- 4. 
+ 4. $ composer require tcg/voyager
  
+ 5. php artisan voyager:install --with-dummy
+   mail: admin@admin.com
+   password: password
+
+ 6. manual install
+ This section is meant for users who are installing Voyager on an already existing Laravel installation or for users who want to perform a manual install.
+  $ php artisan vendor:publish --provider=VoyagerServiceProvider
+  $ php artisan vendor:publish --provider=ImageServiceProviderLaravel5
+
+  
+# lavalite  a CMS
+  
