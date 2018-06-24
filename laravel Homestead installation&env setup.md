@@ -37,7 +37,14 @@ php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
 
-## 安装laravel框架：
+## install nvm
+$curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash
+(https://github.com/creationix/nvm#install-script)
+nvm install node
+nvm use node
+nvm list
+
+## 安装laravel installer：
 ### 1、全局安装
 ~vagrant@Homestead$vagrant ssh
 cd ~/Code
@@ -671,6 +678,58 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
   $ php artisan vendor:publish --provider=VoyagerServiceProvider
   $ php artisan vendor:publish --provider=ImageServiceProviderLaravel5
 
+# Laravel Boilerplate
+  1. git clone boilerplate 
+  2. composer install       yarn/npm install
+  3. database:
+    mysql -uroot
+ CREATE USER 'boilerplate'@'%' IDENTIFIED BY 'boilerplate';
+ CREATE DATABASE IF NOT EXISTS `boilerplate` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `boilerplate`.* TO 'boilerplate'@'%';
+
+ 4. 配置web服务器等
+ sudo /vagrant/scripts/serve-laravel.sh bp.app /home/vagrant/Code/boilerplate/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/bp.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/bp.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+ sudo vi /etc/hosts
+ 192.168.0.198 bp.app
+
+ 5. php artisan key:generate
+    php artisan db:seed
+ 6. visit bp.app/admin with admin@admin.com/secret
   
 # lavalite  a CMS
-  
+  1. git clone lavalite 
+  2. composer install
+  3. database:
+    mysql -uroot
+ CREATE USER 'lavalite'@'%' IDENTIFIED BY 'lavalite';
+ CREATE DATABASE IF NOT EXISTS `lavalite` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `lavalite`.* TO 'lavalite'@'%';
+
+ 4. 配置web服务器等
+ sudo /vagrant/scripts/serve-laravel.sh lavalite.app /home/vagrant/Code/lavalite/public/
+ sudo cp /etc/nginx/ssl/homestead.app.crt /etc/nginx/ssl/lavalite.app.crt
+ sudo cp /etc/nginx/ssl/homestead.app.key /etc/nginx/ssl/lavalite.app.key
+ sudo nginx -t
+ sudo nginx -s reload
+ 修改hosts文件：laravel homestead box：
+ sudo vi /etc/hosts
+ 192.168.0.198 lavalite.app
+ 
+ 5. $php artisan lavalite:install
+*********************************
+*     Lavalite Installation     *
+*********************************
+ Enter your database host. [127.0.0.1]:
+
+ Migration table not found.
+ admin@lavalite.app/123456
+ 
+ 6. php artisan clear-compiled
+    php artisan ide-helper:generate
+    php artisan ide-helper:meta
+    
