@@ -698,7 +698,11 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
  192.168.0.198 bp.app
 
  5. php artisan key:generate
+    php artisan migrate
     php artisan db:seed
+   After your project is installed you must run this command to link your public storage folder for user avatar uploads:
+   php artisan storage:link
+
  6. visit bp.app/admin with admin@admin.com/secret
   
 # lavalite  a CMS
