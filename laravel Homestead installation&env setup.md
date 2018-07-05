@@ -733,7 +733,8 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
  Migration table not found.
  admin@lavalite.app/123456
  
- 6. php artisan clear-compiled
+ 6. composer require --dev barryvdh/laravel-ide-helper 
+    php artisan clear-compiled
     php artisan ide-helper:generate
     php artisan ide-helper:meta
     
