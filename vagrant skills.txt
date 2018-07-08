@@ -1,0 +1,439 @@
+xenserver   root/ cdtfhr
+[root@xenserver /] xe host-list
+[root@xenserver /] xe sr-create content-type=user device-config:device=/dev/sdb1 host-uuid=c3f95f45-9f5b-458a-af89-aa916bc90e52  name-
+
+label="local ssd for VMs" shared=true type=lvm
+[root@xenserver /]# xe vm-export vm=虚拟机名 filename=/my_iso/虚拟机名.xva
+                    xe vm-import filename=[name.xva]
+
+
+CentOS7-server   ip 10.46.99.201  
+            root/ cdtfhr    hok/hok
+
+
+centOS6 test-server     ip 10.46.99.202
+            root HOK      hok  HOK  
+设置www服务器目录权限：
+    groupadd www
+    useradd www -d /home/wwwroot  -g www
+    chmod -R 755 /home/wwwroot
+    chown -R www:www  /home/wwwroot
+
+
+安装lnmpa：
+yum  install screen
+screen -S lnmp
+ screen -r lnmp
+ screen -D -r lnmp
+sudo su
+wget -c http://soft.vpser.net/lnmp/lnmp1.3-full.tar.gz && tar zxf lnmp1.3-full.tar.gz && cd lnmp1.3-full && ./install.sh lnmpa
+
+lnmpa 1.3 conf：
+mysql5.5.48  root   rocdtfhr   InnoDB enabled.
+php5.6.22  
+ Apache 2.4.20
+admin email adress: admin@cdtfhr.com
+
+lnmp vhost add 10.46.99.202
+zhaopin database name:cdtfhr_zhaopin    user:cdtfhr_zhaopin   password:cdtf$_zha0pin 
+
+LNMPA 1.2+各个程序状态管理: lnmp {httpd|mysql|mariadb|pureftpd} {start|stop|reload|restart|kill|status}
+        ./addons.sh {install|uninstall} {eaccelerator|xcache|memcached|opcache|redis|imagemagick|ioncube} 
+
+升级脚本：
+ 执行：./upgrade.sh 按提示进行选择
+也可以直接使用参数：./upgrade.sh {nginx|mysql|mariadb|php|phpa|m2m|phpmyadmin}
+  参数: nginx 可升级至任意Nginx版本。
+  参数: mysql 可升级至任意MySQL版本，MySQL升级风险较大，虽然会自动备份数据，依然建议自行再备份一下。
+  参数: mariadb 可升级已安装的Mariadb，虽然会自动备份数据，依然建议自行再备份一下。
+  参数: m2m    可从MySQL升级至Mariadb，虽然会自动备份数据，依然建议自行再备份一下。
+  参数: php   仅适用于LNMP，可升级至大部分PHP版本。
+  参数: phpa    可升级LNMPA/LAMP的PHP至大部分版本。
+  参数: phpmyadmin    可升级phpMyadmin。
+
+扩展插件
+  执行: ./addons.sh {install|uninstall} {eaccelerator|xcache|memcached|opcache|redis|imagemagick|ioncube}
+缓存加速：
+  参数: xcache 安装时需选择版本和设置密码，http://yourIP/xcache/ 进行管理，用户名 admin，密码为安装xcache时设置的。
+  参数: redis
+  参数: memcached 可选择php-memcache或php-memcached扩展。
+  参数: opcache http://yourIP/ocp.php 进行管理。
+  参数: eaccelerator 安装。  
+    请勿安装多个缓存类扩展模块，多个可能导致网站出现问题 ！
+
+图像处理：
+  参数: ./addons.sh {install|uninstall} imageMagick imageMagick路径：/usr/local/imagemagick/bin/。
+
+解密：
+  IonCube，执行：./addons.sh {install|uninstall} ionCube 。
+
+其他：
+  可选1，执行：./php5.2.17.sh 可安装一个不与LNMP冲突的PHP 5.2.17单独存在，目录在/usr/local/php52/，使用时需要将nginx虚拟主机配置文件里的 
+
+php-cgi.sock 修改为 php-cgi52.sock即可调用PHP5.2.17。
+  以下工具在lnmp安装包tools目录下
+  可选2，执行：./reset_mysql_root_password.sh 可重置MySQL/MariaDB的root密码。
+  可选3，执行：./check502.sh  可检测php-fpm是否挂掉,502报错时重启，配合crontab使用。
+  可选4，执行：./cut_nginx_logs.sh 日志切割脚本。
+  可选5，执行：./remove_disable_function.sh 运行此脚本可删掉禁用函数。
+
+卸载
+  卸载LNMP、LNMPA或LAMP可执行：./uninstall.sh 按提示选择即可卸载。
+
+虚拟主机管理
+  添加：lnmp vhost add
+  删除：lnmp vhost del
+  列出：lnmp vhost list
+
+相关图形界面
+  PHPMyAdmin：http://yourIP/phpmyadmin/
+  phpinfo：http://yourIP/phpinfo.php
+  PHP探针：http://yourIP/p.php
+  Xcache管理界面：http://yourIP/xcache/
+  Zend Opcache管理界面：http://yourIP/ocp.php
+
+LNMP相关目录文件
+
+ 目录位置
+  Nginx：/usr/local/nginx/
+  MySQL：/usr/local/mysql/
+  MariaDB：/usr/local/mariadb/
+  PHP：/usr/local/php/
+  PHPMyAdmin：/home/wwwroot/default/phpmyadmin/
+  默认虚拟主机网站目录：/home/wwwroot/default/
+  Nginx日志目录：/home/wwwlogs/
+
+ 配置文件：
+  Nginx主配置文件：/usr/local/nginx/conf/nginx.conf
+  MySQL/MariaDB配置文件：/etc/my.cnf
+  PHP配置文件：/usr/local/php/etc/php.ini
+  PHP-FPM配置文件：/usr/local/php/etc/php-fpm.conf
+  PureFtpd配置文件：/usr/local/pureftpd/etc/pure-ftpd.conf
+  Apache配置文件：/usr/local/apache/conf/httpd.conf
+
+
+
+nginx配置：
+2、在一个server块中为一个站点配置多个二级域名。
+
+实际网站目录结构中我们通常会为站点的二级域名独立创建一个目录，同样我们可以使用正则的捕获来实现在一个server块中配置多个二级域名：
+
+ 
+
+server
+   {
+     listen       80;
+     server_name  ~^(.+)?\.domain\.com$;
+     index index.html;
+     if ($host = domain.com){
+         rewrite ^ http://www.domain.com permanent;
+     }
+     root  /data/wwwsite/domain.com/$1/;
+   }
+
+站点的目录结构应该如下：
+
+/data/wwwsite/domain.com/www/
+/data/wwwsite/domain
+.com/nginx/
+
+这样访问www.domain.com时root目录为/data/wwwsite/domain.com/www/，nginx.domain.com时为/data/wwwsite/domain.com/nginx/，以此类推。
+
+后面if语句的作用是将domain.com的方位重定向到www.domain.com，这样既解决了网站的主目录访问，又可以增加seo中对www.domain.com的域名权重。
+
+
+
+Joomla3.6.5   网站管理员用户名：administrator	密码：WPLi4hjTNa
+     mysql  database name:  joom_cdtfhr        user:joom_cdtfhr       password: 4hjPLi4a
+     zhaopin database name:cdtfhr_zhaopin    user:cdtfhr_zhaopin   password:cdtfhr_zhaopin   后台目录修改为：admin_cgsafe
+
+
+
+windows 2008 R2 64   administrator    WinSer123
+
+
+
+git-server-RhodeCode-AppEnlight-CE-10.46.99.204    
+The default login credentials to the appliance are:
+
+login:    rcdev          password: qweqweqwe
+
+The server have a running SSH Server on Port 9022, you can access the server by an ssh client:
+ssh rcdev@10.46.99.204 -p9022
+password: qweqweqwe
+
+ sudo su - postgres
+ psql
+    postgres-# \password postgres
+Enter new password:        postgres
+Enter it again:         postgres
+     ^
+postgres=# create user rhcode with password 'rhcode';
+CREATE ROLE
+postgres=# create database rhcode owner rhcode;
+CREATE DATABASE
+postgres=# grant all privileges on database rhcode to rhcode;
+GRANT
+postgres=# \q
+
+
+
+安装git：
+sudo apt-get install git-core
+$　sudo mkdir /home/rcdev/repositories　　// 创建git仓库存储目录
+
+$　sudo chmod 755 /home/rcdev/repositories　　// 设置目录访问的可读写或执行的权限
+
+开始安装：见教程。
+安装：Enterprise版本：
+ rccontrol install Enterprise  --start-at-boot
+  网站10.46.99.204登录帐号密码:    admin   admin_rc888
+   仓库路径：  /home/rcdev/repositories 
+
+The server has NGINX http server pre-installed and pre-configured.
+By default the listen address configured is https://rhodecode-appenlight,
+you can change this address by modifying configuration file inside
+directory /etc/nginx/sites-enabled
+C:\Windows\System32\drivers\etc  windows7的hosts文件目录。
+
+rccontrol stop enterprise-1
+rccontrol start enterprise-1
+rccontrol stop vcsserver-1
+rccontrol start vcsserver-1
+端口配置文件：/root/.rccontrol/enterprise-1/rhodecode.ini
+
+
+
+
+ECS配置：
+实例ID:i-8vbbf705zrhlzzwxwqcb
+实例名称:cdtfhr.com.server
+公网IP：47.92.70.78
+内网IP：172.26.116.66 
+管理终端连接密码： 881313
+root/TTRZ@ali888
+
+设置www服务器目录权限：
+    groupadd www
+    useradd www -d /home/www  -g www
+    chown -R www:www /home/wwwroot/www.cdtfhr.com
+find /home/wwwroot/www.cdtfhr.com -type d -exec chmod 755 {} \;
+find /home/wwwroot/www.cdtfhr.com -type f -exec chmod 644 {} \;
+
+
+lnmpa 1.3 conf：
+mysql5.5.48  root/rocdtfhr@TTRZ888   InnoDB enabled.                      
+//phpmyadmin后台地址改为：http://47.92.70.78/my.M.myadmin
+php5.6.22  
+Apache 2.4.20
+admin email adress: admin@cdtfhr.com
+
+lnmp vhost list             lnmp vhost add ( www.cdtfhr.com   cdtfhr.com     admin@cdtfhr.com  )
+ rm -rf /home/wwwroot/www.cdtfhr.com/*
+上传网站文件到www.cdtfhr.com目录。
+chmod -R 755 /home/wwwroot/www.cdtfhr.com
+lnmp restart
+
+招聘频道：
+     后台admin目录修改为：admin_cgsafe     user: administrator       password: 4$hjPLi$4a
+     数据库：
+   地址：http://47.92.70.78/my.M.myadmin/
+     zhaopin database name:cdtfhr_zhaopin    user:cdtfhr_zhaopin   password:cdtf$_zha0pin 
+     sql语句： 
+     CREATE USER 'cdtfhr_zhaopin'@'localhost' IDENTIFIED BY 'cdtf$_zha0pin';GRANT ALL PRIVILEGES ON *.* TO 'cdtfhr_zhaopin'@'localhost' 
+
+IDENTIFIED BY 'cdtf$_zha0pin' REQUIRE NONE WITH GRANT OPTION MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 
+
+MAX_USER_CONNECTIONS 0;CREATE DATABASE IF NOT EXISTS `cdtfhr_zhaopin` DEFAULT CHARACTER SET gbk;GRANT ALL PRIVILEGES ON `cdtfhr\_zhaopin`.* 
+
+TO 'cdtfhr_zhaopin'@'localhost';GRANT ALL PRIVILEGES ON `cdtfhr_zhaopin`.* TO 'cdtfhr_zhaopin'@'localhost';
+
+   //在zhaopin.sql文件中最前面加上：SET NAMES 'gbk'; 
+
+
+
+Aliyun.com   登录：领诚会社    lchs85645577   ECS:  106.14.83.169  root/Abc@12345
+
+FTP:
+account:www 
+password:1vpcbmh0X 
+
+MySQL:
+account:root
+ password:9d98ae7b8b
+
+
+
+      
+1.七牛云账号密码：  	账号：admin@cdtfhr.com 	密码：tt876RZ$  	手机号码： 18782938418（修改为胡尧部长的手机号码13388193994）
+官方网站：https://portal.qiniu.com/create
+http://blog.csdn.net/javaer_lee/article/details/53521176
+
+
+
+
+centos7.oneinstack.box制作：
+virtualbox guestaddons安装：
+#lsblk
+#mount /dev/sr0  /mnt
+#cd /mnt
+#./VBoxLinux***.run
+
+https://oneinstack.com/
+yum -y install wget screen curl python #for CentOS/Redhat
+# apt-get -y install wget screen curl python #for Debian/Ubuntu
+wget http://aliyun-oss.linuxeye.com/oneinstack-full.tar.gz #阿里云经典网络下载
+wget http://mirrors.linuxeye.com/oneinstack-full.tar.gz #包含源码，国内外均可下载
+wget http://mirrors.linuxeye.com/oneinstack.tar.gz #不包含源码，建议仅国外主机下载
+tar xzf oneinstack-full.tar.gz
+cd oneinstack #如果需要修改目录(安装、数据存储、Nginx日志)，请修改options.conf文件
+screen -S oneinstack #如果网路出现中断，可以执行命令`screen -R oneinstack`重新连接安装窗口
+./install.sh #注：请勿sh install.sh或者bash install.sh这样执行
+
+网站目录权限设置：
+chown -R www:www /data/wwwroot/
+find /data/wwwroot/ -type d -exec chmod 755 {} \;
+find /data/wwwroot/ -type f -exec chmod 644 {} \;
+
+
+vagrant操作：
+vagrant box list
+vagrant box remove centos7oneinstack
+cd VAGRANT_DICTORY
+vagrant box add SELF_DEFINED_BOX_ENVIRONMENT_NAME "D:\ISOLIB\centos7oneinstack.box"
+vagrant init SELF_DEFINED_BOX_ENVIRONMENT_NAME
+配置 VAGRANT_DICTORY目录下的Vagrantfile。
+vagrant up
+
+解决ssh无法连接（Authentication failed）的问题：
+wget https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub -O ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+chown -R vagrant:vagrant ~/.ssh
+
+在本地机器执行：
+vagrant ssh-status  查看本地private_key的目录，删除后重新vagrant up.
+或者将其他的private_key拷贝到本目录~\.vagrant\machines\default\virtualbox下，重新vagrant up。如果失败，则删除此private_key，再次vagrant up。
+
+way2 to solve homestead authentication failure problem:
+1. ssh-keygen -t rsa -b 4096 -C vagrant
+2. eval "$(ssh-agent -s)"
+3. sh-add -k ~/.ssh/id_rsa
+4. vagrant up
+5. ssh-copy-id -p 2222 vagrant@127.0.0.1
+6. ssh -p '2222' 'vagrant@127.0.0.1'
+7. cat ~/.ssh/authorized_keys
+
+定制www.cdtfrz.com虚拟主机：
+./vhost.sh   www.cdtfrz.com  cdtfhrz.com     
+
+修改
+ vi /usr/local/nginx/conf/vhost/www.cdtfrz.com.conf
+ root /data/wwwroot/www.cdtfrz.com/think/public;
+ service nginx restart
+修改：
+vi /usr/local/apache/conf/vhost/www.cdtfrz.com.conf
+DocumentRoot "/data/wwwroot/www.cdtfrz.com/think/public"
+service httpd restart
+
+访问http://192.168.0.202/phpMyAdmin/ 导入数据库文件。
+mysql root：vagrant
+zhaopin database name:cdtfhr_zhaopin    user:cdtfhr_zhaopin   password:cdtf$_zha0pin
+
+在windows10上修改hosts解析文件：
+ C:\windows\system32\drivers\etc\hosts
+增加： 
+#vagrant mapping
+192.168.0.202 www.cdtfrz.com
+生效：
+ipconfig /flushdns
+
+招聘后台网站：
+后台admin目录修改为：admin_cgsafe     user: administrator       password: 4$hjPLi$4a
+
+删除虚拟主机：
+./vhost.sh del
+./addons.sh
+./pureftpd_vhost.sh
+./backup_setup.sh # Set backup options
+ ./backup.sh # Start backup, You can add cron jobs
+   # crontab -l # Examples 
+     0 1 * * * cd ~/oneinstack;./backup.sh  > /dev/null 2>&1 &
+service nginx {start|stop|status|restart|reload|configtest}
+service mysqld {start|stop|restart|reload|status}
+service php-fpm {start|stop|restart|reload|status}
+service supervisord {start|stop|status|restart|reload}
+service httpd {start|restart|stop}
+service tomcat {start|stop|status|restart}
+service pureftpd {start|stop|restart|status}
+service redis-server {start|stop|status|restart|reload}
+service memcached {start|stop|status|restart|reload}
+./upgrade.sh
+./uninstall
+
+
+打包www.cdtfrz.com:
+virtualbox操作：
+vboxmanage.exe list vms  （vagrant package --base  ｛vboxmanage.exe list vms｝ --output  vagrantbox_name.box  --vagrantfile FILE）
+虚拟机关机: shutdown -h now 或者vagrant halt
+vagrant package --base  ｛vboxmanage.exe list vms｝ --output  centos7oneinstack.box  --vagrantfile Vagrantfile
+vagrant global-status
+vagrant ssh-status  
+vagrant destroy box-id
+
+vagrant plugin 用于安装卸载插件
+
+vagrant reload 重启虚拟机，主要用于重新载入配置文件
+
+vagrant suspend 挂起虚拟机
+
+vagrant resume 恢复挂起状态
+
+vagrant ssh-config 输出ssh连接信息
+
+vagrant status 输出当前虚拟机的状态
+
+配置多台虚拟机
+
+Vagrant支持单机启动多台虚拟机，支持一个配置文件启动多台。
+
+Vagrant.configure("2") do |config|
+    config.vm.define :web do |web|
+        web.vm.provider "virtualbox" do |v|
+            v.customize ["modifyvm", :id, "--name", "web", "--memory", "512"]
+        end
+        web.vm.box = "base"
+        web.vm.hostname = "web"
+        web.vm.network :private_network, ip : "11.11.11.1"
+    end
+
+    config.vm.define :db do |db|
+        db.vm.provider "virtualbox" do |v|
+            v.customize ["modifyvm", :id, "--name", "db", "--memory", "512"]
+        end
+        db.vm.box = "base"
+        db.vm.hostname = "db"
+        db.vm.network :private_network, ip : "11.11.11.2"
+    end
+end
+
+这里使用了:web和:db定义了两个VM，设置完后再使用vagrant up启动。可以通过vagrant ssh web和vagrant ss db分别登录指定虚拟机上。
+验证两台虚拟机间的通信: (验证方法: 在web虚拟机上通过ssh登录到db虚拟机)
+
+## 验证流程顺序
+vagrant ssh web
+@web: ssh 11.11.11.2
+@db:
+
+
+
+
+
+Odoo 9.0 server
+192.168.0.199:8069
+
+#openerp
+OE_USER="odoo"
+OE_SUPERADMIN="superadminpassword"
+
+试用数据库：cdtfrz-dev    admin/admin
