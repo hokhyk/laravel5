@@ -369,6 +369,31 @@ For my case, the host is 192.168.0.198
         CREATE DATABASE IF NOT EXISTS `coffeehouse` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
         GRANT ALL PRIVILEGES ON `coffeehouse`.* TO 'coffeehouse'@'localhost';
    
+   9.1 remove mysql-server and reinstall it:
+        sudo apt-get remove mysql-server
+        sudo service mysql stop  #or mysqld
+        sudo killall -9 mysql
+        sudo killall -9 mysqld
+        sudo apt-get remove --purge mysql-server mysql-client mysql-common
+        sudo deluser -f mysql
+        sudo rm -rf /var/lib/mysql
+        sudo apt-get purge mysql-server-core-5.7
+        sudo apt-get purge mysql-client-core-5.7
+        sudo rm -rf /var/log/mysql
+        sudo rm -rf /etc/mysql
+        
+        sudo apt update
+        sudo apt install mysql-server
+        
+        (Optional) Adjusting User Authentication and Privileges:
+        sudo mysql
+        mysql> SELECT user,authentication_string,plugin,host FROM mysql.user;
+               ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+               FLUSH PRIVILEGES;
+               SELECT user,authentication_string,plugin,host FROM mysql.user;
+               exit
+
+    
    10、安装代码
     安装依赖
     ```
