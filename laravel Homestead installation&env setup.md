@@ -81,6 +81,11 @@ sudo vi /etc/hosts
 192.168.0.198 laravel_cms.app
 192.168.0.198 laraxxxxx.app
 
+## modify firefox to bypass HST check:
+  According to several forums, you can disable HSTS by introducing a new configuration variable. First, go to the Firefox configuration page (about:config), right-click, choose "New Integer", then provide the name "test.currentTimeOffsetSeconds" (no quotes) with a value of 11491200. This should bypass HSTS, although you may also need to clear the Cache and Active Logins in the Clear Recent History dialog (Ctrl-Shift-Del).
+
+
+
 ### 4、配置laravel项目参数
  Configuration
  Public Directory
