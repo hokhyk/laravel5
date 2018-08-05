@@ -768,3 +768,24 @@ GITHUB_CLIENT_SECRET=72696fb8f1fcff3dfd832f32187e910f544d52c7
     php artisan ide-helper:generate
     php artisan ide-helper:meta
     
+# laravel with BDD (behat)
+1. composer create-project laravel/laravel=5.5.* bdd-setup
+2. composer require behat/behat behat/mink behat/mink-extension laracasts/behat-laravel-extension --dev
+   sudo ln -s /home/vagrant/Code/bdd-setup/vendor/bin/behat /usr/local/bin/behat
+   behat/behat is the main package for Behat. The behat/mink package is used to emulate a browser, so we can have the test suite check our URLs and their output. behat/mink-extension is the glue for Mink and Behat, and the last package, behat-laravel-extension is Jeffrey Way’s own implementation of Behat bindings, specifically made for Laravel.
+3. behat --init
+4. alter the source code of FeatureContext.php from:
+
+class FeatureContext implements Context, SnippetAcceptingContext
+
+to
+
+class FeatureContext extends Behat\MinkExtension\Context\MinkContext implements Context, SnippetAcceptingContext
+
+5. 
+We designed our classes using phpspec in an isolated environment, concentrating
+only on the business rules and client's requests while mocking things, such as the
+actual entities, such as rooms. We then verified that the actual queries were executed
+and saved in the database correctly by the use of a functional testing testing tool,
+PHPUnit. Finally, we used Behat to perform end-to-end testing.
+
