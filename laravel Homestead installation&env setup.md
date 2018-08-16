@@ -782,10 +782,36 @@ to
 
 class FeatureContext extends Behat\MinkExtension\Context\MinkContext implements Context, SnippetAcceptingContext
 
-5. 
-We designed our classes using phpspec in an isolated environment, concentrating
-only on the business rules and client's requests while mocking things, such as the
-actual entities, such as rooms. We then verified that the actual queries were executed
-and saved in the database correctly by the use of a functional testing testing tool,
+5. phpspec
+We designed our classes using phpspec in an isolated environment, concentrating
+
+only on the business rules and client's requests while mocking things, such as the
+
+actual entities, such as rooms. We then verified that the actual queries were executed
+
+and saved in the database correctly by the use of a functional testing testing tool,
+
 PHPUnit. Finally, we used Behat to perform end-to-end testing.
+
+- Learning to design the software, starting with the domain and then thinking about
+ which entities are involved in that domain, will help a developer think in an objectoriented manner. Having a list of entities leads to the creation of the table, so the
+ actual creation of the schema will be performed last. This approach may take
+ some getting used to. Understanding Eloquent relationships is key to being able to
+ produce expressive, readable statements that query the database while hiding away
+ the complexity.
+
+
+# laravel with master/slave database to realize write/read pattern
+Dump the master database using the following command:
+$ mysqldump -u root -p"MYSQLPASSWORD" --opt "MASTERDATABASE" >
+dumpfile.sql
+
+ $ echo "CREATE DATABASE SLAVEDATABASE;" | mysql -u MYSQLUSER
+-p"MYSQLPASSWORD"
+
+Import the dump file created from the master database using the
+following command:
+$ mysql -u MYSQLUSER -p"MYSQLPASSWORD" "MASTERDATABASE" <
+dumpfile.sql
+
 
