@@ -74,4 +74,100 @@ results:
     $ bin/console doctrine:schema:update --force
 
 ## installing bundles created by others:
+- create this directory and file structure:
+    /src/HokBundle/DataFixtures/ORM/LoadUsers.php
+- Adding the following content to our class:
+  <?php
+    // mava/src/AppBundle/DataFixtures/ORM/LoadUsers.php
+    namespace AppBundle\DataFixtures\ORM;
+    use Doctrine\Common\DataFixtures\FixtureInterface;
+    use Doctrine\Common\Persistence\ObjectManager;
+    use AppBundle\Entity\User;
+    class LoadUsers implements FixtureInterface
+    {
+        public function load(ObjectManager $manager)
+        {
+            // todo: create and persist objects
+            $user1 = new User();
+            $user1->setName('John');
+            $user1->setBio('He is a cool guy');
+            $user1->setEmail('john@mava.info');
+            $manager->persist($user1);
+            
+            $user2 = new User();
+            $user2->setName('Jack');
+            $user2->setBio('He is a cool guy too');
+            $user2->setEmail('jack@mava.info');
+            $manager->persist($user2);
+            $manager->flush();
+        }
+    }
 
+## loading data fixtures
+  $ bin/console doctrine:fixtures:load
+
+  
+# installing Jenkins
+- installing apache2
+ sudo apt-get update
+ sudo apt-get install apache2
+ sudo a2enmod proxy
+ sudo a2enmod proxy_http
+ sudo service apache2 restart
+ 
+- installing Mysql and php
+  sudo apt-get install php7.0 libapache2-mod-php7.0
+  sudo apt-get install mysql-server mysql-client 
+  mysql: root/root
+  
+- checking php mysql support:
+  root@ubuntu16:~# apt-cache search php7|grep mysql
+  php7.0-mysql - MySQL module for PHP
+  如果没有结果，则sudo apt-get install php7.0-mysql
+  
+- install phpmyadmin
+  sudo apt-get install phpmyadmin
+  cp -r /usr/share/phpmyadmin/ /var/www/html/phpmyadmin
+
+- installing Jenkins:
+   - sudo apt install openjdk-8-jdk
+   - wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key|sudo apt-key add -
+   - echo "deb http://pkg.jenkins-ci.org/debian binary/" | sudo tee -a /etc/apt/sources.list.d/jenkins.list
+   - sudo apt-get update
+   - sudo apt-get install jenkins
+   
+- configure jenkins:
+   - sudo vi /etc/default/jenkins
+     # port for HTTP connector (default 8080; disable with -1)
+     HTTP_PORT=8069   
+   - sudo service jenkins start
+   
+   - setting up an apache virtual host for Jenkins as a proxy:
+        $ sudo a2enmod proxy
+        $ sudo a2enmod proxy_http
+        $ sudo service apache2 restart
+        - configure a virtual host:
+            $ sudo vi /etc/apache2/sites-available/jenkins.conf
+            <VirtualHost *:80>
+                ServerName 192.168.0.100
+                ProxyRequests Off
+                <Proxy *>
+                    Order deny,allow
+                    Allow from all
+                </Proxy>
+                ProxyPreserveHost on
+                ProxyPass / http://192.168.0.100:8069/
+            </VirtualHost>
+            $ sudo a2ensite jenkins
+            $ sudo apache2 reload
+   
+   - visit :192.168.0.100
+       - input the administrator password:
+       - sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+         442c9ca929354d4b9da977c202a4b584
+       - change admin login to admin/admin
+       
+   - 
+         
+
+     
