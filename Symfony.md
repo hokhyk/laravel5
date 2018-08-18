@@ -116,14 +116,19 @@ results:
  sudo service apache2 restart
  
 - installing Mysql and php
-  sudo apt-get install php7.0 libapache2-mod-php7.0
+  sudo apt-get install php7.0 libapache2-mod-php7.0 (需要升级为7.1)
+  
+  sudo add-apt-repository ppa:ondrej/php
+  sudo apt-get update
+  sudo apt-get install php7.1 php7.1-common
+  sudo apt-get install libapache2-mod-php7.1 php7.1-mysql php7.1-zip php7.1-gd php7.1-mbstring mcrypt  php7.1-mcrypt  php7.1-xml  php7.1-curl
   sudo apt-get install mysql-server mysql-client 
   mysql: root/root
   
 - checking php mysql support:
   root@ubuntu16:~# apt-cache search php7|grep mysql
-  php7.0-mysql - MySQL module for PHP
-  如果没有结果，则sudo apt-get install php7.0-mysql
+  php7.1-mysql - MySQL module for PHP
+  如果没有结果，则sudo apt-get install php7.1-mysql
   
 - install phpmyadmin
   sudo apt-get install phpmyadmin
@@ -149,19 +154,19 @@ results:
         - configure a virtual host:
             $ sudo vi /etc/apache2/sites-available/jenkins.conf
             <VirtualHost *:80>
-                ServerName 192.168.0.100
+                ServerName jenkins.app
                 ProxyRequests Off
                 <Proxy *>
                     Order deny,allow
                     Allow from all
                 </Proxy>
                 ProxyPreserveHost on
-                ProxyPass / http://192.168.0.100:8069/
+                ProxyPass / http://localhost:8069/
             </VirtualHost>
             $ sudo a2ensite jenkins
             $ sudo apache2 reload
-   
-   - visit :192.168.0.100
+            $ sudo vi /etc/hosts     # adding   192.168.0.100  jenkins.app   
+   - visit http://jenkins.app
        - input the administrator password:
        - sudo cat /var/lib/jenkins/secrets/initialAdminPassword
          442c9ca929354d4b9da977c202a4b584
@@ -203,15 +208,20 @@ results:
         $ composer global require phpunit/phpunit
         $ composer global require phpunit/dbunit
         $ composer global require phing/phing
-        $ composer global require phpdocumentor/phpdocumentor
         $ composer global require sebastian/phpcpd
-        $ composer global require phploc/phploc
         $ composer global require phpmd/phpmd
+        $ composer global require pdepend/pdepend
+        $ composer global require phploc/phploc
         $ composer global require "squizlabs/php_codesniffer=*"
+        $ composer global require phpdocumentor/phpdocumentor   (###problematic......)
 
     - config phpcs:
+        $ vi ~/.bash_profile
+           adding the following line:
+           export PATH=$PATH:/home/vagrant/.config/composer/vendor/bin/
+        $ source ~/.bash_profile
         $ git clone git://github.com/djoos/Symfony2-coding-standard.git
-        $ phpcs --config-set /home/vagrant/Symfony2-coding-standard
+        $ phpcs --config-set symfony2_standard  /home/vagrant/Symfony2-coding-standard
         $ phpcs -i
         $ phpcs /path/to/code     
 
