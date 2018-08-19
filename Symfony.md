@@ -213,7 +213,13 @@ results:
         $ composer global require pdepend/pdepend
         $ composer global require phploc/phploc
         $ composer global require "squizlabs/php_codesniffer=*"
-        $ composer global require phpdocumentor/phpdocumentor   (###problematic......)
+        $ composer global require phpdocumentor/phpdocumentor   (###problematic...... ,use phpdox instead.)
+
+    - using phar for phpdox:
+        ➜ wget http://phpdox.de/releases/phpdox.phar
+        ➜ chmod +x phpdox.phar
+        ➜ mv phpdox.phar /usr/local/bin/phpdox
+        ➜ phpdox --version
 
     - config phpcs:
         $ vi ~/.bash_profile
@@ -225,4 +231,19 @@ results:
         $ phpcs -i
         $ phpcs /path/to/code     
 
-     
+- using apache Ant
+  - apache Ant's build.xml file.
+    sudo apt install ant
+    
+- jenkins to integrate with github:
+  - Sign in Jenkins,new item->source code management-> choose git-> type in your project's git repository
+  - configure ssh keys:
+      $sudo su - jenkins
+      $ssh-kengen -t dsa
+      $cat ~/.ssh/id_dsa.pub |xclip
+  - Go to your github repository, choose settings tab, and select Deploy keys-> Add deploy key->paste the content of id_das.pub in the text area.
+  - jenkins@192.168.0.100:~$ git ls-remote -h git@github.com:Soolan/mava.git HEAD
+
+# Using BDD methodology in Symfony
+
+
