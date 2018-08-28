@@ -245,5 +245,64 @@ results:
   - jenkins@192.168.0.100:~$ git ls-remote -h git@github.com:Soolan/mava.git HEAD
 
 # Using BDD methodology in Symfony
+        "behat/behat": "dev-master",
+        "behat/mink-extension": "dev-master",
+        "behat/mink": "dev-master",
+        "behat/mink-selenium2-driver": "dev-master",
+        "behat/symfony2-extension": "dev-master",
+        "behat/mink-browserkit-driver": "dev-master",
+        "behat/mink-goutte-driver": "dev-master"
 
+        behat --init
+        
+- about.feature:        
+    Feature: about page
+    In order to see about page contents
+    As a user
+    I am able to visit about page
+    Scenario: Visiting about page
+        Given I am on "/about"
+        Then I should see "mava is a web app"
+    Scenario: Visiting about page for an existing user
+        Given I am on "/about/john"
+        Then I should see "He is a cool guy"
+    Scenario: Visiting about page for non existing user
+        Given I am on "/about/jim"
+        Then I should see "Not Found"
 
+- FeatureContext.php
+  <?php
+
+    use Behat\Behat\Context\Context;
+    use Behat\Gherkin\Node\PyStringNode;
+    use Behat\Gherkin\Node\TableNode;
+    use Behat\MinkExtension\Context\MinkContext;
+
+    /**
+    * Defines application features from the specific context.
+    */
+    class FeatureContext extends MinkContext
+    {
+        /**
+        * Initializes context.
+        *
+        * Every scenario gets its own context instance.
+        * You can also pass arbitrary arguments to the
+        * context constructor through behat.yml.
+        */
+        public function __construct()
+        {
+        }
+    }
+    
+- behat.yml
+    default:
+    extensions:
+        Behat\Symfony2Extension: ~
+        Behat\MinkExtension:
+        goutte: ~
+        selenium2: ~
+        base_url: http://mava.dev/app_dev.php
+
+# selenium2 installation:
+  
