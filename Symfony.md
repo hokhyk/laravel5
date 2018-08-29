@@ -305,4 +305,33 @@ results:
         base_url: http://mava.dev/app_dev.php
 
 # selenium2 installation:
-  
+    1. Download the Selenium2 driver:
+    http://www.seleniumhq.org/download/
+    
+    2. Run it by executing the following:
+    $ java -jar ~/Downloads/selenium-server-standalone-[latestversion].jar
+    
+    3. Now edit the features/about.feature file as follows:
+        Feature: about page
+        In order to see about page contents
+        As a user
+        I am able to visit about page
+        
+        @javascript
+        Scenario: Visiting about page
+        Given I am on "/about"
+        Then I should see "mava is a web app"
+        
+        @javascript
+        Scenario: Visiting about page for an existing user
+        Given I am on "/about/john"
+        Then I should see "He is a cool guy"
+        
+        @javascript
+        Scenario: Visiting about page for non existing user
+        Given I am on "/about/jim"
+        Then I should see "Not Found"
+        
+        Adding an @javascript annotation before each scenario means that we need
+        a browser controller. So Mink will look into its drivers and choose Selenium2
+        over Goutte.
