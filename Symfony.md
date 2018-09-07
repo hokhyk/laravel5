@@ -335,3 +335,4 @@ results:
         Adding an @javascript annotation before each scenario means that we need
         a browser controller. So Mink will look into its drivers and choose Selenium2
         over Goutte.
+        
