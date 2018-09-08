@@ -3,9 +3,9 @@
   2. composer install 
   3. database:
     mysql -uroot
- CREATE USER 'boilerplate'@'%' IDENTIFIED BY 'boilerplate';
- CREATE DATABASE IF NOT EXISTS `boilerplate` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
- GRANT ALL PRIVILEGES ON `boilerplate`.* TO 'boilerplate'@'%';
+ CREATE USER 'sf4'@'%' IDENTIFIED BY 'sf4';
+ CREATE DATABASE IF NOT EXISTS `silverstripe4` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
+ GRANT ALL PRIVILEGES ON `silverstripe4`.* TO 'sf4'@'%';
 
  4. 配置web服务器等
  sudo /vagrant/scripts/serve-laravel.sh silverstripe.app /home/vagrant/Code/silverstripe-installer4/public/
@@ -59,3 +59,51 @@ SS_DATABASE_SSL_KEY 	Absolute path to SSL key file
 SS_DATABASE_SSL_CERT 	Absolute path to SSL certificate file
 SS_DATABASE_SSL_CA 	Absolute path to SSL Certificate Authority bundle file
 SS_DATABASE_SSL_CIPHER 	Optional setting for custom SSL cipher
+
+# Directory structure
+## core structure
+  Directory 	Description
+public/ 	Webserver public webroot
+public/assets/ 	Images and other files uploaded via the SilverStripe CMS. You can also place your own content inside it, and link to it from within the content area of the CMS.
+public/resources/ 	Exposed public files added from modules. Folders within this parent will match that of the source root location.
+vendor/ 	SilverStripe modules and other supporting libraries (the framework is in vendor/silverstripe/framework)
+themes/ 	Standard theme installation location
+
+## custom code structure
+  Directory 	Description
+app/ 	This directory contains all of your code that defines your website.
+app/_config 	YAML configuration specific to your application
+app/src 	PHP code for model and controller (subdirectories are optional)
+app/tests 	PHP Unit tests
+app/templates 	HTML templates with *.ss-extension for the $default theme
+app/css 	CSS files
+app/images 	Images used in the HTML templates
+app/javascript 	Javascript and other script files
+app/client 	More complex projects can alternatively contain frontend assets in a common client folder
+app/themes/<yourtheme> 	Custom nested themes (note: theme structure is described below)
+
+## theme structure
+Themes Structure
+Directory 	Description
+themes/simple/ 	Standard "simple" theme
+themes/<yourtheme>/ 	Custom theme base directory
+themes/<yourtheme>/templates 	Theme templates
+themes/<yourtheme>/css 	Theme CSS files
+
+## Module structure
+Modules are commonly stored as composer packages in the vendor/ folder. They need to have a _config.php file or a _config/ directory present, and should follow the same conventions as posed in "Custom Site Structure".
+
+
+# SS CMS 
+## Explaining security groups and roles
+Instead of assigning individual permissions to access, create, edit, or delete content per user, you can use Security Groups and Roles to organise which accounts have certain permissions.
+
+Roles are collections of permissions. For example, you might create an editor role to give a group read/write access to all content, or a "contributor" role who has the right to add content to the CMS but not to publish it, or a "spectator" role which gives a person a right to view the backend of the CMS, but not any ability to edit it.
+
+Security groups are collections of users, and whatever permissions they have apply to a subset of pages. So, for example, the marketing team could have access to the parts of the website dealing with marketing, and the customer support team could have access to the parts of the website dealing with customer queries.
+
+One of the ways that the two can be used together is to assign similar roles to different groups. You only need to define an "editor" role once, but by applying the "editor" role to different groups with different access to different pages, so if you assigned the "editor" role to both the marketing team and development team security groups, the marketing team would be able to edit the marketing pages, and the development team would be able to edit the development pages, but they would not be able to edit each other's pages.
+
+Groups represent a group of members, and you can assign a Group with a set of roles which are descriptors for various permissions in the system e.g. a group which has the "Administrator" role, allows access to the CMS.
+
+
