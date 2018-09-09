@@ -120,3 +120,13 @@ SilverStripe\Blog\Model\Blog:
 visit the route http://silverstripe.app/dev/build/  to migrate the database tables.
 visit the route http://silverstripe.app/?flush  to clear the cache.
 
+# Common subsite uses
+Subsites can be used for various different reasons here are some of the common ones:
+    Setting up a subsite for a small campaign so for example a clothing company may set up a summer or winter subsite to market just that season of clothing.
+    Locking down a particular subsite you may create a particular department like recruitment who would have access to create and edit pages for their particular subsite but they would not be able to modify the main website.
+    Running sub-domains on a single SilverStripe instance, with subsites if a sub-domain is pointing to the same instance and has been setup correctly you can manage this via a single CMS instance.
+    Subsites can not be used to run multiple websites on a single instance. Subsites does not allow you to run multiple domains/vhosts on a single instance.
+
+# CMS workflow
+composer require symbiote/silverstripe-advancedworkflow
+https://packagist.org/packages/symbiote/silverstripe-advancedworkflow
