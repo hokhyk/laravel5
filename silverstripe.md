@@ -106,4 +106,17 @@ One of the ways that the two can be used together is to assign similar roles to 
 
 Groups represent a group of members, and you can assign a Group with a set of roles which are descriptors for various permissions in the system e.g. a group which has the "Administrator" role, allows access to the CMS.
 
+# installing blog, subsites, widgets
+composer search silverstripe
+composer require silverstripe/blog
+composer require silverstripe/subsites
+composer require silverstripe/widgets
+
+modify configuration file ./mysite/_config/mysite.yml, adding the fllowing codes:
+SilverStripe\Blog\Model\Blog:
+  extensions:
+    - SilverStripe\Widgets\Extensions\WidgetPageExtension
+    
+visit the route http://silverstripe.app/dev/build/  to migrate the database tables.
+visit the route http://silverstripe.app/?flush  to clear the cache.
 
