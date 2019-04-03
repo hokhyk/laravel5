@@ -499,7 +499,7 @@ Available commands for the "make" namespace:
  mysql -uroot
  CREATE USER 'framework'@'%' IDENTIFIED BY 'framework';
  CREATE DATABASE IF NOT EXISTS `lara_framework` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
- GRANT ALL PRIVILEGES ON `lara_framework`.* TO 'framework'@'%';
+ GRANT ALL PRIVILEGES ON `lara_framework`.* TO 'framework'@'%' ;
  exit
  cp .env.example .env
  修改数据库链接参数后，执行 php artisan migrate
@@ -802,16 +802,22 @@ PHPUnit. Finally, we used Behat to perform end-to-end testing.
 
 
 # laravel with master/slave database to realize write/read pattern
-Dump the master database using the following command:
-$ mysqldump -u root -p"MYSQLPASSWORD" --opt "MASTERDATABASE" >
+Dump the master database using the following command:
+
+$ mysqldump -u root -p"MYSQLPASSWORD" --opt "MASTERDATABASE" >
+
 dumpfile.sql
 
- $ echo "CREATE DATABASE SLAVEDATABASE;" | mysql -u MYSQLUSER
+ $ echo "CREATE DATABASE SLAVEDATABASE;" | mysql -u MYSQLUSER
+
 -p"MYSQLPASSWORD"
 
-Import the dump file created from the master database using the
-following command:
-$ mysql -u MYSQLUSER -p"MYSQLPASSWORD" "MASTERDATABASE" <
+Import the dump file created from the master database using the
+
+following command:
+
+$ mysql -u MYSQLUSER -p"MYSQLPASSWORD" "MASTERDATABASE" <
+
 dumpfile.sql
 
 

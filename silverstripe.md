@@ -130,3 +130,26 @@ Subsites can be used for various different reasons here are some of the common o
 # CMS workflow
 composer require symbiote/silverstripe-advancedworkflow
 https://packagist.org/packages/symbiote/silverstripe-advancedworkflow
+
+# Silverstripe ORM
+SilverStripe uses an object-relational model to represent its information.
+    Each database table maps to a PHP class.
+    Each database row maps to a PHP object.
+    Each database column maps to a property on a PHP object.
+
+All data tables in SilverStripe are defined as subclasses of DataObject. The DataObject object represents a single row in a database table, following the "Active Record" design pattern. Database Columns are defined as Data Types in the static $db variable along with any relationships defined as $has_one, $has_many, $many_many properties on the class.
+
+app/code/Player.php
+
+use SilverStripe\ORM\DataObject;
+
+class Player extends DataObject 
+{
+    private static $db = [
+        'PlayerNumber' => 'Int',
+        'FirstName' => 'Varchar(255)',
+        'LastName' => 'Text',
+        'Birthday' => 'Date'
+    ];
+}
+
